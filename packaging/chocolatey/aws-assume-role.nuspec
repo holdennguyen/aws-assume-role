@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>aws-assume-role</id>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
     <packageSourceUrl>https://github.com/holdennguyen/aws-assume-role</packageSourceUrl>
     <owners>holdennguyen</owners>
     <title>AWS Assume Role CLI</title>
@@ -37,7 +37,7 @@ awsr list
 
 The tool automatically sets AWS credentials in your current shell environment, making it easy to work with different AWS accounts without complex eval commands.
     </description>
-    <releaseNotes>https://github.com/holdennguyen/aws-assume-role/releases/tag/v1.0.0</releaseNotes>
+    <releaseNotes>https://github.com/holdennguyen/aws-assume-role/releases/tag/v1.0.2</releaseNotes>
     <dependencies>
       <dependency id="awscli" version="2.0.0" />
     </dependencies>

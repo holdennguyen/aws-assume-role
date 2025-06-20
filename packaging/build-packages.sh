@@ -4,7 +4,7 @@ set -e
 # AWS Assume Role CLI - Package Builder
 # Builds packages for all supported package managers
 
-VERSION="1.0.0"
+VERSION="1.0.2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 

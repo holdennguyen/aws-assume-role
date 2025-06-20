@@ -1,5 +1,5 @@
 Name:           aws-assume-role
-Version:        1.0.0
+Version:        1.0.2
 Release:        1%{?dist}
 Summary:        Simple CLI tool to easily switch between AWS IAM roles
 
@@ -126,5 +126,5 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
-* Thu Jun 20 2025 Hung, Nguyen Minh <holdennguyen6174@gmail.com> - 1.0.0-1
+* Thu Jun 20 2025 Hung, Nguyen Minh <holdennguyen6174@gmail.com> - 1.0.2-1
 - Initial RPM package release

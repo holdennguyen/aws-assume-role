@@ -9,7 +9,7 @@ The application is distributed as a comprehensive multi-shell package that suppo
 ### Package Contents
 
 ```
-aws-assume-role-cli-v1.0.0-YYYYMMDD/
+aws-assume-role-cli-v1.0.2-YYYYMMDD/
 ├── aws-assume-role-macos          # macOS binary
 ├── aws-assume-role-unix           # Linux binary  
 ├── aws-assume-role.exe            # Windows binary
@@ -32,14 +32,14 @@ aws-assume-role-cli-v1.0.0-YYYYMMDD/
 
 **For End Users:**
 1. Download the appropriate package:
-   - `aws-assume-role-cli-v1.0.0-YYYYMMDD.zip` (Windows)
-   - `aws-assume-role-cli-v1.0.0-YYYYMMDD.tar.gz` (Unix/Linux/macOS)
+   - `aws-assume-role-cli-v1.0.2-YYYYMMDD.zip` (Windows)
+- `aws-assume-role-cli-v1.0.2-YYYYMMDD.tar.gz` (Unix/Linux/macOS)
 
 2. Extract and install:
    ```bash
    # Unix/Linux/macOS/Git Bash
-   tar -xzf aws-assume-role-cli-v1.0.0-YYYYMMDD.tar.gz
-   cd aws-assume-role-cli-v1.0.0-YYYYMMDD
+   tar -xzf aws-assume-role-cli-v1.0.2-YYYYMMDD.tar.gz
+cd aws-assume-role-cli-v1.0.2-YYYYMMDD
    ./INSTALL.sh
    
    # Windows PowerShell
@@ -50,7 +50,7 @@ aws-assume-role-cli-v1.0.0-YYYYMMDD/
 3. Clean up (optional):
    ```bash
    # Can safely delete extracted folder after installation
-   cd .. && rm -rf aws-assume-role-cli-v1.0.0-YYYYMMDD
+   cd .. && rm -rf aws-assume-role-cli-v1.0.2-YYYYMMDD
    ```
 
 ### 2. Enterprise Distribution
@@ -63,14 +63,14 @@ aws-assume-role-cli-v1.0.0-YYYYMMDD/
    # Ansible example
    - name: Download and install AWS Assume Role CLI
      unarchive:
-       src: "{{ internal_repo }}/aws-assume-role-cli-v1.0.0-YYYYMMDD.tar.gz"
+       src: "{{ internal_repo }}/aws-assume-role-cli-v1.0.2-YYYYMMDD.tar.gz"
        dest: /tmp
        remote_src: yes
      
    - name: Run installer
      command: ./INSTALL.sh
      args:
-       chdir: /tmp/aws-assume-role-cli-v1.0.0-YYYYMMDD
+               chdir: /tmp/aws-assume-role-cli-v1.0.2-YYYYMMDD
    ```
 
 3. **Custom Installation**: Modify `INSTALL.sh` for organizational requirements
