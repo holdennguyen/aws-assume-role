@@ -7,6 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct AwsClient {
     sts_client: StsClient,
+    #[allow(dead_code)]
     sso_client: SsoClient,
 }
 
@@ -62,6 +63,7 @@ impl AwsClient {
         })
     }
 
+    #[allow(dead_code)]
     pub async fn get_sso_credentials(&self, account_id: &str, role_name: &str, access_token: &str) -> AppResult<Credentials> {
         let role_creds = self.sso_client
             .get_role_credentials()
