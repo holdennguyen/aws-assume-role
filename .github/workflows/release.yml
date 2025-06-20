@@ -75,6 +75,34 @@ jobs:
         asset_name: ${{ matrix.asset_name }}
         tag: ${{ github.ref }}
         overwrite: true
+        make_latest: true
+        release_name: "AWS Assume Role CLI ${{ github.ref_name }}"
+        body: |
+          # 🎉 AWS Assume Role CLI ${{ github.ref_name }} - Release
+          
+          A simple command-line tool to easily switch between AWS IAM roles across different accounts, designed for SSO users.
+          
+          ## 📦 Installation
+          
+          Download the appropriate binary for your platform from the assets below, or use package managers:
+          
+          ```bash
+          # Homebrew (macOS/Linux)
+          brew install holdennguyen/tap/aws-assume-role
+          
+          # Cargo (Rust)
+          cargo install aws-assume-role
+          ```
+          
+          ## 🚀 Quick Start
+          
+          ```bash
+          # Configure a role
+          awsr configure --name dev --role-arn arn:aws:iam::123456789012:role/DevRole --account-id 123456789012
+          
+          # Assume the role
+          awsr assume dev
+          ```
 
   package-deb:
     name: Build DEB package
