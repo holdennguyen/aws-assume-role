@@ -10,8 +10,8 @@ echo "=================================================="
 
 # Get current date for versioning
 DATE=$(date +%Y%m%d)
-# Get version from git tag or default to v1.1.1
-VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.1.1")
+# Get version from git tag (latest tag only) or default to v1.1.2
+VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.1.2")
 PACKAGE_NAME="aws-assume-role-cli-${VERSION}-${DATE}"
 
 echo "📍 Package name: $PACKAGE_NAME"
