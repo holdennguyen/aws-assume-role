@@ -1,7 +1,7 @@
 # Project Progress
 
 ## Current Status
-The AWS Assume Role application has been successfully implemented and is now fully functional. All core features have been completed and tested.
+The AWS Assume Role application has been successfully implemented and is now fully functional. All core features have been completed and tested. **v1.0.1 hotfix released** to fix critical Windows Git Bash IMDS timeout issue.
 
 ## What Works
 - ✅ Project structure initialized with Rust
@@ -82,8 +82,17 @@ The application is **production-ready** with all core functionality implemented:
 - Configuration is persisted across sessions
 - Error handling provides clear feedback
 
+### v1.0.1 Hotfix Release (June 20, 2025)
+**Critical Fix**: Resolved Windows Git Bash IMDS timeout issue
+- **Problem**: 1-second timeout when AWS SDK tried to connect to EC2 metadata service
+- **Solution**: Intelligent region handling with us-east-1 default when no region configured
+- **Impact**: Instant credential switching on Windows Git Bash
+- **Files Modified**: `src/aws/mod.rs`, `releases/multi-shell/aws-assume-role-bash.sh`, `Cargo.toml`
+- **Distribution**: Available via GitHub Releases, Homebrew, Cargo, and other package managers
+
 ## Known Issues
 - Minor warnings about unused SSO client code (future enhancement)
+- ✅ **RESOLVED**: Windows Git Bash IMDS timeout issue (fixed in v1.0.1)
 - No current blocking issues
 
 ## Evolution of Project Decisions

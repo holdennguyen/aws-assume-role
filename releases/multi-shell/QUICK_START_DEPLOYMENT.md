@@ -33,7 +33,7 @@ awsr --help
 **If you chose Option 2 or 3**: You can safely delete the extracted folder!
 
 ```bash
-cd .. && rm -rf aws-assume-role-cli-v1.0.0-*
+cd .. && rm -rf aws-assume-role-cli-v1.0.1-*
 ```
 
 **If you chose Option 1**: Keep the folder as it contains your installation.

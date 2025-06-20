@@ -16,8 +16,8 @@ A simple command-line tool to easily switch between AWS IAM roles across differe
 ### Quick Installation (Recommended)
 
 1. **Download and extract** the appropriate package for your system:
-   - `aws-assume-role-cli-v1.0.0-YYYYMMDD.zip` for Windows
-   - `aws-assume-role-cli-v1.0.0-YYYYMMDD.tar.gz` for Unix/Linux/macOS
+   - `aws-assume-role-cli-v1.0.1-YYYYMMDD.zip` for Windows
+- `aws-assume-role-cli-v1.0.1-YYYYMMDD.tar.gz` for Unix/Linux/macOS
 
 2. **Run the automated installer**:
    ```bash
@@ -50,10 +50,10 @@ The installer copies all necessary files to your chosen directory and updates th
 cd ..
 
 # Remove the extracted folder
-rm -rf aws-assume-role-cli-v1.0.0-YYYYMMDD
+rm -rf aws-assume-role-cli-v1.0.1-YYYYMMDD
 
 # Or on Windows
-rmdir /s aws-assume-role-cli-v1.0.0-YYYYMMDD
+rmdir /s aws-assume-role-cli-v1.0.1-YYYYMMDD
 ```
 
 **If you installed to current directory** (Option 1):
