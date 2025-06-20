@@ -38,8 +38,6 @@ cp INSTALL.sh "$DIST_DIR/"
 cp INSTALL.ps1 "$DIST_DIR/"
 cp UNINSTALL.sh "$DIST_DIR/"
 cp UNINSTALL.ps1 "$DIST_DIR/"
-cp DELIVERY_INSTRUCTIONS.md "$DIST_DIR/"
-cp QUICK_START_DEPLOYMENT.md "$DIST_DIR/"
 
 # Make scripts executable
 chmod +x "$DIST_DIR/INSTALL.sh"
