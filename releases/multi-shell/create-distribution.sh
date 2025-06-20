@@ -10,7 +10,7 @@ echo "=================================================="
 
 # Get current date for versioning
 DATE=$(date +%Y%m%d)
-VERSION="v1.0.1"
+VERSION="v1.0.2"
 PACKAGE_NAME="aws-assume-role-cli-${VERSION}-${DATE}"
 
 echo "📍 Package name: $PACKAGE_NAME"
