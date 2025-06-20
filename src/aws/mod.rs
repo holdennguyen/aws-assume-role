@@ -19,6 +19,13 @@ pub struct Credentials {
     pub expiration: Option<SystemTime>,
 }
 
+#[derive(Debug)]
+pub struct CallerIdentity {
+    pub account: String,
+    pub arn: String,
+    pub user_id: String,
+}
+
 impl AwsClient {
     pub async fn new() -> AppResult<Self> {
         // Check if region is already configured via environment or AWS config
@@ -74,6 +81,53 @@ impl AwsClient {
             session_token: credentials.session_token,
             expiration,
         })
+    }
+
+    /// Verify current AWS credentials and identity
+    pub async fn verify_current_identity(&self) -> AppResult<CallerIdentity> {
+        let result = self.sts_client
+            .get_caller_identity()
+            .send()
+            .await
+            .map_err(|e| AppError::AwsError(format!("Failed to get caller identity: {}", e)))?;
+
+        Ok(CallerIdentity {
+            account: result.account.unwrap_or_default(),
+            arn: result.arn.unwrap_or_default(),
+            user_id: result.user_id.unwrap_or_default(),
+        })
+    }
+
+    /// Test if we can assume a specific role (dry run)
+    pub async fn test_assume_role(&self, role_config: &RoleConfig) -> AppResult<bool> {
+        match self.sts_client
+            .assume_role()
+            .role_arn(&role_config.role_arn)
+            .role_session_name("aws-assume-role-test")
+            .duration_seconds(900) // Minimum duration for test
+            .send()
+            .await
+        {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                let error_msg = e.to_string();
+                if error_msg.contains("AccessDenied") || error_msg.contains("Forbidden") {
+                    Ok(false)
+                } else {
+                    Err(AppError::AwsError(format!("Failed to test role assumption: {}", e)))
+                }
+            }
+        }
+    }
+
+    /// Check if AWS CLI is available
+    pub fn check_aws_cli() -> AppResult<bool> {
+        use std::process::Command;
+        
+        match Command::new("aws").arg("--version").output() {
+            Ok(output) => Ok(output.status.success()),
+            Err(_) => Ok(false),
+        }
     }
 
     #[allow(dead_code)]

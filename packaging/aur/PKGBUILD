@@ -1,6 +1,6 @@
 # Maintainer: Your Name <your.email@example.com>
 pkgname=aws-assume-role
-pkgver=1.0.2
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="Simple CLI tool to easily switch between AWS IAM roles across different accounts"
 arch=('x86_64')

@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $packageName = 'aws-assume-role'
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$version = '1.0.2'
+$version = '1.1.0'
 $url64 = "https://github.com/holdennguyen/aws-assume-role/releases/download/v$version/aws-assume-role.exe"
 
 $packageArgs = @{
