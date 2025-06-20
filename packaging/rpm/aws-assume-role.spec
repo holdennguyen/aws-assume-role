@@ -126,5 +126,5 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
-* Thu Jun 20 2025 Your Name <your.email@example.com> - 1.0.0-1
-- Initial RPM package release 
+* Thu Jun 20 2025 Hung, Nguyen Minh <holdennguyen6174@gmail.com> - 1.0.0-1
+- Initial RPM package release
