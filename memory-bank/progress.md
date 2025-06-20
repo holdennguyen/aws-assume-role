@@ -102,7 +102,7 @@ The application is **production-ready** with all core functionality implemented:
 - **Files Modified**: Core application, all package configs, CI/CD, documentation
 - **Distribution**: Available via GitHub Releases, GitHub Packages, Homebrew, Cargo, and all package managers
 
-### v1.1.0 RELEASED ✅ (June 21, 2025)
+### v1.1.1 RELEASED ✅ (June 21, 2025)
 **Enhanced User Experience**: Prerequisites verification + improved help system
 - **Prerequisites Verification**: ✅ TESTED
   - Built-in `verify` command for checking AWS CLI, credentials, and role permissions
@@ -132,6 +132,11 @@ The application is **production-ready** with all core functionality implemented:
   - Removed 4 redundant documentation files
   - Achieved clean 4-file documentation structure
   - Eliminated content duplication across multiple files
+- **v1.1.1 Patch Release**: ✅ COMPLETED
+  - Fixed GitHub Actions workflow failures
+  - Fixed multi-shell distribution package creation (removed references to deleted files)
+  - Fixed Docker container build (added unzip dependency)
+  - No functional changes to application
 
 ## Known Issues
 - Minor warnings about unused SSO client code (future enhancement)

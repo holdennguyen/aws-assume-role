@@ -242,6 +242,9 @@ jobs:
     
     - name: Prepare binaries for distribution
       run: |
+        # Clean old distribution files
+        rm -rf releases/multi-shell/dist/
+        
         # Copy binaries (skip universal macOS binary creation on Linux)
         cp temp-binaries/aws-assume-role-macos-x86_64 releases/multi-shell/aws-assume-role-macos
         cp temp-binaries/aws-assume-role-linux-x86_64 releases/multi-shell/aws-assume-role-unix

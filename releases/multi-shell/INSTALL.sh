@@ -31,17 +31,17 @@ case $OS in
         ;;
     "gitbash")
         # Git Bash on Windows needs a Windows executable
-        if [ -f "aws-assume-role-windows.exe" ]; then
-            BINARY_NAME="aws-assume-role-windows.exe"
-        elif [ -f "aws-assume-role.exe" ]; then
+        if [ -f "aws-assume-role.exe" ]; then
             BINARY_NAME="aws-assume-role.exe"
         else
-            echo "❌ Windows executable not found!"
-            echo "For Git Bash on Windows, you need either:"
-            echo "  - aws-assume-role-windows.exe"
-            echo "  - aws-assume-role.exe"
+            echo "❌ AWS Assume Role binary not found!"
+            echo "For Git Bash on Windows, you need: aws-assume-role.exe"
             echo ""
-            echo "Please use the Windows PowerShell installation instead:"
+            echo "Available files in this directory:"
+            ls -la *.exe 2>/dev/null || echo "No .exe files found"
+            echo ""
+            echo "Please ensure you've downloaded the correct release package."
+            echo "Alternatively, use Windows PowerShell installation:"
             echo "  .\INSTALL.ps1"
             exit 1
         fi

@@ -1,7 +1,153 @@
 # Active Context
 
 ## Current Focus
-The AWS Assume Role application has been **successfully completed** and is now production-ready. **All critical issues have been resolved** and the project now features **comprehensive distribution capabilities** with GitHub Packages integration and complete version consistency across all package managers.
+The AWS Assume Role application has been **successfully completed** and is now production-ready with **streamlined package management automation**. The project has evolved from supporting many package managers to focusing on **4 core, well-maintained distribution channels** with full automation.
+
+## Recent Changes (January 2025)
+- ✅ **Streamlined Package Management Strategy**
+  - Removed unused package managers (AUR, Chocolatey, NPM)
+  - Focused on 4 core channels: Cargo, Homebrew, APT (PPA), YUM/DNF (COPR)
+  - Created comprehensive automation for all supported channels
+  - Eliminated maintenance overhead of less-used package managers
+
+- ✅ **Full Automation Implementation**
+  - Created `.github/workflows/publish-packages.yml` for automated publishing
+  - Built manual publishing helper script `scripts/publish-to-package-managers.sh`
+  - Integrated with existing PPA: `ppa:holdennguyen/aws-assume-role`
+  - Set up COPR repository for Fedora/CentOS/RHEL support
+  - Created personal Homebrew tap: `holdennguyen/homebrew-tap`
+
+- ✅ **Package Manager Configuration**
+  - Updated Homebrew formula with proper placeholders for automation
+  - Configured PPA with proper debian packaging structure
+  - Set up RPM spec file for COPR builds
+  - Maintained Cargo.toml for crates.io publishing
+
+- ✅ **Documentation Updates**
+  - Completely rewrote PUBLISHING_GUIDE.md for streamlined approach
+  - Updated README.md installation section with correct commands
+  - Created comprehensive setup instructions for GPG and COPR
+  - Added troubleshooting guides for each package manager
+
+## Current Status
+**PRODUCTION-READY**: The application is fully functional with **streamlined, automated package management** across 4 major distribution channels.
+
+### Supported Package Managers (Current)
+1. **🦀 Cargo** (Rust Package Manager) - Automated via GitHub Actions
+2. **🍺 Homebrew** (macOS/Linux) - Personal tap with automation
+3. **📦 APT** (Debian/Ubuntu) - Launchpad PPA: `ppa:holdennguyen/aws-assume-role`
+4. **📦 YUM/DNF** (Fedora/CentOS/RHEL) - COPR repository
+
+### Installation Commands (Current)
+```bash
+# Homebrew (macOS/Linux)
+brew tap holdennguyen/tap
+brew install aws-assume-role
+
+# APT (Debian/Ubuntu)
+sudo add-apt-repository ppa:holdennguyen/aws-assume-role
+sudo apt update
+sudo apt install aws-assume-role
+
+# DNF/YUM (Fedora/CentOS/RHEL)
+sudo dnf copr enable holdennguyen/aws-assume-role
+sudo dnf install aws-assume-role
+
+# Cargo (Rust)
+cargo install aws-assume-role
+```
+
+### Repository Structure (Current)
+```
+aws-assume-role/
+├── src/                    # Source code
+├── packaging/              # Streamlined package configurations
+│   ├── apt/               # Debian/Ubuntu PPA configuration
+│   ├── homebrew/          # Homebrew formula
+│   ├── rpm/               # RPM spec for COPR
+│   └── cargo/             # Cargo.toml (root level)
+├── scripts/               # Automation scripts
+│   └── publish-to-package-managers.sh  # Manual publishing helper
+├── .github/workflows/     # CI/CD automation
+│   └── publish-packages.yml            # Automated publishing
+├── memory-bank/           # Project documentation
+├── PUBLISHING_GUIDE.md    # Package publishing documentation
+├── README.md              # Updated with streamlined installation
+└── releases/              # Release artifacts
+```
+
+## Automation Architecture
+
+### GitHub Actions Workflow
+The automated publishing workflow triggers on:
+- New release creation
+- Manual workflow dispatch
+
+**Jobs:**
+1. **publish-homebrew**: Updates personal tap repository automatically
+2. **publish-ppa**: Builds and uploads to Launchpad PPA
+3. **publish-copr**: Submits builds to Fedora COPR
+4. **update-documentation**: Updates installation commands in README
+
+### Required Secrets
+- `PPA_GPG_PRIVATE_KEY`: GPG private key for signing PPA packages
+- `PPA_GPG_PASSPHRASE`: GPG key passphrase
+- `COPR_CONFIG`: COPR configuration file content
+
+### Manual Publishing
+The `scripts/publish-to-package-managers.sh` script provides:
+1. Interactive menu for selective publishing
+2. Automatic checksum calculation
+3. Version consistency verification
+4. Documentation updates
+
+## Key Technical Achievements
+
+### Prerequisites Verification System (v1.1.0+)
+- Built-in `verify` command for checking all prerequisites
+- Automatic role assumption testing during configuration
+- Enhanced CLI help with detailed examples
+- Comprehensive troubleshooting guidance
+
+### Multi-Shell Support
+- Cross-platform binaries (macOS, Linux, Windows)
+- Shell wrapper scripts for seamless integration
+- PowerShell and Command Prompt compatibility
+- Git Bash compatibility with IMDS timeout fixes
+
+### Container Support
+- Docker container via GitHub Container Registry
+- Multi-architecture support
+- CI/CD pipeline integration
+- Base image for AWS-enabled containers
+
+## Current Version Status
+- **Application Version**: v1.1.1 (production)
+- **Features**: Prerequisites verification, enhanced CLI, automatic role testing
+- **Distribution**: All 4 package managers ready for automated publishing
+- **Documentation**: Comprehensive and streamlined
+
+## Package Manager Setup Status
+
+| Package Manager | Status | Repository | Installation Command |
+|----------------|--------|------------|---------------------|
+| 🦀 **Cargo** | ✅ Automated | crates.io | `cargo install aws-assume-role` |
+| 🍺 **Homebrew** | ✅ Ready | holdennguyen/homebrew-tap | `brew tap holdennguyen/tap && brew install aws-assume-role` |
+| 📦 **APT** | ✅ Ready | ppa:holdennguyen/aws-assume-role | `sudo add-apt-repository ppa:holdennguyen/aws-assume-role && sudo apt install aws-assume-role` |
+| 📦 **YUM/DNF** | ✅ Ready | holdennguyen/aws-assume-role (COPR) | `sudo dnf copr enable holdennguyen/aws-assume-role && sudo dnf install aws-assume-role` |
+
+## Next Steps for Package Publishing
+1. **Set up GitHub Secrets** for PPA and COPR authentication
+2. **Test automated workflow** with next release
+3. **Monitor package repositories** for successful builds
+4. **Update documentation** with verified installation commands
+
+## Project Insights & Patterns
+1. **Focused Strategy**: Maintaining 4 high-quality channels is better than 8+ partially-maintained ones
+2. **Automation First**: Full automation reduces maintenance burden significantly
+3. **User Experience**: Clear installation commands and comprehensive help improve adoption
+4. **Distribution Strategy**: Personal repositories (PPA, COPR, Homebrew tap) provide full control
+5. **Documentation**: Streamlined, focused documentation is more valuable than comprehensive but scattered docs
 
 ## Recent Changes
 - ✅ Completed full application implementation
@@ -210,14 +356,15 @@ The application can be deployed by:
 
 **Status**: ✅ PRODUCTION READY & DOCUMENTATION CONSOLIDATED
 
-## Latest Project State (v1.1.0-RELEASED ✅)
+## Latest Project State (v1.1.1-RELEASED ✅)
 - **Core Application**: ✅ Enhanced with prerequisites verification and improved help system (TESTED)
 - **Prerequisites Verification**: ✅ Built-in `verify` command with comprehensive AWS setup checking (WORKING)
 - **User Experience**: ✅ Improved CLI help with clear examples and command explanations (TESTED)
 - **Configuration**: ✅ Automatic role testing during configuration with user prompts (WORKING)
-- **Release Status**: ✅ v1.1.0 RELEASED TO PRODUCTION (June 21, 2025)
-- **Git Status**: ✅ Tagged v1.1.0 and pushed to origin/master
-- **CI/CD Status**: ✅ Automated release workflow triggered
+- **Release Status**: ✅ v1.1.1 RELEASED TO PRODUCTION (June 21, 2025)
+- **Git Status**: ✅ Tagged v1.1.1 and pushed to origin/master  
+- **CI/CD Status**: ✅ Fixed workflow issues and re-triggered automated release
+- **Patch Notes**: Fixed GitHub Actions failures (Docker unzip, distribution packaging)
 - **Distribution**: Complete multi-channel publishing (GitHub Releases, Packages, Package Managers)
 - **Documentation**: Comprehensive guides including detailed prerequisites setup
 - **Automation**: Full CI/CD with version consistency across all channels

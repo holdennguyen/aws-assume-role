@@ -1,141 +1,162 @@
 #!/bin/bash
+
+# AWS Assume Role CLI - Package Building Script
+# Builds packages for supported package managers
+
 set -e
 
-# AWS Assume Role CLI - Package Builder
-# Builds packages for all supported package managers
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-VERSION="1.1.1"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Get current version from Cargo.toml
+VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
 
-echo "🏗️  Building AWS Assume Role CLI packages v$VERSION"
-echo "=================================================="
-
-# Ensure binaries are built
-echo "📋 Checking for binaries..."
-if [ ! -f "$ROOT_DIR/releases/multi-shell/aws-assume-role-unix" ]; then
-    echo "❌ Binaries not found. Please run build-releases.sh first."
-    exit 1
-fi
-
-echo "✅ Binaries found"
-
-# Create package output directory
-PACKAGE_OUTPUT="$ROOT_DIR/packages"
-mkdir -p "$PACKAGE_OUTPUT"
-
-# Build DEB package
+echo -e "${BLUE}🔨 Building packages for AWS Assume Role CLI v${VERSION}${NC}"
 echo ""
-echo "📦 Building DEB package..."
-if command -v dpkg-deb >/dev/null 2>&1; then
-    # Prepare DEB structure
-    DEB_DIR="$SCRIPT_DIR/apt"
-    mkdir -p "$DEB_DIR/usr/bin"
-    mkdir -p "$DEB_DIR/usr/share/aws-assume-role"
+
+# Build binary first
+echo -e "${YELLOW}🦀 Building Rust binary...${NC}"
+cargo build --release
+echo -e "${GREEN}✅ Binary built successfully${NC}"
+echo ""
+
+# Function to build DEB package
+build_deb() {
+    echo -e "${YELLOW}📦 Building DEB package...${NC}"
+    
+    # Create package directory structure
+    mkdir -p aws-assume-role-deb/DEBIAN
+    mkdir -p aws-assume-role-deb/usr/bin
     
     # Copy binary
-    cp "$ROOT_DIR/releases/multi-shell/aws-assume-role-unix" "$DEB_DIR/usr/bin/aws-assume-role"
-    chmod +x "$DEB_DIR/usr/bin/aws-assume-role"
+    cp target/release/aws-assume-role aws-assume-role-deb/usr/bin/
+    chmod +x aws-assume-role-deb/usr/bin/aws-assume-role
     
-    # Set permissions
-    chmod +x "$DEB_DIR/DEBIAN/postinst"
-    chmod +x "$DEB_DIR/DEBIAN/prerm"
+    # Copy control files
+    cp packaging/apt/DEBIAN/control aws-assume-role-deb/DEBIAN/
+    cp packaging/apt/DEBIAN/postinst aws-assume-role-deb/DEBIAN/
+    cp packaging/apt/DEBIAN/prerm aws-assume-role-deb/DEBIAN/
+    
+    # Update version in control file
+    sed -i "s/Version:.*/Version: ${VERSION}/" aws-assume-role-deb/DEBIAN/control
     
     # Build package
-    dpkg-deb --build "$DEB_DIR" "$PACKAGE_OUTPUT/aws-assume-role_${VERSION}_amd64.deb"
-    echo "✅ DEB package: $PACKAGE_OUTPUT/aws-assume-role_${VERSION}_amd64.deb"
-else
-    echo "⚠️  dpkg-deb not available, skipping DEB package"
-fi
+    dpkg-deb --build aws-assume-role-deb aws-assume-role_${VERSION}_amd64.deb
+    
+    # Clean up
+    rm -rf aws-assume-role-deb
+    
+    echo -e "${GREEN}✅ DEB package: aws-assume-role_${VERSION}_amd64.deb${NC}"
+}
 
-# Build RPM package
-echo ""
-echo "📦 Building RPM package..."
-if command -v rpmbuild >/dev/null 2>&1; then
-    # Setup RPM build environment
+# Function to build RPM package
+build_rpm() {
+    echo -e "${YELLOW}📦 Building RPM package...${NC}"
+    
+    # Create RPM build directory structure
     mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
     
-    # Copy spec file and binary
-    cp "$SCRIPT_DIR/rpm/aws-assume-role.spec" ~/rpmbuild/SPECS/
-    cp "$ROOT_DIR/releases/multi-shell/aws-assume-role-unix" ~/rpmbuild/SOURCES/aws-assume-role-linux-x86_64
+    # Copy spec file
+    cp packaging/rpm/aws-assume-role.spec ~/rpmbuild/SPECS/
+    
+    # Update version in spec file
+    sed -i "s/Version:.*/Version: ${VERSION}/" ~/rpmbuild/SPECS/aws-assume-role.spec
+    
+    # Copy binary to SOURCES
+    cp target/release/aws-assume-role ~/rpmbuild/SOURCES/
     
     # Build RPM
-    rpmbuild -bb ~/rpmbuild/SPECS/aws-assume-role.spec
+    rpmbuild -ba ~/rpmbuild/SPECS/aws-assume-role.spec
     
-    # Copy to output
-    cp ~/rpmbuild/RPMS/x86_64/aws-assume-role-${VERSION}-1.*.x86_64.rpm "$PACKAGE_OUTPUT/"
-    echo "✅ RPM package: $PACKAGE_OUTPUT/aws-assume-role-${VERSION}-1.*.x86_64.rpm"
-else
-    echo "⚠️  rpmbuild not available, skipping RPM package"
-fi
+    # Copy built RPM to current directory
+    cp ~/rpmbuild/RPMS/x86_64/aws-assume-role-${VERSION}-1.x86_64.rpm .
+    
+    echo -e "${GREEN}✅ RPM package: aws-assume-role-${VERSION}-1.x86_64.rpm${NC}"
+}
 
-# Build Chocolatey package
-echo ""
-echo "📦 Building Chocolatey package..."
-if command -v choco >/dev/null 2>&1; then
-    cd "$SCRIPT_DIR/chocolatey"
-    choco pack aws-assume-role.nuspec
-    mv aws-assume-role.*.nupkg "$PACKAGE_OUTPUT/"
-    echo "✅ Chocolatey package: $PACKAGE_OUTPUT/aws-assume-role.${VERSION}.nupkg"
-    cd "$ROOT_DIR"
-else
-    echo "⚠️  choco not available, skipping Chocolatey package"
-fi
-
-# Build Homebrew formula (just copy)
-echo ""
-echo "📦 Preparing Homebrew formula..."
-cp "$SCRIPT_DIR/homebrew/aws-assume-role.rb" "$PACKAGE_OUTPUT/"
-echo "✅ Homebrew formula: $PACKAGE_OUTPUT/aws-assume-role.rb"
-
-# Build AUR package (copy PKGBUILD)
-echo ""
-echo "📦 Preparing AUR package..."
-mkdir -p "$PACKAGE_OUTPUT/aur"
-cp "$SCRIPT_DIR/aur/PKGBUILD" "$PACKAGE_OUTPUT/aur/"
-cp "$SCRIPT_DIR/aur/.SRCINFO" "$PACKAGE_OUTPUT/aur/"
-echo "✅ AUR package: $PACKAGE_OUTPUT/aur/"
-
-# Generate checksums
-echo ""
-echo "🔒 Generating checksums..."
-cd "$PACKAGE_OUTPUT"
-for file in *.deb *.rpm *.nupkg; do
-    if [ -f "$file" ]; then
-        sha256sum "$file" > "$file.sha256"
-        echo "✅ Checksum: $file.sha256"
+# Function to prepare Homebrew formula
+prepare_homebrew() {
+    echo -e "${YELLOW}🍺 Preparing Homebrew formula...${NC}"
+    
+    # Calculate checksums
+    if [ -f "target/release/aws-assume-role" ]; then
+        BINARY_SHA256=$(shasum -a 256 target/release/aws-assume-role | cut -d' ' -f1)
+        echo "Binary SHA256: $BINARY_SHA256"
+        
+        # Update formula with version
+        sed -i "s/version \".*\"/version \"${VERSION}\"/" packaging/homebrew/aws-assume-role.rb
+        
+        echo -e "${GREEN}✅ Homebrew formula updated${NC}"
+    else
+        echo -e "${RED}❌ Binary not found. Build first.${NC}"
+        return 1
     fi
-done
-cd "$ROOT_DIR"
+}
+
+# Function to prepare Cargo package
+prepare_cargo() {
+    echo -e "${YELLOW}🦀 Preparing Cargo package...${NC}"
+    
+    # Check if Cargo.toml is ready
+    if grep -q "^version = \"${VERSION}\"" Cargo.toml; then
+        echo -e "${GREEN}✅ Cargo.toml version is correct: ${VERSION}${NC}"
+        
+        # Test build
+        cargo check
+        echo -e "${GREEN}✅ Cargo package ready for publishing${NC}"
+    else
+        echo -e "${RED}❌ Version mismatch in Cargo.toml${NC}"
+        return 1
+    fi
+}
+
+# Main menu
+echo "What packages would you like to build?"
+echo "1) DEB package (APT)"
+echo "2) RPM package (YUM/DNF)"
+echo "3) Prepare Homebrew formula"
+echo "4) Prepare Cargo package"
+echo "5) Build all packages"
+echo "6) Exit"
+echo ""
+
+read -p "Enter your choice (1-6): " choice
+
+case $choice in
+    1)
+        build_deb
+        ;;
+    2)
+        build_rpm
+        ;;
+    3)
+        prepare_homebrew
+        ;;
+    4)
+        prepare_cargo
+        ;;
+    5)
+        echo -e "${BLUE}🚀 Building all packages...${NC}"
+        build_deb
+        build_rpm
+        prepare_homebrew
+        prepare_cargo
+        echo -e "${GREEN}✅ All packages built!${NC}"
+        ;;
+    6)
+        echo -e "${BLUE}👋 Goodbye!${NC}"
+        exit 0
+        ;;
+    *)
+        echo -e "${RED}❌ Invalid choice${NC}"
+        exit 1
+        ;;
+esac
 
 echo ""
-echo "🎉 Package building complete!"
-echo "=============================="
-echo ""
-echo "📦 Built packages:"
-ls -la "$PACKAGE_OUTPUT"
-echo ""
-echo "📋 Next steps:"
-echo "1. Test packages on target systems"
-echo "2. Update checksums in package manager configs"
-echo "3. Submit to package repositories"
-echo ""
-echo "📚 Installation commands for users:"
-echo ""
-echo "🍺 Homebrew (macOS/Linux):"
-echo "  brew install yourusername/tap/aws-assume-role"
-echo ""
-echo "🍫 Chocolatey (Windows):"
-echo "  choco install aws-assume-role"
-echo ""
-echo "📦 APT (Debian/Ubuntu):"
-echo "  sudo dpkg -i aws-assume-role_${VERSION}_amd64.deb"
-echo ""
-echo "📦 YUM/DNF (RedHat/CentOS/Fedora):"
-echo "  sudo rpm -i aws-assume-role-${VERSION}-1.*.x86_64.rpm"
-echo ""
-echo "🏗️  AUR (Arch Linux):"
-echo "  yay -S aws-assume-role"
-echo ""
-echo "🦀 Cargo (Rust):"
-echo "  cargo install aws-assume-role" 
+echo -e "${GREEN}🎉 Package building completed!${NC}"
+echo -e "${BLUE}Version v${VERSION} packages are ready.${NC}" 

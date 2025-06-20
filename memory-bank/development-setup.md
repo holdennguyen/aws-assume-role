@@ -323,7 +323,15 @@ git push origin v1.1.0
 
 ### 📊 Version History Tracking
 
-#### Current Version: v1.1.0
+#### Current Version: v1.1.1
+**Type:** PATCH (Build/CI Fixes)
+**Changes:**
+- ✅ Fixed GitHub Actions workflow failures
+- ✅ Fixed multi-shell distribution package creation
+- ✅ Fixed Docker container build dependencies
+- ✅ No functional changes to application
+
+#### Previous Version: v1.1.0  
 **Type:** MINOR (New Features)
 **Changes:**
 - ✅ Added `verify` command for prerequisites checking

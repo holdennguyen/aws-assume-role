@@ -6,26 +6,32 @@ class AwsAssumeRole < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/holdennguyen/aws-assume-role/releases/download/v#{version}/aws-assume-role-macos-arm64"
-      sha256 "YOUR_ARM64_SHA256_HERE"
+      sha256 "PLACEHOLDER_ARM64_SHA256" # arm64
     else
       url "https://github.com/holdennguyen/aws-assume-role/releases/download/v#{version}/aws-assume-role-macos-x86_64"
-      sha256 "YOUR_X86_64_SHA256_HERE"
+      sha256 "PLACEHOLDER_X86_64_SHA256" # macos
     end
   end
 
   on_linux do
     url "https://github.com/holdennguyen/aws-assume-role/releases/download/v#{version}/aws-assume-role-linux-x86_64"
-    sha256 "YOUR_LINUX_SHA256_HERE"
+    sha256 "PLACEHOLDER_LINUX_SHA256" # linux
   end
 
   depends_on "awscli"
 
   def install
-    bin.install "aws-assume-role-macos-arm64" => "aws-assume-role" if Hardware::CPU.arm? && OS.mac?
-    bin.install "aws-assume-role-macos-x86_64" => "aws-assume-role" if Hardware::CPU.intel? && OS.mac?
-    bin.install "aws-assume-role-linux-x86_64" => "aws-assume-role" if OS.linux?
+    if OS.mac?
+      if Hardware::CPU.arm?
+        bin.install "aws-assume-role-macos-arm64" => "aws-assume-role"
+      else
+        bin.install "aws-assume-role-macos-x86_64" => "aws-assume-role"
+      end
+    elsif OS.linux?
+      bin.install "aws-assume-role-linux-x86_64" => "aws-assume-role"
+    end
 
-    # Install shell completions and wrapper scripts
+    # Install shell completions
     generate_completions_from_executable(bin/"aws-assume-role", "completion")
     
     # Create wrapper script for shell integration
@@ -66,8 +72,8 @@ class AwsAssumeRole < Formula
     <<~EOS
       AWS Assume Role CLI has been installed!
       
-      Usage:
-        awsr configure --name dev --role-arn arn:aws:iam::123:role/DevRole --account-id 123
+      Quick Start:
+        awsr configure --name dev --role-arn arn:aws:iam::123456789012:role/DevRole --account-id 123456789012
         awsr assume dev
         awsr list
       

@@ -19,31 +19,26 @@ A fast, reliable command-line tool for switching between AWS IAM roles across di
 
 **🍺 Homebrew (macOS/Linux)**
 ```bash
-brew install holdennguyen/tap/aws-assume-role
-```
-
-**🍫 Chocolatey (Windows)**
-```bash
-choco install aws-assume-role
+brew tap holdennguyen/tap
+brew install aws-assume-role
 ```
 
 **📦 APT (Debian/Ubuntu)**
 ```bash
-sudo apt update && sudo apt install aws-assume-role
+sudo add-apt-repository ppa:holdennguyen/aws-assume-role
+sudo apt update
+sudo apt install aws-assume-role
 ```
 
 **📦 DNF/YUM (Fedora/CentOS/RHEL)**
 ```bash
 # Fedora
+sudo dnf copr enable holdennguyen/aws-assume-role
 sudo dnf install aws-assume-role
 
 # CentOS/RHEL
+sudo yum copr enable holdennguyen/aws-assume-role
 sudo yum install aws-assume-role
-```
-
-**🏗️ AUR (Arch Linux)**
-```bash
-yay -S aws-assume-role
 ```
 
 **🦀 Cargo (Rust)**
