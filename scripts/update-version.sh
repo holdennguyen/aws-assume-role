@@ -25,11 +25,6 @@ sed -i.bak "s/^version = \".*\"/version = \"$NEW_VERSION\"/" Cargo.toml
 # Update package manager configurations
 echo "📦 Updating package manager configurations..."
 
-# Chocolatey
-sed -i.bak "s/<version>.*<\/version>/<version>$NEW_VERSION<\/version>/" packaging/chocolatey/aws-assume-role.nuspec
-sed -i.bak "s/\$version = '.*'/\$version = '$NEW_VERSION'/" packaging/chocolatey/tools/chocolateyinstall.ps1
-sed -i.bak "s/releases\/tag\/v.*/releases\/tag\/v$NEW_VERSION<\/releaseNotes>/" packaging/chocolatey/aws-assume-role.nuspec
-
 # RPM
 sed -i.bak "s/^Version:.*$/Version:        $NEW_VERSION/" packaging/rpm/aws-assume-role.spec
 sed -i.bak "s/- [0-9]\+\.[0-9]\+\.[0-9]\+-1$/- $NEW_VERSION-1/" packaging/rpm/aws-assume-role.spec
@@ -40,16 +35,8 @@ sed -i.bak "s/^Version: .*/Version: $NEW_VERSION/" packaging/apt/DEBIAN/control
 # Homebrew
 sed -i.bak "s/version \".*\"/version \"$NEW_VERSION\"/" packaging/homebrew/aws-assume-role.rb
 
-# AUR
-sed -i.bak "s/pkgver=.*/pkgver=$NEW_VERSION/" packaging/aur/PKGBUILD
-sed -i.bak "s/pkgver = .*/pkgver = $NEW_VERSION/" packaging/aur/.SRCINFO
-sed -i.bak "s/archive\/v.*/archive\/v$NEW_VERSION.tar.gz/" packaging/aur/.SRCINFO
-
 # Build script
 sed -i.bak "s/VERSION=\".*\"/VERSION=\"$NEW_VERSION\"/" packaging/build-packages.sh
-
-# Distribution script
-sed -i.bak "s/VERSION=\"v.*\"/VERSION=\"v$NEW_VERSION\"/" releases/multi-shell/create-distribution.sh
 
 # GitHub Actions workflow
 sed -i.bak "s/default: '.*'/default: '$NEW_VERSION'/" .github/workflows/release.yml
