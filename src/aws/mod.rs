@@ -21,7 +21,20 @@ pub struct Credentials {
 
 impl AwsClient {
     pub async fn new() -> AppResult<Self> {
-        let config = aws_config::from_env().load().await;
+        // Check if region is already configured via environment or AWS config
+        let config_builder = aws_config::from_env();
+        
+        // If no region is explicitly set, use a default to prevent IMDS timeout
+        let config = if std::env::var("AWS_REGION").is_err() && 
+                        std::env::var("AWS_DEFAULT_REGION").is_err() {
+            config_builder
+                .region("us-east-1") // Default region to prevent IMDS timeout
+                .load()
+                .await
+        } else {
+            config_builder.load().await
+        };
+        
         Ok(Self::new_with_config(&config))
     }
 

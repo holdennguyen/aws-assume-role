@@ -83,30 +83,29 @@ aws_assume_role() {
     if [ "$1" = "assume" ] && [ -n "$2" ]; then
         echo "🔄 Assuming role: $2"
         
+        # Ensure AWS region is set to prevent IMDS timeout
+        if [ -z "$AWS_REGION" ] && [ -z "$AWS_DEFAULT_REGION" ]; then
+            echo "📍 Setting default AWS region to prevent timeout..."
+            export AWS_DEFAULT_REGION="us-east-1"
+        fi
+        
         # Capture the output and separate stderr
         local output
         output=$("$binary_path" assume "$2" "${@:3}" --format export 2>/dev/null)
         local exit_code=$?
         
-        # Debug: Show raw output (remove this after testing)
-        echo "🔍 Debug - Raw output:"
-        echo "$output"
-        echo "🔍 Debug - Exit code: $exit_code"
+        # Check if the command was successful
         
         if [ $exit_code -eq 0 ] && [ -n "$output" ]; then
-            # Show what we're about to execute
-            echo "🔍 Debug - Executing credential commands:"
             
-            # Check for different output formats
+            # Check for different output formats and apply credentials
             if echo "$output" | grep -q "^export"; then
                 # Standard export format
-                echo "📋 Using export format..."
                 local filtered_output
                 filtered_output=$(echo "$output" | grep -E '^export')
                 eval "$filtered_output"
             elif echo "$output" | grep -q '^\$env:'; then
                 # PowerShell format - convert to bash
-                echo "📋 Converting PowerShell format to Bash..."
                 echo "$output" | grep '^\$env:' | while IFS= read -r line; do
                     # Convert $env:VAR = "value" to export VAR="value"
                     if [[ "$line" =~ ^\$env:([A-Z_]+)\ =\ \"(.*)\"$ ]]; then
@@ -130,19 +129,16 @@ aws_assume_role() {
                 done <<< "$(echo "$output" | grep '^\$env:')"
                 
                 if [ -n "$converted_commands" ]; then
-                    echo "🔧 Executing: $converted_commands"
                     eval "$converted_commands"
                 fi
             elif echo "$output" | grep -q "^set"; then
                 # Windows set format
-                echo "📋 Using set format..."
                 # Convert set commands to export
                 echo "$output" | grep "^set" | sed 's/^set /export /' | sed 's/=/="/' | sed 's/$/"/' | while read line; do
                     eval "$line"
                 done
             else
                 # Try to parse any credential-looking lines
-                echo "📋 Parsing credential lines..."
                 echo "$output" | while IFS= read -r line; do
                     if [[ "$line" =~ AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_SESSION_TOKEN ]]; then
                         echo "Processing: $line"
@@ -157,14 +153,9 @@ aws_assume_role() {
                 done
             fi
             
-            echo "🎯 Role assumed successfully in current shell!"
-            echo "📋 Current environment variables:"
-            echo "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:0:20}..." 
-            echo "AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:+[SET]}"
-            echo "AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:+[SET]}"
-            echo ""
-            echo "Current AWS identity:"
-            aws sts get-caller-identity --query 'Arn' --output text 2>/dev/null || echo "Failed to verify identity"
+            echo "✅ Successfully assumed role: $2"
+            echo "🔍 Current AWS identity:"
+            aws sts get-caller-identity --output table 2>/dev/null || echo "Run 'aws sts get-caller-identity' to verify"
         else
             echo "❌ Failed to assume role: $2"
             if [ $exit_code -ne 0 ]; then
