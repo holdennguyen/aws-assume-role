@@ -8,13 +8,28 @@ set -e
 echo "🚀 AWS Assume Role CLI Tool - Installation Script"
 echo "=================================================="
 
-# Detect OS
+# Debug information
+echo "🔍 Debug Information:"
+echo "  OSTYPE: $OSTYPE"
+echo "  SHELL: $SHELL"
+echo "  PWD: $(pwd)"
+echo "  Available files:"
+ls -la | head -10
+
+# Detect OS with improved logic
 OS="unknown"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     OS="macos"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="linux"
-elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
+elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    OS="gitbash"
+elif [[ "$OSTYPE" == *"msys"* ]] || [[ "$OSTYPE" == *"mingw"* ]] || [[ "$OSTYPE" == *"cygwin"* ]]; then
+    # Additional patterns for Git Bash detection
+    OS="gitbash"
+elif command -v winpty >/dev/null 2>&1 || [[ -n "$WINDIR" ]] || [[ -n "$SYSTEMROOT" ]]; then
+    # Fallback: detect Windows environment variables or winpty (common in Git Bash)
+    echo "🔍 Windows environment detected via fallback method"
     OS="gitbash"
 fi
 
@@ -33,12 +48,16 @@ case $OS in
         # Git Bash on Windows needs a Windows executable
         if [ -f "aws-assume-role.exe" ]; then
             BINARY_NAME="aws-assume-role.exe"
+            echo "✅ Found Windows executable: $BINARY_NAME"
         else
             echo "❌ AWS Assume Role binary not found!"
             echo "For Git Bash on Windows, you need: aws-assume-role.exe"
             echo ""
             echo "Available files in this directory:"
             ls -la *.exe 2>/dev/null || echo "No .exe files found"
+            echo ""
+            echo "All files in directory:"
+            ls -la
             echo ""
             echo "Please ensure you've downloaded the correct release package."
             echo "Alternatively, use Windows PowerShell installation:"
@@ -48,7 +67,14 @@ case $OS in
         ;;
     *)
         echo "❌ Unsupported operating system: $OSTYPE"
-        echo "Please install manually using the README instructions."
+        echo ""
+        echo "If you're using Git Bash on Windows, please try:"
+        echo "1. Make sure you're in the directory with aws-assume-role.exe"
+        echo "2. Run: OSTYPE=msys ./INSTALL.sh"
+        echo "3. Or use PowerShell: .\INSTALL.ps1"
+        echo ""
+        echo "Available files in this directory:"
+        ls -la
         exit 1
         ;;
 esac
@@ -57,8 +83,13 @@ esac
 if [ ! -f "$BINARY_NAME" ]; then
     echo "❌ Binary not found: $BINARY_NAME"
     echo "Please ensure you're running this script from the directory containing the AWS Assume Role files."
+    echo ""
+    echo "Available files:"
+    ls -la
     exit 1
 fi
+
+echo "✅ Found binary: $BINARY_NAME"
 
 # Detect shell
 SHELL_TYPE="unknown"

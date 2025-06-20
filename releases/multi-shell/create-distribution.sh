@@ -40,6 +40,12 @@ cp INSTALL.ps1 "$DIST_DIR/"
 cp UNINSTALL.sh "$DIST_DIR/"
 cp UNINSTALL.ps1 "$DIST_DIR/"
 
+# Copy debug script if it exists
+if [ -f "debug-environment.sh" ]; then
+    cp debug-environment.sh "$DIST_DIR/"
+    chmod +x "$DIST_DIR/debug-environment.sh"
+fi
+
 # Make scripts executable
 chmod +x "$DIST_DIR/INSTALL.sh"
 chmod +x "$DIST_DIR/UNINSTALL.sh"

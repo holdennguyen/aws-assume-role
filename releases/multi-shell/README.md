@@ -166,9 +166,26 @@ aws s3 sync ./dist s3://my-bucket
 
 ## 🆘 Troubleshooting
 
+### Installation Issues
+
+If you encounter "❌ AWS Assume Role binary not found" or similar errors:
+
+1. **Run the debug script** to diagnose the issue:
+   ```bash
+   ./debug-environment.sh
+   ```
+   This will show detailed information about your environment and help identify the problem.
+
+2. **For Git Bash on Windows**:
+   - Ensure you extracted the complete package
+   - Check that `aws-assume-role.exe` exists in the directory
+   - Try: `OSTYPE=msys ./INSTALL.sh` if auto-detection fails
+   - Alternative: Use PowerShell instead: `.\INSTALL.ps1`
+
 ### Git Bash on Windows
 - Ensure you're using the bash wrapper: `source aws-assume-role-bash.sh`
 - The installer handles PowerShell format conversion automatically
+- If installation fails, run `./debug-environment.sh` for detailed diagnostics
 
 ### Permission Issues
 - Use Option 3 (`~/.local/bin`) to avoid sudo requirements
