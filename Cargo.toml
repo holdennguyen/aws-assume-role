@@ -1,0 +1,42 @@
+[package]
+name = "aws-assume-role"
+version = "1.0.0"
+edition = "2021"
+authors = ["Hung, Nguyen Minh <holdennguyen6174@gmail.com>"]
+description = "Simple CLI tool to easily switch between AWS IAM roles across different accounts"
+documentation = "https://docs.rs/aws-assume-role"
+readme = "README.md"
+homepage = "https://github.com/holdennguyen/aws-assume-role"
+repository = "https://github.com/holdennguyen/aws-assume-role"
+license = "MIT"
+keywords = ["aws", "cli", "iam", "role", "sso"]
+categories = ["command-line-utilities", "authentication"]
+exclude = [
+    "releases/",
+    "packaging/",
+    "memory-bank/",
+    "tests/",
+    ".gitignore",
+    "build-releases.sh",
+    "install.sh",
+    "DEPLOYMENT.md"
+]
+
+[[bin]]
+name = "aws-assume-role"
+path = "src/main.rs"
+
+[dependencies]
+aws-config = "0.56.1"
+aws-sdk-sts = "0.30.0"
+clap = { version = "4.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+dirs = "5.0"
+anyhow = "1.0"
+
+[dev-dependencies]
+tempfile = "3.0"
+assert_cmd = "2.0"
+predicates = "3.0"

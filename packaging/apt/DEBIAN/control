@@ -1,0 +1,21 @@
+Package: aws-assume-role
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: awscli (>= 2.0.0)
+Maintainer: Your Name <your.email@example.com>
+Description: Simple CLI tool to easily switch between AWS IAM roles
+ AWS Assume Role CLI is a simple command-line tool designed for SSO users
+ who need to easily switch between AWS IAM roles across different accounts.
+ .
+ Features:
+  * Easy role switching between AWS accounts
+  * SSO credential management
+  * Multiple output formats (shell exports, JSON)
+  * Persistent role configuration
+  * Session duration control
+ .
+ The tool automatically sets AWS credentials in your current shell environment,
+ making it easy to work with different AWS accounts without complex eval commands.
+Homepage: https://github.com/yourusername/aws-assume-role 

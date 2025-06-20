@@ -1,0 +1,77 @@
+#!/bin/bash
+set -e
+
+# Create wrapper script for shell integration
+cat > /usr/local/bin/awsr << 'EOF'
+#!/bin/bash
+# AWS Assume Role CLI wrapper for shell integration
+
+case "$1" in
+    assume)
+        if [ -z "$2" ]; then
+            echo "Usage: awsr assume <role-name>"
+            exit 1
+        fi
+        
+        # Get credentials and export them
+        eval $(aws-assume-role assume "$2" --format export)
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Successfully assumed role: $2"
+            echo "🔍 Current AWS identity:"
+            aws sts get-caller-identity --output table 2>/dev/null || echo "Run 'aws sts get-caller-identity' to verify"
+        else
+            echo "❌ Failed to assume role: $2"
+            exit 1
+        fi
+        ;;
+    *)
+        # Pass through all other commands
+        aws-assume-role "$@"
+        ;;
+esac
+EOF
+
+chmod +x /usr/local/bin/awsr
+
+# Create helper functions script
+cat > /usr/local/share/aws-assume-role/shell-helpers.sh << 'EOF'
+#!/bin/bash
+# AWS Assume Role CLI shell helper functions
+
+# Clear AWS credentials from current shell
+clear_aws_creds() {
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    echo "🧹 AWS credentials cleared from current shell"
+}
+
+# Show current AWS identity
+aws_whoami() {
+    if command -v aws >/dev/null 2>&1; then
+        aws sts get-caller-identity --output table 2>/dev/null || echo "❌ No AWS credentials found"
+    else
+        echo "❌ AWS CLI not found"
+    fi
+}
+
+# Export functions
+export -f clear_aws_creds aws_whoami
+EOF
+
+chmod +x /usr/local/share/aws-assume-role/shell-helpers.sh
+
+echo ""
+echo "AWS Assume Role CLI has been installed!"
+echo ""
+echo "Usage:"
+echo "  awsr configure --name dev --role-arn arn:aws:iam::123:role/DevRole --account-id 123"
+echo "  awsr assume dev"
+echo "  awsr list"
+echo ""
+echo "For shell helper functions, add this to your ~/.bashrc or ~/.zshrc:"
+echo "  source /usr/local/share/aws-assume-role/shell-helpers.sh"
+echo ""
+
+exit 0 

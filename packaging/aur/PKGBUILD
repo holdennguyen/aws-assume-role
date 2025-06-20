@@ -1,0 +1,92 @@
+# Maintainer: Your Name <your.email@example.com>
+pkgname=aws-assume-role
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Simple CLI tool to easily switch between AWS IAM roles across different accounts"
+arch=('x86_64')
+url="https://github.com/holdennguyen/aws-assume-role"
+license=('MIT')
+depends=('aws-cli')
+makedepends=('rust' 'cargo')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/holdennguyen/aws-assume-role/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')  # Replace with actual checksum
+
+build() {
+    cd "$pkgname-$pkgver"
+    cargo build --release --locked
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    cargo test --release --locked
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    
+    # Install binary
+    install -Dm755 target/release/aws-assume-role "$pkgdir/usr/bin/aws-assume-role"
+    
+    # Create wrapper script
+    install -Dm755 /dev/stdin "$pkgdir/usr/bin/awsr" << 'EOF'
+#!/bin/bash
+# AWS Assume Role CLI wrapper for shell integration
+
+case "$1" in
+    assume)
+        if [ -z "$2" ]; then
+            echo "Usage: awsr assume <role-name>"
+            exit 1
+        fi
+        
+        # Get credentials and export them
+        eval $(aws-assume-role assume "$2" --format export)
+        
+        if [ $? -eq 0 ]; then
+            echo "✅ Successfully assumed role: $2"
+            echo "🔍 Current AWS identity:"
+            aws sts get-caller-identity --output table 2>/dev/null || echo "Run 'aws sts get-caller-identity' to verify"
+        else
+            echo "❌ Failed to assume role: $2"
+            exit 1
+        fi
+        ;;
+    *)
+        # Pass through all other commands
+        aws-assume-role "$@"
+        ;;
+esac
+EOF
+    
+    # Create helper functions script
+    install -Dm755 /dev/stdin "$pkgdir/usr/share/aws-assume-role/shell-helpers.sh" << 'EOF'
+#!/bin/bash
+# AWS Assume Role CLI shell helper functions
+
+# Clear AWS credentials from current shell
+clear_aws_creds() {
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    echo "🧹 AWS credentials cleared from current shell"
+}
+
+# Show current AWS identity
+aws_whoami() {
+    if command -v aws >/dev/null 2>&1; then
+        aws sts get-caller-identity --output table 2>/dev/null || echo "❌ No AWS credentials found"
+    else
+        echo "❌ AWS CLI not found"
+    fi
+}
+
+# Export functions
+export -f clear_aws_creds aws_whoami
+EOF
+    
+    # Install documentation
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    
+    # Install license
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+} 
