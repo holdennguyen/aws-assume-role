@@ -233,7 +233,7 @@ mod tests {
 
         // Store original environment variables to restore later
         let original_home = std::env::var("HOME").ok();
-        
+
         #[cfg(windows)]
         let original_userprofile = std::env::var("USERPROFILE").ok();
 
@@ -258,7 +258,7 @@ mod tests {
             Some(value) => std::env::set_var("HOME", value),
             None => std::env::remove_var("HOME"),
         }
-        
+
         #[cfg(windows)]
         match original_userprofile {
             Some(value) => std::env::set_var("USERPROFILE", value),
@@ -273,7 +273,7 @@ mod tests {
 
         // Store original environment variables to restore later
         let original_home = std::env::var("HOME").ok();
-        
+
         #[cfg(windows)]
         let original_userprofile = std::env::var("USERPROFILE").ok();
 
@@ -292,7 +292,7 @@ mod tests {
             Some(value) => std::env::set_var("HOME", value),
             None => std::env::remove_var("HOME"),
         }
-        
+
         #[cfg(windows)]
         match original_userprofile {
             Some(value) => std::env::set_var("USERPROFILE", value),
@@ -336,7 +336,7 @@ mod tests {
 
         // Store original environment variables to restore later
         let original_home = std::env::var("HOME").ok();
-        
+
         #[cfg(windows)]
         let original_userprofile = std::env::var("USERPROFILE").ok();
 
@@ -356,7 +356,7 @@ mod tests {
             Some(value) => std::env::set_var("HOME", value),
             None => std::env::remove_var("HOME"),
         }
-        
+
         #[cfg(windows)]
         match original_userprofile {
             Some(value) => std::env::set_var("USERPROFILE", value),
