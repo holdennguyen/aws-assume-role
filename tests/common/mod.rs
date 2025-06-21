@@ -8,6 +8,7 @@ pub struct TestHelper {
     pub config_dir: std::path::PathBuf,
 }
 
+#[allow(dead_code)]
 impl TestHelper {
     /// Create a new test helper with isolated temporary directory
     pub fn new() -> Self {
@@ -146,12 +147,14 @@ impl Drop for TestHelper {
 }
 
 /// Mock AWS credentials for testing
+#[allow(dead_code)]
 pub struct MockCredentials {
     pub access_key_id: String,
     pub secret_access_key: String,
     pub session_token: Option<String>,
 }
 
+#[allow(dead_code)]
 impl MockCredentials {
     pub fn new() -> Self {
         Self {
@@ -168,6 +171,7 @@ impl MockCredentials {
 }
 
 /// Test data constants
+#[allow(dead_code)]
 pub mod test_data {
     pub const VALID_ROLE_ARN: &str = "arn:aws:iam::123456789012:role/TestRole";
     pub const INVALID_ROLE_ARN: &str = "invalid-arn";
