@@ -162,6 +162,146 @@ impl Config {
 - **Dependency Monitoring**: AWS SDK v1.x with `aws-lc-rs`
 - **Clean Results**: Zero tolerance for security issues
 
+## 🏷️ Release Workflow (MANDATORY PROCESS)
+
+### Pre-Release Preparation (BEFORE Master Merge)
+
+#### 1. Version Validation
+```bash
+# Ensure version consistency across all components
+./scripts/update-version.sh [NEW_VERSION]  # Updates all version references
+cargo build --release                      # Verify build works
+./target/release/aws-assume-role --version # Confirm version
+```
+
+#### 2. Multi-Shell Release Updates (CRITICAL)
+```bash
+# Update local release binaries with latest changes
+cargo build --release
+
+# Update multi-shell binaries
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-macos
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-unix
+
+# Verify updated binaries
+./releases/multi-shell/aws-assume-role-macos --version
+./releases/multi-shell/aws-assume-role-unix --version
+ls -la releases/multi-shell/aws-assume-role-* # Check timestamps
+```
+
+#### 3. Create Release Notes (MANDATORY)
+**⚠️ CRITICAL**: Always create release notes BEFORE merging to master
+
+```bash
+# Create comprehensive release notes
+touch releases/multi-shell/RELEASE_NOTES_v[VERSION].md
+```
+
+**Release Notes Template Structure:**
+```markdown
+# 🚀 AWS Assume Role CLI v[VERSION] Release Notes
+
+**Release Date**: [DATE]  
+**Focus**: [PRIMARY_FOCUS]
+
+## 🎯 Overview
+[Brief description of the release]
+
+## 🔧 Critical Fixes
+### [Category 1]
+- **Issue**: Description
+- **Solution**: What was fixed
+- **Impact**: How it helps users
+
+## 🧪 Testing Improvements
+### Enhanced Test Framework
+- **Test Coverage**: X unit + Y integration + Z shell tests
+- **Platforms**: Ubuntu ✅ Windows ✅ macOS ✅
+
+## 🏗️ Architecture Enhancements
+[Technical improvements with code examples if relevant]
+
+## 📦 Distribution Updates
+### Multi-Shell Release Binaries
+- ✅ **macOS Binary**: Updated with latest fixes
+- ✅ **Unix/Linux Binary**: Updated with latest fixes
+- ✅/**⚠️** **Windows Binary**: Status and notes
+
+## 🔒 Security & Dependencies
+[Security improvements and dependency updates]
+
+## 📋 Technical Details
+### Test Matrix
+| Platform | Unit Tests | Integration Tests | Shell Tests | Status |
+|----------|------------|-------------------|-------------|---------|
+| Ubuntu   | X/X ✅     | Y/Y ✅            | Z/Z ✅      | PASS ✅  |
+| Windows  | X/X ✅     | Y/Y ✅            | Z/Z ✅      | PASS ✅  |
+| macOS    | X/X ✅     | Y/Y ✅            | Z/Z ✅      | PASS ✅  |
+
+## 📥 Installation
+[Installation instructions]
+
+## 🙏 Acknowledgments
+[Credits and thanks]
+```
+
+#### 4. Commit Pre-Release Changes
+```bash
+# Commit all pre-release updates
+git add releases/multi-shell/
+git commit -m "📦 Prepare v[VERSION] release artifacts
+
+- Updated multi-shell binaries with latest changes
+- Created comprehensive release notes for v[VERSION]
+- Verified all local artifacts contain latest fixes
+- Ready for production release"
+```
+
+### Release Process (After Pre-Release Preparation)
+
+#### 5. Merge to Master
+```bash
+# Only after ALL pre-release steps completed
+git checkout master
+git merge develop  # All changes including release notes and updated binaries
+```
+
+#### 6. Create Release Tag
+```bash
+git tag -a v[VERSION] -m "Release v[VERSION]: [BRIEF_DESCRIPTION]
+
+[DETAILED_RELEASE_SUMMARY]"
+```
+
+#### 7. Push Release
+```bash
+git push origin master
+git push origin v[VERSION]  # Triggers automated GitHub Actions release
+```
+
+### Post-Release Validation
+- ✅ GitHub Actions builds all platform binaries
+- ✅ GitHub Release created with assets
+- ✅ Package managers updated automatically
+- ✅ Multi-shell distribution available
+- ✅ All installation methods working
+
+### Release Notes Best Practices
+1. **User-Focused**: Explain impact, not just technical changes
+2. **Comprehensive**: Cover all significant changes
+3. **Visual**: Use emojis and tables for readability
+4. **Technical Details**: Include code examples for major changes
+5. **Installation**: Always include updated installation instructions
+6. **Test Matrix**: Show comprehensive testing results
+7. **Binary Status**: Clearly indicate which binaries are updated
+
+### Why This Process Matters
+- **User Communication**: Release notes inform users of changes
+- **Binary Consistency**: Ensures distributed binaries contain latest fixes
+- **Quality Assurance**: Validates everything works before public release
+- **Documentation**: Creates permanent record of changes
+- **Professional Standards**: Maintains high-quality release practices
+
 ## 📚 Documentation Workflow
 
 ### Memory Bank Maintenance

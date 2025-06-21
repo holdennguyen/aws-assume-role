@@ -65,6 +65,44 @@ echo "APT: $(grep '^Version:' packaging/apt/DEBIAN/control)"
 echo "Homebrew: $(grep 'version' packaging/homebrew/aws-assume-role.rb | head -1)"
 ```
 
+#### 1.5 Create Release Notes (MANDATORY)
+**⚠️ CRITICAL**: Always create comprehensive release notes BEFORE merging to master
+
+```bash
+# Create release notes file
+touch releases/multi-shell/RELEASE_NOTES_v1.2.0.md
+
+# Use the comprehensive template (see memory-bank/development-workflow.md)
+# Include:
+# - Overview of changes
+# - Critical fixes and improvements
+# - Testing results matrix
+# - Architecture enhancements
+# - Security updates
+# - Installation instructions
+# - Binary update status
+```
+
+**Release Notes Must Include:**
+- **User Impact**: How changes benefit users
+- **Technical Details**: Code examples for major changes
+- **Test Matrix**: Platform-specific test results
+- **Binary Status**: Which binaries are updated with latest changes
+- **Installation Methods**: Updated installation instructions
+- **Security Information**: Any security improvements or dependency updates
+
+#### 1.6 Commit Pre-Release Artifacts
+```bash
+# Commit all pre-release changes together
+git add releases/multi-shell/
+git commit -m "📦 Prepare v1.2.0 release artifacts
+
+- Updated multi-shell binaries with latest Windows compatibility fixes
+- Created comprehensive release notes for v1.2.0
+- Verified all local artifacts contain latest code changes
+- Ready for production release to master"
+```
+
 ### Phase 2: Quality Validation
 
 #### 2.1 Comprehensive Testing

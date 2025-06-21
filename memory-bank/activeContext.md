@@ -39,6 +39,50 @@ git push origin [branch]
 
 ---
 
+## ⚠️ CRITICAL PATTERN: Release Notes Before Master Merge
+**NEW MANDATORY PROCESS**: Always create comprehensive release notes BEFORE merging to master.
+
+### Pattern Recognition
+1. **Root Cause**: Users need clear communication about changes and improvements
+2. **Trigger**: ANY version ready for production release
+3. **Manifestation**: Release without proper documentation confuses users
+4. **Impact**: Poor user experience and missed communication opportunities
+
+### Mandatory Release Notes Workflow (ALWAYS FOLLOW)
+```bash
+# 1. Update multi-shell binaries with latest changes
+cargo build --release
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-macos
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-unix
+
+# 2. Create comprehensive release notes
+touch releases/multi-shell/RELEASE_NOTES_v[VERSION].md
+# [Edit with comprehensive template - see development-workflow.md]
+
+# 3. Commit pre-release artifacts
+git add releases/multi-shell/
+git commit -m "📦 Prepare v[VERSION] release artifacts"
+
+# 4. ONLY THEN merge to master
+git checkout master && git merge develop
+```
+
+### Release Notes Requirements
+- **User Impact**: How changes benefit users
+- **Technical Details**: Code examples for major changes  
+- **Test Matrix**: Platform-specific test results (Ubuntu/Windows/macOS)
+- **Binary Status**: Which binaries updated with latest changes
+- **Installation Methods**: Updated installation instructions
+- **Security Information**: Dependency updates and security improvements
+
+### Why This Pattern Matters
+- **User Communication**: Clear documentation of improvements
+- **Professional Standards**: High-quality release practices
+- **Binary Consistency**: Ensures distributed artifacts contain latest fixes
+- **Permanent Record**: Creates historical record of project evolution
+
+---
+
 ## Current Status: ENHANCED SECURITY v1.2.0+ with AWS SDK v1.x
 AWS Assume Role now features **modern cryptographic security** with AWS SDK v1.x and `aws-lc-rs`, **completely resolving ring vulnerabilities**, in addition to comprehensive testing framework and production-ready automated distribution.
 
