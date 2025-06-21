@@ -1,389 +1,447 @@
-# Development Guide
+# 🛠️ Development Guide
 
-## 🔒 Security First
+Complete guide for developing, testing, and contributing to AWS Assume Role CLI.
 
-### Latest Security Enhancement (v1.2.0+)
-AWS Assume Role has been upgraded to AWS SDK v1.x with `aws-lc-rs` cryptographic backend, **completely resolving all ring vulnerabilities**:
-
-- ✅ **RUSTSEC-2025-0009**: ring AES panic issue - FIXED
-- ✅ **RUSTSEC-2025-0010**: ring unmaintained warning - FIXED  
-- ✅ **Clean Security Audit**: Modern, AWS-maintained cryptography
-- ✅ **FIPS Ready**: Optional FIPS 140-3 compliance available
-- ✅ **Post-Quantum Crypto**: Future-proof cryptographic support
-
-See `memory-bank/security-upgrade.md` for complete security upgrade details.
-
-### Security Practices
-```bash
-# Always run security audit before commits
-cargo audit
-
-# Should show only minor test dependency warnings
-# No critical vulnerabilities should be present
-```
-
-## 🔄 Git Flow Workflow
-
-We use a modified Git Flow branching strategy to manage development:
-
-### Branch Structure
-
-- **`master`**: Production-ready code, tagged releases
-- **`develop`**: Integration branch, latest development features  
-- **`feature/*`**: New features and enhancements
-- **`release/*`**: Release preparation and testing
-- **`hotfix/*`**: Critical fixes for production issues
-
-### Workflow Commands
-
-#### Starting New Features
-```bash
-# Create and switch to feature branch
-git checkout develop
-git pull origin develop
-git checkout -b feature/your-feature-name
-
-# Work on your feature...
-git add .
-git commit -m "feat: implement your feature"
-
-# Push feature branch
-git push -u origin feature/your-feature-name
-```
-
-## 🧪 Comprehensive Testing Framework
-
-### Test Matrix Overview (55 Total Tests)
-
-Our testing framework provides comprehensive coverage across all functionality:
-
-```
-Testing Framework (v1.2.0):
-├── Unit Tests (23 tests)
-│   ├── Config Module (10 tests)
-│   │   ├── Role configuration and management
-│   │   ├── Serialization/deserialization
-│   │   ├── File I/O operations
-│   │   └── Cross-platform path handling
-│   └── Error Module (13 tests)
-│       ├── Error type creation and conversion
-│       ├── Display and debug formatting
-│       ├── Error chaining and context
-│       └── Result type handling
-├── Integration Tests (14 tests)
-│   ├── CLI Functionality (8 tests)
-│   │   ├── Help output verification
-│   │   ├── Version information
-│   │   └── Command validation
-│   ├── Error Handling (3 tests)
-│   │   ├── Invalid input validation
-│   │   └── Graceful error recovery
-│   └── Config Workflow (3 tests)
-│       └── End-to-end configuration testing
-└── Shell Integration Tests (18 tests) ← v1.2.0 NEW!
-    ├── Wrapper Script Structure (4 tests)
-    │   ├── Bash/Zsh wrapper validation
-    │   ├── PowerShell wrapper validation
-    │   ├── Fish shell wrapper validation
-    │   └── CMD batch wrapper validation
-    ├── Cross-Platform Features (8 tests)
-    │   ├── Binary discovery logic
-    │   ├── Error handling patterns
-    │   ├── Usage information display
-    │   ├── Export format integration
-    │   ├── File permissions (Unix)
-    │   ├── Installation scripts
-    │   ├── Documentation validation
-    │   └── Version consistency
-    └── Test Utilities (6 tests)
-        └── Common testing infrastructure
-```
-
-### Test Structure
-
-```
-Project Testing Architecture:
-├── src/
-│   ├── lib.rs                   # Library entry point (enables unit testing)
-│   ├── config/mod.rs           # Config module + 10 unit tests
-│   ├── error/mod.rs            # Error module + 13 unit tests
-│   ├── cli/mod.rs              # CLI logic (tested via integration)
-│   └── aws/mod.rs              # AWS integration (tested via integration)
-├── tests/
-│   ├── common/mod.rs           # Shared test utilities and helpers
-│   ├── integration_tests.rs    # 14 CLI and workflow tests
-│   └── shell_integration_tests.rs # 18 shell wrapper tests (NEW v1.2.0)
-├── benches/
-│   └── performance.rs          # Performance benchmarks (Criterion)
-└── releases/multi-shell/       # Shell wrapper scripts (tested)
-    ├── aws-assume-role-bash.sh
-    ├── aws-assume-role-powershell.ps1
-    ├── aws-assume-role-fish.fish
-    ├── aws-assume-role-cmd.bat
-    ├── INSTALL.sh / INSTALL.ps1
-    └── UNINSTALL.sh / UNINSTALL.ps1
-```
-
-### Running Tests
-
-#### Complete Test Suite (Recommended)
-```bash
-# Run all 55 tests across all categories
-cargo test
-
-# Run with detailed output
-cargo test -- --nocapture
-
-# Run with test timing information
-cargo test -- --nocapture --show-output
-```
-
-#### Test Categories
-
-#### Unit Tests (23 tests)
-```bash
-# Run all unit tests
-cargo test --lib
-
-# Run specific module tests
-cargo test --lib config::tests
-cargo test --lib error::tests
-```
-
-#### Integration Tests (14 tests)
-```bash
-# Run all integration tests
-cargo test --test integration_tests
-
-# Run specific integration test groups
-cargo test --test integration_tests integration::
-cargo test --test integration_tests error_handling::
-cargo test --test integration_tests config_integration::
-```
-
-#### Shell Integration Tests (18 tests) - NEW v1.2.0
-```bash
-# Run all shell integration tests
-cargo test --test shell_integration_tests
-
-# Run specific shell wrapper tests
-cargo test test_bash_wrapper_structure
-cargo test test_powershell_wrapper_structure
-cargo test test_fish_wrapper_structure
-cargo test test_cmd_wrapper_structure
-
-# Run cross-platform feature tests
-cargo test test_wrapper_binary_discovery
-cargo test test_wrapper_error_handling
-cargo test test_shell_export_format_integration
-```
-
-#### Performance Benchmarks
-```bash
-# Run all performance benchmarks
-cargo bench
-
-# Run specific benchmark categories
-cargo bench config_operations
-cargo bench file_operations
-```
-
-### Test Environment Setup
-
-#### Isolated Testing
-All tests use isolated environments to prevent interference:
-
-```rust
-// Example: Isolated test environment
-use tempfile::TempDir;
-
-#[test]
-fn test_with_isolation() {
-    let temp_dir = TempDir::new().unwrap();
-    
-    // Set cross-platform environment variables
-    std::env::set_var("HOME", temp_dir.path());
-    #[cfg(windows)]
-    std::env::set_var("USERPROFILE", temp_dir.path());
-    
-    // Test logic here...
-    
-    // Automatic cleanup on test completion
-}
-```
-
-#### Cross-Platform Compatibility
-Tests handle platform differences automatically:
-
-```rust
-// Cross-platform file permissions testing
-#[cfg(unix)]
-#[test]
-fn test_unix_permissions() {
-    // Unix-specific permission testing
-}
-
-#[cfg(windows)]
-#[test]
-fn test_windows_permissions() {
-    // Windows-specific permission testing
-}
-```
-
-### Test Coverage Analysis
-
-```bash
-# Install coverage tool (one-time setup)
-cargo install cargo-tarpaulin
-
-# Generate comprehensive coverage report
-cargo tarpaulin --verbose --all-features --workspace --timeout 120
-
-# Generate coverage with specific test exclusions
-cargo tarpaulin --verbose --all-features --workspace --timeout 120 \
-  --exclude-files "tests/*" --exclude-files "benches/*"
-
-# HTML coverage report
-cargo tarpaulin --verbose --all-features --workspace --timeout 120 \
-  --out Html --output-dir coverage/
-```
-
-### Test Quality Metrics
-
-#### Current Status (v1.2.0)
-- **Total Tests**: 55 (23 unit + 14 integration + 18 shell integration)
-- **Success Rate**: 100% (55/55 passing)
-- **Platform Coverage**: Ubuntu, Windows, macOS
-- **Shell Coverage**: Bash, Zsh, PowerShell, Fish, CMD
-- **Security Coverage**: Automated vulnerability scanning
-- **Performance Coverage**: Benchmark regression detection
-
-## 🏗️ Development Environment
+## 🚀 Quick Start
 
 ### Prerequisites
-- **Rust**: 1.70+ with stable toolchain
-- **Git**: Configured with repository access
-- **AWS CLI**: v2 for integration testing (optional)
+- **Rust** 1.70+ (`rustup` recommended)
+- **AWS CLI** v2 (for integration testing)
+- **Git** (for version control)
 
 ### Setup
 ```bash
-# Clone repository
+# Clone and setup
 git clone https://github.com/holdennguyen/aws-assume-role.git
 cd aws-assume-role
-
-# Switch to develop branch
-git checkout develop
 
 # Install dependencies and build
 cargo build
 
-# Run tests to verify setup
+# Run tests
 cargo test
+
+# Run with debug logging
+RUST_LOG=debug cargo run -- --help
 ```
 
-## 🚀 CI/CD Pipeline
+## 📁 Project Structure
 
-### Quality Gates (Enhanced v1.2.0)
-
-All pull requests must pass comprehensive quality checks:
-
-#### Code Quality Gates
-1. ✅ **Formatting Check**: `cargo fmt --all -- --check`
-2. ✅ **Linting**: `cargo clippy -- -D warnings` (zero warnings policy)
-3. ✅ **Documentation**: All public APIs documented
-
-#### Testing Gates (55 Total Tests)
-4. ✅ **Unit Tests**: All 23 module tests passing (config + error)
-5. ✅ **Integration Tests**: All 14 CLI and workflow tests passing
-6. ✅ **Shell Integration Tests**: All 18 wrapper script tests passing ← NEW v1.2.0
-7. ✅ **Cross-Platform Tests**: Ubuntu, Windows, macOS validation
-8. ✅ **Performance Benchmarks**: No regression detection (advisory)
-
-#### Security & Compliance Gates
-9. ✅ **Security Audit**: `cargo audit` with clean results
-10. ✅ **Vulnerability Scanning**: No critical security issues
-11. ✅ **Dependency Validation**: Up-to-date and secure dependencies
-
-#### Build & Distribution Gates
-12. ✅ **Cross Compilation**: Linux, Windows, macOS builds successful
-13. ✅ **Release Builds**: Optimized builds for all platforms
-14. ✅ **Binary Validation**: Generated binaries functional
-
-### GitHub Actions Workflow
-
-Our CI/CD pipeline runs on multiple platforms and validates all aspects:
-
-```yaml
-# .github/workflows/test.yml (Enhanced v1.2.0)
-Strategy Matrix:
-├── Platforms: [ubuntu-latest, windows-latest, macos-latest]
-├── Rust Versions: [stable]
-└── Test Categories:
-    ├── Unit Tests (23 tests)
-    ├── Integration Tests (14 tests) 
-    ├── Shell Integration Tests (18 tests)
-    ├── Security Audit
-    ├── Performance Benchmarks
-    └── Cross-compilation Verification
+```
+aws-assume-role/
+├── src/                          # Source code
+│   ├── main.rs                  # CLI entry point
+│   ├── lib.rs                   # Library interface
+│   ├── cli/mod.rs               # Command-line interface
+│   ├── aws/mod.rs               # AWS integration
+│   ├── config/mod.rs            # Configuration management
+│   └── error/mod.rs             # Error handling
+├── tests/                        # Test suite
+│   ├── integration_tests.rs     # Integration tests (23 tests)
+│   ├── shell_integration_tests.rs # Shell wrapper tests (22 tests)
+│   └── common/mod.rs            # Test utilities
+├── benches/                      # Performance benchmarks
+├── packaging/                    # Distribution packages
+├── releases/multi-shell/         # Release binaries
+├── scripts/                      # Automation scripts
+└── memory-bank/                  # Development documentation
 ```
 
-### Local Development Workflow
+## 🧪 Testing Framework
 
-#### Pre-commit Checklist
+### Test Categories (59 Total Tests)
+
+**Unit Tests (14 tests)**
+- Configuration management
+- Error handling
+- AWS integration logic
+- CLI argument parsing
+
+**Integration Tests (23 tests)**
+- End-to-end CLI functionality
+- AWS credential handling
+- Configuration file operations
+- Cross-platform compatibility
+
+**Shell Integration Tests (22 tests)**
+- Bash/Zsh wrapper scripts
+- PowerShell wrapper scripts
+- Fish shell wrapper scripts
+- Command Prompt batch files
+
+### Running Tests
+
 ```bash
-# 1. Run complete test suite
-cargo test                              # All 55 tests
+# All tests
+cargo test
 
-# 2. Check code formatting
-cargo fmt --all -- --check
+# Specific test categories
+cargo test --test integration_tests
+cargo test --test shell_integration_tests
 
-# 3. Run linting with strict warnings
+# Unit tests only
+cargo test --lib
+
+# With output
+cargo test -- --nocapture
+
+# Specific test
+cargo test test_assume_role_success
+
+# Performance tests
+cargo bench
+```
+
+### Test Environment Setup
+
+**Required Environment Variables for Testing:**
+```bash
+# AWS credentials (for integration tests)
+export AWS_ACCESS_KEY_ID="test-key"
+export AWS_SECRET_ACCESS_KEY="test-secret"
+export AWS_DEFAULT_REGION="us-east-1"
+
+# Optional: Custom AWS profile
+export AWS_PROFILE="test-profile"
+```
+
+**Cross-Platform Environment Variables:**
+- **Unix/Linux/macOS**: `HOME` for user directory
+- **Windows**: `USERPROFILE` for user directory
+
+## 🔧 Development Workflow
+
+### **⚠️ CRITICAL: Post-Change Workflow**
+
+**MANDATORY** after ANY code changes to prevent CI failures:
+
+```bash
+# 1. Format code (REQUIRED)
+cargo fmt
+
+# 2. Verify formatting (REQUIRED)
+cargo fmt --check
+
+# 3. Run clippy with strict warnings (REQUIRED)
 cargo clippy -- -D warnings
 
-# 4. Security audit
-cargo audit
+# 4. Run all tests (REQUIRED)
+cargo test
 
-# 5. Performance benchmarks (optional)
+# 5. Commit and push
+git add .
+git commit -m "Your changes"
+git push
+```
+
+**Why This Matters:**
+- CI has zero tolerance for formatting violations
+- Any formatting differences cause immediate build failures
+- Pattern observed in multiple CI failure cycles
+
+### Development Patterns
+
+**Environment Variable Testing (Cross-Platform):**
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+    use std::env;
+
+    #[test]
+    #[serial]  // Prevent race conditions with env vars
+    fn test_cross_platform_config() {
+        // Store original values
+        let original_home = env::var("HOME").ok();
+        let original_userprofile = env::var("USERPROFILE").ok();
+        
+        // Set test values
+        env::set_var("HOME", "/tmp/test");
+        env::set_var("USERPROFILE", "C:\\tmp\\test");
+        
+        // Your test logic here
+        
+        // Restore original values
+        match original_home {
+            Some(val) => env::set_var("HOME", val),
+            None => env::remove_var("HOME"),
+        }
+        match original_userprofile {
+            Some(val) => env::set_var("USERPROFILE", val),
+            None => env::remove_var("USERPROFILE"),
+        }
+    }
+}
+```
+
+**Integration Test Pattern:**
+```rust
+#[test]
+fn test_cli_functionality() {
+    let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
+    
+    // Set cross-platform environment
+    cmd.env("HOME", "/tmp/test")
+       .env("USERPROFILE", "C:\\tmp\\test");
+    
+    let output = cmd
+        .arg("assume")
+        .arg("test-role")
+        .assert()
+        .success();
+    
+    // Verify output
+    output.stdout(predicate::str::contains("Assumed role"));
+}
+```
+
+### Code Quality Standards
+
+**Rust Standards:**
+- Follow `rustfmt` formatting (enforced by CI)
+- Pass `clippy` with `-D warnings` (enforced by CI)
+- Maintain test coverage above 80%
+- Use `#[serial_test::serial]` for environment variable tests
+
+**Error Handling:**
+- Use `thiserror` for structured error types
+- Provide actionable error messages
+- Include context for debugging
+
+**Documentation:**
+- Document all public APIs
+- Include usage examples
+- Maintain up-to-date README
+
+## 🏗️ Architecture
+
+### Core Components
+
+**CLI Layer (`src/cli/mod.rs`)**
+- Command parsing and validation
+- User interaction and output formatting
+- Shell integration coordination
+
+**AWS Layer (`src/aws/mod.rs`)**
+- STS AssumeRole operations
+- Credential management
+- AWS CLI integration
+
+**Configuration Layer (`src/config/mod.rs`)**
+- Cross-platform config file handling
+- User preference management
+- Default value resolution
+
+**Error Layer (`src/error/mod.rs`)**
+- Structured error types
+- User-friendly error messages
+- Debug information preservation
+
+### Key Design Patterns
+
+**Cross-Platform Compatibility:**
+```rust
+pub fn get_config_path() -> PathBuf {
+    // Production: Use both environment variables for cross-platform support
+    if let Ok(home) = env::var("HOME") {
+        return PathBuf::from(home).join(".aws-assume-role");
+    }
+    if let Ok(userprofile) = env::var("USERPROFILE") {
+        return PathBuf::from(userprofile).join(".aws-assume-role");
+    }
+    
+    // Fallback to dirs crate
+    dirs::home_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join(".aws-assume-role")
+}
+```
+
+**Error Propagation:**
+```rust
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum CliError {
+    #[error("AWS CLI not found. Please install AWS CLI v2")]
+    AwsCliNotFound,
+    
+    #[error("Failed to assume role '{role}': {source}")]
+    AssumeRoleFailed { role: String, source: Box<dyn std::error::Error> },
+    
+    #[error("Configuration error: {0}")]
+    ConfigError(String),
+}
+```
+
+## 🔍 Debugging
+
+### Debug Logging
+```bash
+# Enable debug logging
+RUST_LOG=debug cargo run -- assume my-role
+
+# Trace level logging
+RUST_LOG=trace cargo run -- assume my-role
+
+# Module-specific logging
+RUST_LOG=aws_assume_role::aws=debug cargo run -- assume my-role
+```
+
+### Common Issues
+
+**Test Failures:**
+- **Environment Variables**: Use `#[serial_test::serial]` for env var tests
+- **Windows Compatibility**: Test both `HOME` and `USERPROFILE` variables
+- **Race Conditions**: Avoid parallel env var modifications
+
+**CI/CD Failures:**
+- **Formatting**: Always run `cargo fmt` before committing
+- **Clippy Warnings**: Fix all warnings, don't ignore them
+- **Cross-Platform**: Test on multiple platforms
+
+**Integration Test Issues:**
+- **AWS Credentials**: Ensure test credentials are configured
+- **Binary Path**: Use `Command::cargo_bin()` for reliable binary location
+- **Shell Wrappers**: Verify wrapper script content matches expectations
+
+### Performance Profiling
+
+```bash
+# Run benchmarks
 cargo bench
 
-# 6. Cross-platform build test (optional)
-cargo build --target x86_64-pc-windows-gnu    # Windows
-cargo build --target x86_64-unknown-linux-gnu # Linux
+# Profile with perf (Linux)
+cargo build --release
+perf record target/release/aws-assume-role assume my-role
+perf report
+
+# Memory profiling with valgrind
+cargo build --release
+valgrind --tool=massif target/release/aws-assume-role assume my-role
 ```
 
-#### Test-Driven Development
+## 📦 Release Process
+
+### Version Management
+
 ```bash
-# Development cycle with comprehensive testing
-git checkout develop
-git pull origin develop
-git checkout -b feature/new-feature
+# Update version in Cargo.toml
+./scripts/update-version.sh 1.2.1
 
-# Write tests first
-cargo test --test integration_tests test_new_feature -- --ignored
-
-# Implement feature
-# ... code changes ...
-
-# Validate all tests
-cargo test                              # All 55 tests must pass
-
-# Commit with proper convention
-git add .
-git commit -m "feat: implement new feature with comprehensive tests"
+# This updates:
+# - Cargo.toml version
+# - Documentation references
+# - Package configurations
 ```
 
-## 📝 Commit Standards
+### Build Release Binaries
 
-### Conventional Commits Format
-```
-type(scope): description
+```bash
+# Build all platform binaries
+./build-releases.sh
+
+# Builds:
+# - macOS universal binary
+# - Linux x86_64 binary  
+# - Windows x86_64 binary
+# - Shell wrapper scripts
 ```
 
-#### Types
-- `feat`: New features
-- `fix`: Bug fixes
-- `docs`: Documentation changes
-- `test`: Test additions/modifications
-- `refactor`: Code restructuring
-- `perf`: Performance improvements
-- `ci`: CI/CD configuration changes 
+### Release Checklist
+
+**Pre-Release:**
+- [ ] All tests passing (`cargo test`)
+- [ ] Code formatted (`cargo fmt --check`)
+- [ ] No clippy warnings (`cargo clippy -- -D warnings`)
+- [ ] Version updated in all files
+- [ ] Release notes created
+- [ ] Binaries built and tested
+
+**Release:**
+- [ ] Git tag created (`git tag v1.2.1`)
+- [ ] GitHub release published
+- [ ] Binaries uploaded to release
+- [ ] Package managers updated automatically
+
+**Post-Release:**
+- [ ] Monitor CI/CD pipeline
+- [ ] Verify package manager updates
+- [ ] Update documentation if needed
+
+## 🤝 Contributing
+
+### Getting Started
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the development workflow above
+4. Submit a pull request
+
+### Pull Request Requirements
+- [ ] All tests pass
+- [ ] Code is formatted (`cargo fmt`)
+- [ ] No clippy warnings
+- [ ] Documentation updated if needed
+- [ ] Descriptive commit messages
+
+### Code Review Process
+1. Automated CI checks must pass
+2. Manual code review by maintainer
+3. Integration testing on multiple platforms
+4. Merge to develop branch
+5. Release when ready
+
+## 🔧 Troubleshooting Development Issues
+
+### Cargo Issues
+```bash
+# Clean build artifacts
+cargo clean
+
+# Update dependencies
+cargo update
+
+# Check for outdated dependencies
+cargo outdated
+```
+
+### Test Environment Issues
+```bash
+# Reset test environment
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+rm -rf ~/.aws-assume-role
+
+# Verify AWS CLI
+aws --version
+aws sts get-caller-identity
+```
+
+### CI/CD Pipeline Debugging
+```bash
+# Simulate CI formatting check
+cargo fmt --check
+
+# Simulate CI clippy check
+cargo clippy -- -D warnings
+
+# Simulate CI test run
+cargo test --verbose
+```
+
+## 📚 Resources
+
+### Rust Development
+- [Rust Book](https://doc.rust-lang.org/book/)
+- [Cargo Book](https://doc.rust-lang.org/cargo/)
+- [Clippy Lints](https://rust-lang.github.io/rust-clippy/master/)
+
+### AWS Development
+- [AWS CLI Documentation](https://docs.aws.amazon.com/cli/)
+- [AWS STS API Reference](https://docs.aws.amazon.com/STS/latest/APIReference/)
+- [AWS SDK for Rust](https://github.com/awslabs/aws-sdk-rust)
+
+### Testing
+- [Rust Testing Guide](https://doc.rust-lang.org/book/ch11-00-testing.html)
+- [Assert Command](https://docs.rs/assert_cmd/)
+- [Serial Test](https://docs.rs/serial_test/) 

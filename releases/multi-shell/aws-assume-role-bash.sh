@@ -1,15 +1,6 @@
 #!/bin/bash
 # AWS Assume Role - Bash/Zsh Wrapper
-# 
-# IMPORTANT: This script provides the 'awsr' command for shell integration.
-# 
-# COMMANDS AVAILABLE:
-#   aws-assume-role  - Direct binary execution (requires eval for credentials)
-#   awsr            - Wrapper function (sets credentials directly in shell)
-# 
-# RECOMMENDED: Use 'awsr' for daily role switching
-# 
-# Usage: source aws-assume-role-bash.sh
+# Usage: source aws-assume-role-bash.sh assume <role-name>
 
 aws_assume_role() {
     local binary_name="aws-assume-role-unix"
@@ -45,15 +36,6 @@ aws_assume_role() {
 alias awsr='aws_assume_role'
 
 echo "✅ AWS Assume Role loaded for Bash/Zsh"
-echo ""
-echo "📋 COMMANDS AVAILABLE:"
-echo "  awsr                    - Wrapper function (recommended)"
-echo "  aws-assume-role         - Direct binary (requires eval)"
-echo ""
-echo "🚀 QUICK START:"
-echo "  awsr verify             - Check prerequisites"
-echo "  awsr configure -n dev -r <role-arn> -a <account-id>"
-echo "  awsr assume dev         - Assume role (sets credentials in shell)"
-echo "  awsr list               - List configured roles"
-echo ""
-echo "💡 TIP: Use 'awsr' for seamless role switching without eval commands!"
+echo "Usage: awsr assume <role-name>"
+echo "       awsr list"
+echo "       awsr configure --name <name> --role-arn <arn> --account-id <id>"
