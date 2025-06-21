@@ -1,245 +1,355 @@
 # 🚀 Release Guide
 
-This guide covers the complete process for releasing new versions of AWS Assume Role CLI.
+This guide covers the complete process for releasing new versions of AWS Assume Role CLI, from local development to public distribution.
 
-## 🎯 Release Process Overview
+## 🎯 Complete Release Process Overview
 
-### 1. Version Management
+### Phase 1: Local Development & Version Management
 
-**Automated Version Updates**:
+#### 1.1 Update Version Across All Components
 ```bash
-# Use the automated script for consistency
-./scripts/update-version.sh 1.0.3
+# Use the automated script for consistency across ALL files
+./scripts/update-version.sh 1.2.0
 
 # This updates ALL version references:
 # - Cargo.toml
-# - All package manager configs (10+ files)
+# - All package manager configs (RPM, APT, Homebrew, etc.)
 # - GitHub Actions workflow
-# - Documentation
-# - Docker labels
+# - Dockerfile labels
+# - Documentation references
 ```
 
-**Manual Verification**:
-```bash
-# Verify version consistency
-grep -r "1\.0\.3" packaging/ | wc -l  # Should show multiple matches
-grep -r "1\.0\.2" packaging/ | wc -l  # Should show 0 matches after update
-```
-
-### 2. Pre-Release Checklist
-
-**Code Quality**:
-- [ ] All tests pass: `cargo test`
-- [ ] Code builds successfully: `cargo build --release`
-- [ ] Binary works correctly: `./target/release/aws-assume-role --version`
-- [ ] No linting errors: `cargo clippy`
-
-**Documentation**:
-- [ ] README.md updated with new features
-- [ ] DEPLOYMENT.md reflects current installation methods
-- [ ] Memory bank files updated with latest changes
-- [ ] Release notes prepared
-
-**Version Consistency**:
-- [ ] All package manager configs use same version
-- [ ] GitHub Actions workflow updated
-- [ ] Documentation references correct version
-
-### 3. Release Creation
-
-**Tag and Push**:
-```bash
-# 1. Commit all changes
-git add .
-git commit -m "🔖 Bump version to v1.0.3"
-
-# 2. Create annotated tag
-git tag -a v1.0.3 -m "Release v1.0.3: [Brief description]"
-
-# 3. Push to trigger CI/CD
-git push origin master
-git push origin v1.0.3
-```
-
-**GitHub Actions Automation**:
-The workflow automatically:
-- ✅ Builds cross-platform binaries
-- ✅ Creates GitHub Release with assets
-- ✅ Publishes to GitHub Container Registry
-- ✅ Publishes to crates.io
-- ✅ Builds all package manager packages
-- ✅ Creates multi-shell distribution
-
-### 4. Post-Release Tasks
-
-**Package Manager Updates**:
-- [ ] Homebrew formula (automated via GitHub Actions)
-- [ ] Chocolatey package (automated)
-- [ ] APT/RPM packages (automated)
-- [ ] AUR package (automated)
-- [ ] Cargo/crates.io (automated)
-
-**Verification**:
-- [ ] GitHub Release created successfully
-- [ ] Container images published to ghcr.io
-- [ ] Package managers show new version
-- [ ] Download links work correctly
-
-**Communication**:
-- [ ] Update project README if needed
-- [ ] Announce release in relevant channels
-- [ ] Update documentation websites
-
-## 📦 Distribution Channels
-
-### Automated (via GitHub Actions)
-1. **GitHub Releases**: Binaries and distribution packages
-2. **GitHub Container Registry**: Docker images
-3. **Crates.io**: Rust package
-4. **Package Managers**: APT, RPM, Chocolatey, AUR
-
-### Manual Updates Required
-1. **Homebrew Tap**: Usually automated, but verify
-2. **Documentation Sites**: If any external docs exist
-
-## 🔄 Hotfix Process
-
-For critical fixes (like v1.0.1 → v1.0.2):
+#### 1.2 Rebuild Local Binaries for New Version
+**CRITICAL**: The `/releases/multi-shell` directory contains pre-built binaries that must be regenerated:
 
 ```bash
-# 1. Create hotfix branch (optional)
-git checkout -b hotfix/v1.0.3
-
-# 2. Make minimal fixes
-# Edit only necessary files
-
-# 3. Update version
-./scripts/update-version.sh 1.0.3
-
-# 4. Test thoroughly
-cargo test
+# Build new release binaries
 cargo build --release
 
-# 5. Merge and release
+# Copy new binaries to multi-shell releases (macOS example)
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-macos
+
+# For cross-platform builds (if needed locally):
+# cargo build --release --target x86_64-unknown-linux-gnu
+# cargo build --release --target x86_64-pc-windows-gnu
+# cp target/x86_64-unknown-linux-gnu/release/aws-assume-role releases/multi-shell/aws-assume-role-unix
+# cp target/x86_64-pc-windows-gnu/release/aws-assume-role.exe releases/multi-shell/
+```
+
+#### 1.3 Update Multi-Shell Distribution Scripts
+The `create-distribution.sh` script uses git tags, so we need to either:
+
+**Option A: Create temporary local tag for testing**
+```bash
+git tag -a v1.2.0-local -m "Local testing tag"
+cd releases/multi-shell
+./create-distribution.sh
+git tag -d v1.2.0-local  # Clean up after testing
+```
+
+**Option B: Update fallback version in script**
+```bash
+# Temporarily update the fallback version for local testing
+sed -i.bak 's/v1\.1\.2/v1.2.0/' releases/multi-shell/create-distribution.sh
+```
+
+#### 1.4 Validate Version Consistency
+```bash
+# Verify all components show correct version
+echo "🔍 Version Validation:"
+echo "Cargo.toml: $(grep '^version = ' Cargo.toml)"
+echo "Binary: $(./target/release/aws-assume-role --version)"
+echo "Multi-shell binary: $(releases/multi-shell/aws-assume-role-macos --version)"
+echo "RPM: $(grep '^Version:' packaging/rpm/aws-assume-role.spec)"
+echo "APT: $(grep '^Version:' packaging/apt/DEBIAN/control)"
+echo "Homebrew: $(grep 'version' packaging/homebrew/aws-assume-role.rb | head -1)"
+```
+
+### Phase 2: Quality Validation
+
+#### 2.1 Comprehensive Testing
+```bash
+# Run complete test suite (55 tests)
+cargo test
+
+# Test categories breakdown:
+cargo test --lib                           # Unit tests (23)
+cargo test --test integration_tests        # Integration tests (14)
+cargo test --test shell_integration_tests  # Shell integration tests (18)
+
+# Performance benchmarks
+cargo bench
+
+# Security audit
+cargo audit
+```
+
+#### 2.2 Build Validation
+```bash
+# Build release binary
+cargo build --release
+
+# Verify binary functionality
+./target/release/aws-assume-role --version
+./target/release/aws-assume-role --help
+```
+
+#### 2.3 Code Quality Checks
+```bash
+# Formatting check
+cargo fmt --all -- --check
+
+# Linting with zero warnings policy
+cargo clippy -- -D warnings
+
+# Documentation check
+cargo doc --no-deps
+```
+
+### Phase 3: Git Flow & CI/CD Validation
+
+#### 3.1 Commit Version Updates
+```bash
+# Commit all version-related changes
+git add .
+git commit -m "🔖 Bump version to v1.2.0 across all components
+
+- Updated Cargo.toml version to 1.2.0
+- Updated all package manager configurations
+- Updated Dockerfile and GitHub Actions
+- Regenerated multi-shell release binaries
+- Verified all 55 tests passing"
+```
+
+#### 3.2 Push to Develop for CI/CD Validation
+```bash
+# Push to develop branch for CI/CD testing
+git push origin develop
+
+# Monitor GitHub Actions:
+# 1. All tests pass on Ubuntu, Windows, macOS
+# 2. Security audit clean
+# 3. Cross-compilation successful
+# 4. All quality gates pass
+```
+
+### Phase 4: Production Release
+
+#### 4.1 Merge to Master
+```bash
+# After CI/CD validation passes on develop:
 git checkout master
-git merge hotfix/v1.0.3
-git tag -a v1.0.3 -m "Hotfix v1.0.3: [Critical fix description]"
-git push origin master && git push origin v1.0.3
+git merge develop
 ```
 
-## 📋 Release Notes Template
-
-```markdown
-# 🚀 AWS Assume Role CLI v1.0.3
-
-**Release Date**: [Date]  
-**Type**: [Feature/Hotfix/Major]
-
-## 🎯 What's New
-
-### ✨ New Features
-- Feature 1 description
-- Feature 2 description
-
-### 🐛 Bug Fixes
-- Fix 1 description
-- Fix 2 description
-
-### 🔧 Improvements
-- Improvement 1
-- Improvement 2
-
-## 📦 Installation
-
-### Package Managers
+#### 4.2 Create Release Tag
 ```bash
-# Homebrew (macOS/Linux)
-brew upgrade aws-assume-role
+# Create annotated tag for release
+git tag -a v1.2.0 -m "Release v1.2.0: Enhanced Security & Comprehensive Testing
 
-# Cargo (Rust)
-cargo install aws-assume-role --force
+🔒 Security Enhancements:
+- AWS SDK v1.x with aws-lc-rs cryptographic backend
+- Resolved all ring vulnerabilities (RUSTSEC-2025-0009, RUSTSEC-2025-0010)
+- Clean security audit with modern dependencies
 
-# Chocolatey (Windows)
-choco upgrade aws-assume-role
+🧪 Testing Excellence:
+- 55 comprehensive tests (23 unit + 14 integration + 18 shell integration)
+- Cross-platform validation (Ubuntu, Windows, macOS)
+- Shell compatibility testing (Bash, Zsh, PowerShell, Fish, CMD)
+
+📦 Distribution Ready:
+- Updated package manager configurations
+- Enhanced documentation and development guides
+- Complete CI/CD automation"
 ```
 
-### Container
+#### 4.3 Push Release
 ```bash
-docker pull ghcr.io/holdennguyen/aws-assume-role:v1.0.3
+# Push to trigger automated release process
+git push origin master
+git push origin v1.2.0
+
+# This triggers GitHub Actions to:
+# ✅ Build cross-platform binaries
+# ✅ Create GitHub Release with assets
+# ✅ Publish to GitHub Container Registry
+# ✅ Publish to crates.io
+# ✅ Build all package manager packages
+# ✅ Create multi-shell distribution
 ```
 
-## 🔧 Breaking Changes
-- None / List any breaking changes
+## 📁 Understanding the Multi-Shell Releases Directory
 
-## 📊 Distribution
-- **GitHub Releases**: Cross-platform binaries
-- **GitHub Packages**: Docker containers
-- **Package Managers**: All major platforms
-- **Source**: Available for manual compilation
-
----
-**Download**: [GitHub Releases](https://github.com/holdennguyen/aws-assume-role/releases/tag/v1.0.3)
+### What's in `/releases/multi-shell`?
+```
+releases/multi-shell/
+├── aws-assume-role-macos          # Pre-built macOS binary (ARM64)
+├── aws-assume-role-unix           # Pre-built Linux binary (x86_64)
+├── aws-assume-role.exe            # Pre-built Windows binary
+├── aws-assume-role-bash.sh        # Bash/Zsh wrapper script
+├── aws-assume-role-fish.fish      # Fish shell wrapper script
+├── aws-assume-role-powershell.ps1 # PowerShell wrapper script
+├── aws-assume-role-cmd.bat        # CMD batch wrapper script
+├── INSTALL.sh                     # Unix installation script
+├── INSTALL.ps1                    # Windows installation script
+├── UNINSTALL.sh                   # Unix uninstallation script
+├── UNINSTALL.ps1                  # Windows uninstallation script
+├── create-distribution.sh         # Distribution package creator
+├── README.md                      # Installation instructions
+└── dist/                          # Generated distribution packages
+    ├── aws-assume-role-cli-v1.2.0-YYYYMMDD.tar.gz
+    ├── aws-assume-role-cli-v1.2.0-YYYYMMDD.zip
+    └── *.sha256                   # Checksum files
 ```
 
-## 🛠️ Troubleshooting Release Issues
+### Why These Files Need Manual Updates
 
-### Common Problems
+1. **Pre-built Binaries**: These are actual compiled executables from previous releases
+2. **Version Dependencies**: Scripts reference specific versions
+3. **Distribution Packages**: Generated packages contain old binaries
+4. **Local Testing**: Allows testing complete distribution before GitHub release
 
-**1. Crates.io Version Conflict**
+### Automated vs Manual Updates
+
+**Automated by GitHub Actions (on release)**:
+- Cross-platform binary compilation
+- GitHub Release creation
+- Package manager publishing
+- Container image publishing
+
+**Manual for Local Development**:
+- Local binary regeneration for testing
+- Multi-shell distribution validation
+- Version consistency verification
+- Local testing of complete distribution
+
+## 🔄 Local Development Workflow
+
+### Daily Development
 ```bash
-# Error: crate aws-assume-role@X.X.X already exists
-# Solution: Increment version number (can't republish same version)
-./scripts/update-version.sh 1.0.4
+# 1. Feature development on feature branch
+git checkout -b feature/new-feature
+
+# 2. Write tests first (TDD approach)
+cargo test test_new_feature -- --ignored
+
+# 3. Implement feature
+# ... code changes ...
+
+# 4. Validate all tests
+cargo test                              # All 55 tests
+
+# 5. Commit and push feature
+git add .
+git commit -m "feat: implement new feature"
+git push origin feature/new-feature
 ```
 
-**2. GitHub Actions Failure**
+### Pre-Release Preparation
 ```bash
-# Check workflow logs in GitHub Actions tab
-# Common fixes:
-# - Update secrets (CARGO_REGISTRY_TOKEN)
-# - Fix permission issues
-# - Verify file paths in workflow
+# 1. Update version across all components
+./scripts/update-version.sh 1.2.0
+
+# 2. Rebuild local binaries
+cargo build --release
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-macos
+
+# 3. Validate version consistency
+./target/release/aws-assume-role --version
+releases/multi-shell/aws-assume-role-macos --version
+
+# 4. Run comprehensive tests
+cargo test
+cargo audit
+
+# 5. Commit version updates
+git add .
+git commit -m "🔖 Bump version to v1.2.0"
+
+# 6. Push to develop for CI/CD validation
+git push origin develop
 ```
 
-**3. Package Manager Issues**
+### Release Execution
 ```bash
-# APT/RPM: Check package building logs
-# Chocolatey: Verify nuspec file format
-# Homebrew: Check formula syntax
+# 1. After CI/CD validation passes
+git checkout master
+git merge develop
+
+# 2. Create release tag
+git tag -a v1.2.0 -m "Release v1.2.0: [description]"
+
+# 3. Push to trigger automated release
+git push origin master && git push origin v1.2.0
 ```
 
-### Emergency Rollback
+## 🛠️ Troubleshooting Common Issues
 
-If a release has critical issues:
-
+### Issue: Multi-Shell Binaries Show Wrong Version
+**Cause**: Pre-built binaries not regenerated after version update
+**Solution**:
 ```bash
-# 1. Delete the problematic tag
-git tag -d v1.0.3
-git push origin :refs/tags/v1.0.3
-
-# 2. Delete GitHub Release (via web interface)
-
-# 3. Fix issues and re-release with incremented version
-./scripts/update-version.sh 1.0.4
+# Rebuild and replace binaries
+cargo build --release
+cp target/release/aws-assume-role releases/multi-shell/aws-assume-role-macos
+# Repeat for other platforms if cross-compiling locally
 ```
 
-## 📈 Version Strategy
+### Issue: Distribution Script Uses Wrong Version
+**Cause**: No git tag exists yet, falls back to default
+**Solution**:
+```bash
+# Option A: Create temporary tag for local testing
+git tag -a v1.2.0-local -m "Local testing"
+cd releases/multi-shell && ./create-distribution.sh
+git tag -d v1.2.0-local
 
-### Semantic Versioning
-- **Major (X.0.0)**: Breaking changes
-- **Minor (0.X.0)**: New features, backward compatible
-- **Patch (0.0.X)**: Bug fixes, backward compatible
+# Option B: Update fallback version temporarily
+sed -i.bak 's/v1\.1\.2/v1.2.0/' releases/multi-shell/create-distribution.sh
+```
 
-### Current Status
-- **Latest**: v1.0.2
-- **Next Planned**: v1.0.3 (patch) or v1.1.0 (minor)
-- **Breaking Changes**: None planned for 1.x series
+### Issue: Version Inconsistency Across Components
+**Cause**: Manual version updates missed some files
+**Solution**:
+```bash
+# Always use the automated script
+./scripts/update-version.sh 1.2.0
 
-### Release Frequency
-- **Patch releases**: As needed for critical fixes
-- **Minor releases**: Monthly or when significant features accumulate
-- **Major releases**: Rarely, only for breaking changes
+# Validate all components
+grep -r "1\.2\.0" packaging/ Cargo.toml Dockerfile .github/
+```
 
----
+## 📋 Release Checklist Template
 
-This guide ensures consistent, reliable releases across all distribution channels. The automated tooling minimizes human error and maintains version consistency across the entire ecosystem. 
+### Pre-Release Validation
+- [ ] Version updated across all components (`./scripts/update-version.sh`)
+- [ ] Local binaries regenerated (`cargo build --release`)
+- [ ] Multi-shell binaries updated (`cp target/release/aws-assume-role releases/multi-shell/`)
+- [ ] All 55 tests passing (`cargo test`)
+- [ ] Security audit clean (`cargo audit`)
+- [ ] Binary shows correct version (`./target/release/aws-assume-role --version`)
+- [ ] Code quality checks pass (`cargo fmt`, `cargo clippy`)
+
+### CI/CD Validation
+- [ ] Changes committed to develop branch
+- [ ] Pushed to GitHub (`git push origin develop`)
+- [ ] GitHub Actions CI/CD passes
+- [ ] All platforms build successfully
+- [ ] Cross-platform tests pass
+
+### Release Execution
+- [ ] Merged to master (`git checkout master && git merge develop`)
+- [ ] Release tag created (`git tag -a v1.2.0 -m "..."`)
+- [ ] Pushed to trigger release (`git push origin master && git push origin v1.2.0`)
+- [ ] GitHub Release created automatically
+- [ ] Package managers updated automatically
+- [ ] Container images published
+
+### Post-Release Verification
+- [ ] GitHub Release shows correct assets
+- [ ] Package managers show new version
+- [ ] Container images available
+- [ ] Download links work
+- [ ] Installation instructions updated
+
+This comprehensive process ensures that every component is properly versioned and validated before release, preventing the multi-shell directory version inconsistency issue. 
