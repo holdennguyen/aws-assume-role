@@ -1,12 +1,12 @@
-use clap::{Parser, Subcommand};
-use crate::error::AppResult;
-use crate::config::{Config, RoleConfig};
 use crate::aws::{AwsClient, Credentials};
+use crate::config::{Config, RoleConfig};
+use crate::error::AppResult;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
-    author, 
-    version, 
+    author,
+    version,
     about = "AWS Assume Role CLI - Switch between AWS IAM roles effortlessly",
     long_about = r#"AWS Assume Role CLI (awsr) - A fast, reliable tool for switching between AWS IAM roles.
 
@@ -65,22 +65,31 @@ ROLE REQUIREMENTS:
         /// Name of the role configuration (used for 'awsr assume <name>')
         #[arg(short, long, help = "Friendly name for this role configuration")]
         name: String,
-        
+
         /// AWS Role ARN to assume
-        #[arg(short, long, help = "Full ARN of the IAM role (arn:aws:iam::ACCOUNT:role/ROLE-NAME)")]
+        #[arg(
+            short,
+            long,
+            help = "Full ARN of the IAM role (arn:aws:iam::ACCOUNT:role/ROLE-NAME)"
+        )]
         role_arn: String,
-        
+
         /// AWS Account ID where the role exists
         #[arg(short, long, help = "12-digit AWS account ID")]
         account_id: String,
-        
+
         /// Source AWS profile to use (optional)
         #[arg(short, long, help = "AWS profile name from ~/.aws/credentials")]
         source_profile: Option<String>,
+
+        /// Session duration in seconds (optional, default: 3600)
+        #[arg(long, help = "Session duration in seconds (900-43200, default: 3600)")]
+        session_duration: Option<i64>,
     },
-    
+
     /// Assume a configured role and set credentials
-    #[command(long_about = r#"Assume a configured role and set AWS credentials in the current shell.
+    #[command(
+        long_about = r#"Assume a configured role and set AWS credentials in the current shell.
 
 EXAMPLES:
   # Assume role (default 1 hour session)
@@ -99,32 +108,42 @@ OUTPUT FORMATS:
   - export (default): Shell export statements for direct use
   - json: JSON format for programmatic use
 
-The tool automatically detects your shell and outputs the appropriate format."#)]
+The tool automatically detects your shell and outputs the appropriate format."#
+    )]
     Assume {
         /// Name of the role configuration to assume
         #[arg(help = "Role name from 'awsr list'")]
         name: String,
-        
+
         /// Session duration in seconds (default: 3600)
-        #[arg(short, long, help = "Session duration in seconds (900-43200, default: 3600)")]
+        #[arg(
+            short,
+            long,
+            help = "Session duration in seconds (900-43200, default: 3600)"
+        )]
         duration: Option<i32>,
-        
+
         /// Output format for credentials
-        #[arg(short, long, default_value = "export", help = "Output format: 'export' or 'json'")]
+        #[arg(
+            short,
+            long,
+            default_value = "export",
+            help = "Output format: 'export' or 'json'"
+        )]
         format: String,
-        
+
         /// Execute a command with the assumed role credentials
         #[arg(short, long, help = "Command to execute with assumed role credentials")]
         exec: Option<String>,
     },
-    
+
     /// List all configured roles
     #[command(long_about = r#"List all configured AWS IAM roles.
 
 Shows role names, ARNs, and account IDs for all configured roles.
 Use 'awsr assume <name>' to assume any of the listed roles."#)]
     List,
-    
+
     /// Remove a configured role
     #[command(long_about = r#"Remove a configured AWS IAM role.
 
@@ -138,9 +157,10 @@ This only removes the local configuration. It does not affect the actual IAM rol
         #[arg(help = "Role name from 'awsr list'")]
         name: String,
     },
-    
+
     /// Verify AWS prerequisites and permissions
-    #[command(long_about = r#"Verify that all prerequisites are met for assuming roles.
+    #[command(
+        long_about = r#"Verify that all prerequisites are met for assuming roles.
 
 This command checks:
   1. AWS CLI installation and configuration
@@ -155,12 +175,13 @@ EXAMPLES:
   # Check specific role
   awsr verify --role dev
 
-Run this command if you're having trouble assuming roles."#)]
+Run this command if you're having trouble assuming roles."#
+    )]
     Verify {
         /// Specific role to verify (optional)
         #[arg(short, long, help = "Verify a specific role configuration")]
         role: Option<String>,
-        
+
         /// Show detailed verification information
         #[arg(short, long, help = "Show detailed verification steps")]
         verbose: bool,
@@ -173,18 +194,25 @@ impl Cli {
         let mut config = Config::load()?;
 
         match &cli.command {
-            Commands::Configure { name, role_arn, account_id, source_profile } => {
+            Commands::Configure {
+                name,
+                role_arn,
+                account_id,
+                source_profile,
+                session_duration,
+            } => {
                 let role = RoleConfig {
                     name: name.clone(),
                     role_arn: role_arn.clone(),
                     account_id: account_id.clone(),
                     source_profile: source_profile.clone(),
+                    session_duration: *session_duration,
                 };
-                
+
                 // Test the role configuration before saving
                 println!("🔧 Configuring role '{}'...", name);
                 let aws_client = AwsClient::new().await?;
-                
+
                 print!("🔍 Testing role assumption... ");
                 match aws_client.test_assume_role(&role).await {
                     Ok(true) => {
@@ -204,13 +232,13 @@ impl Cli {
                         println!("   - You don't have sts:AssumeRole permission");
                         println!();
                         print!("   Save configuration anyway? (y/N): ");
-                        
+
                         use std::io::{self, Write};
                         io::stdout().flush().unwrap();
                         let mut input = String::new();
                         io::stdin().read_line(&mut input).unwrap();
                         let input = input.trim().to_lowercase();
-                        
+
                         if input == "y" || input == "yes" {
                             config.add_role(role);
                             config.save()?;
@@ -225,37 +253,46 @@ impl Cli {
                         config.add_role(role);
                         config.save()?;
                         println!("✅ Role '{}' configured (could not verify)", name);
-                        println!("   Run 'awsr verify --role {}' to test the configuration", name);
+                        println!(
+                            "   Run 'awsr verify --role {}' to test the configuration",
+                            name
+                        );
                     }
                 }
             }
-            
-            Commands::Assume { name, duration, format, exec } => {
-                let role = config.get_role(name)
-                    .ok_or_else(|| crate::error::AppError::CliError(format!("Role '{}' not found", name)))?;
-                
+
+            Commands::Assume {
+                name,
+                duration,
+                format,
+                exec,
+            } => {
+                let role = config.get_role(name).ok_or_else(|| {
+                    crate::error::AppError::CliError(format!("Role '{}' not found", name))
+                })?;
+
                 let aws_client = AwsClient::new().await?;
                 let credentials = aws_client.assume_role(role, *duration).await?;
-                
+
                 if let Some(command) = exec {
                     execute_with_credentials(&credentials, command).await?;
                 } else {
                     output_credentials_for_shell(&credentials, format, name)?;
                 }
             }
-            
+
             Commands::List => {
                 if config.roles.is_empty() {
                     println!("No roles configured");
                     return Ok(());
                 }
-                
+
                 println!("Configured roles:");
                 for role in &config.roles {
                     println!("- {} ({})", role.name, role.role_arn);
                 }
             }
-            
+
             Commands::Remove { name } => {
                 if config.remove_role(name) {
                     config.save()?;
@@ -264,7 +301,7 @@ impl Cli {
                     println!("Role '{}' not found", name);
                 }
             }
-            
+
             Commands::Verify { role, verbose } => {
                 verify_prerequisites(&config, role.as_deref(), *verbose).await?;
             }
@@ -274,17 +311,30 @@ impl Cli {
     }
 }
 
-fn output_credentials_for_shell(credentials: &Credentials, format: &str, role_name: &str) -> AppResult<()> {
+fn output_credentials_for_shell(
+    credentials: &Credentials,
+    format: &str,
+    role_name: &str,
+) -> AppResult<()> {
     match format {
         "json" => {
             println!("{{");
             println!("  \"AccessKeyId\": \"{}\",", credentials.access_key_id);
-            println!("  \"SecretAccessKey\": \"{}\",", credentials.secret_access_key);
+            println!(
+                "  \"SecretAccessKey\": \"{}\",",
+                credentials.secret_access_key
+            );
             if let Some(token) = &credentials.session_token {
                 println!("  \"SessionToken\": \"{}\",", token);
             }
             if let Some(expiration) = &credentials.expiration {
-                println!("  \"Expiration\": \"{}\"", expiration.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs());
+                println!(
+                    "  \"Expiration\": \"{}\"",
+                    expiration
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs()
+                );
             }
             println!("}}");
         }
@@ -300,37 +350,52 @@ fn output_credentials_for_shell(credentials: &Credentials, format: &str, role_na
 fn output_shell_exports(credentials: &Credentials, role_name: &str) -> AppResult<()> {
     // Check if we're in PowerShell or Command Prompt
     use std::env;
-    
+
     if env::var("PSModulePath").is_ok() {
         // PowerShell format
         println!("$env:AWS_ACCESS_KEY_ID = \"{}\"", credentials.access_key_id);
-        println!("$env:AWS_SECRET_ACCESS_KEY = \"{}\"", credentials.secret_access_key);
+        println!(
+            "$env:AWS_SECRET_ACCESS_KEY = \"{}\"",
+            credentials.secret_access_key
+        );
         if let Some(token) = &credentials.session_token {
             println!("$env:AWS_SESSION_TOKEN = \"{}\"", token);
         }
-        println!("Write-Host \"✅ Assumed role: {}\" -ForegroundColor Green", role_name);
+        println!(
+            "Write-Host \"✅ Assumed role: {}\" -ForegroundColor Green",
+            role_name
+        );
     } else {
         // Command Prompt format
         println!("set AWS_ACCESS_KEY_ID={}", credentials.access_key_id);
-        println!("set AWS_SECRET_ACCESS_KEY={}", credentials.secret_access_key);
+        println!(
+            "set AWS_SECRET_ACCESS_KEY={}",
+            credentials.secret_access_key
+        );
         if let Some(token) = &credentials.session_token {
             println!("set AWS_SESSION_TOKEN={}", token);
         }
         println!("echo ✅ Assumed role: {}", role_name);
     }
-    
+
     Ok(())
 }
 
 #[cfg(not(target_os = "windows"))]
 fn output_shell_exports(credentials: &Credentials, role_name: &str) -> AppResult<()> {
     use std::env;
-    
+
     // Check for Fish shell
     if let Ok(shell) = env::var("SHELL") {
         if shell.contains("fish") {
-            println!("set -gx AWS_ACCESS_KEY_ID \"{}\"", credentials.access_key_id);
-            println!("set -gx AWS_SECRET_ACCESS_KEY \"{}\"", credentials.secret_access_key);
+            println!(
+                "set -gx AWS_ACCESS_KEY_ID \"{}\"",
+                credentials.access_key_id
+            );
+            println!(
+                "set -gx AWS_SECRET_ACCESS_KEY \"{}\"",
+                credentials.secret_access_key
+            );
             if let Some(token) = &credentials.session_token {
                 println!("set -gx AWS_SESSION_TOKEN \"{}\"", token);
             }
@@ -338,53 +403,69 @@ fn output_shell_exports(credentials: &Credentials, role_name: &str) -> AppResult
             return Ok(());
         }
     }
-    
+
     // Default to bash/zsh format
     println!("export AWS_ACCESS_KEY_ID=\"{}\"", credentials.access_key_id);
-    println!("export AWS_SECRET_ACCESS_KEY=\"{}\"", credentials.secret_access_key);
+    println!(
+        "export AWS_SECRET_ACCESS_KEY=\"{}\"",
+        credentials.secret_access_key
+    );
     if let Some(token) = &credentials.session_token {
         println!("export AWS_SESSION_TOKEN=\"{}\"", token);
     }
     println!("echo \"✅ Assumed role: {}\"", role_name);
-    
+
     Ok(())
 }
 
 async fn execute_with_credentials(credentials: &Credentials, command: &str) -> AppResult<()> {
     use std::process::Command;
-    
+
     // Parse the command string into command and args
     let mut parts = command.split_whitespace();
-    let cmd = parts.next().ok_or_else(|| crate::error::AppError::CliError("Empty command".to_string()))?;
+    let cmd = parts
+        .next()
+        .ok_or_else(|| crate::error::AppError::CliError("Empty command".to_string()))?;
     let args: Vec<&str> = parts.collect();
-    
+
     // Create the command with environment variables
     let mut child = Command::new(cmd);
     child.args(&args);
     child.env("AWS_ACCESS_KEY_ID", &credentials.access_key_id);
     child.env("AWS_SECRET_ACCESS_KEY", &credentials.secret_access_key);
-    
+
     if let Some(token) = &credentials.session_token {
         child.env("AWS_SESSION_TOKEN", token);
     }
-    
+
     // Execute the command
-    let status = child.status().map_err(|e| crate::error::AppError::CliError(format!("Failed to execute command: {}", e)))?;
-    
+    let status = child.status().map_err(|e| {
+        crate::error::AppError::CliError(format!("Failed to execute command: {}", e))
+    })?;
+
     if !status.success() {
-        return Err(crate::error::AppError::CliError(format!("Command failed with exit code: {:?}", status.code())));
+        return Err(crate::error::AppError::CliError(format!(
+            "Command failed with exit code: {:?}",
+            status.code()
+        )));
     }
-    
+
     Ok(())
 }
 
-async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verbose: bool) -> AppResult<()> {
+async fn verify_prerequisites(
+    config: &Config,
+    specific_role: Option<&str>,
+    verbose: bool,
+) -> AppResult<()> {
     println!("🔍 Verifying AWS prerequisites...\n");
-    
+
     let mut all_checks_passed = true;
-    
+
     // Check 1: AWS CLI Installation
-    if verbose { println!("Checking AWS CLI installation..."); }
+    if verbose {
+        println!("Checking AWS CLI installation...");
+    }
     match AwsClient::check_aws_cli() {
         Ok(true) => println!("✅ AWS CLI is installed and accessible"),
         Ok(false) => {
@@ -397,9 +478,11 @@ async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verb
             all_checks_passed = false;
         }
     }
-    
+
     // Check 2: AWS Credentials and Identity
-    if verbose { println!("Checking AWS credentials..."); }
+    if verbose {
+        println!("Checking AWS credentials...");
+    }
     let aws_client = match AwsClient::new().await {
         Ok(client) => {
             println!("✅ AWS SDK initialized successfully");
@@ -408,11 +491,10 @@ async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verb
         Err(e) => {
             println!("❌ Failed to initialize AWS SDK: {}", e);
             println!("   Check your AWS credentials configuration");
-            all_checks_passed = false;
             return Ok(());
         }
     };
-    
+
     // Check current identity
     match aws_client.verify_current_identity().await {
         Ok(identity) => {
@@ -430,14 +512,14 @@ async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verb
             all_checks_passed = false;
         }
     }
-    
+
     // Check 3: Role Configurations
     if config.roles.is_empty() {
         println!("⚠️  No roles configured yet");
         println!("   Run 'awsr configure --help' to add your first role");
     } else {
         println!("✅ Found {} configured role(s)", config.roles.len());
-        
+
         // Check specific role or all roles
         let roles_to_check: Vec<&RoleConfig> = if let Some(role_name) = specific_role {
             match config.get_role(role_name) {
@@ -451,11 +533,13 @@ async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verb
         } else {
             config.roles.iter().collect()
         };
-        
+
         // Test role assumptions
         for role in roles_to_check {
-            if verbose { println!("Testing role assumption for '{}'...", role.name); }
-            
+            if verbose {
+                println!("Testing role assumption for '{}'...", role.name);
+            }
+
             match aws_client.test_assume_role(role).await {
                 Ok(true) => {
                     println!("✅ Can assume role '{}' ({})", role.name, role.role_arn);
@@ -475,7 +559,7 @@ async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verb
             }
         }
     }
-    
+
     // Summary
     println!();
     if all_checks_passed {
@@ -491,7 +575,6 @@ async fn verify_prerequisites(config: &Config, specific_role: Option<&str>, verb
         println!("   3. Check role trust policies in AWS IAM Console");
         println!("   4. Ensure you have sts:AssumeRole permission");
     }
-    
+
     Ok(())
 }
-
