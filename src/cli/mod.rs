@@ -77,6 +77,10 @@ ROLE REQUIREMENTS:
         /// Source AWS profile to use (optional)
         #[arg(short, long, help = "AWS profile name from ~/.aws/credentials")]
         source_profile: Option<String>,
+        
+        /// Session duration in seconds (optional, default: 3600)
+        #[arg(long, help = "Session duration in seconds (900-43200, default: 3600)")]
+        session_duration: Option<i64>,
     },
     
     /// Assume a configured role and set credentials
@@ -173,12 +177,13 @@ impl Cli {
         let mut config = Config::load()?;
 
         match &cli.command {
-            Commands::Configure { name, role_arn, account_id, source_profile } => {
+            Commands::Configure { name, role_arn, account_id, source_profile, session_duration } => {
                 let role = RoleConfig {
                     name: name.clone(),
                     role_arn: role_arn.clone(),
                     account_id: account_id.clone(),
                     source_profile: source_profile.clone(),
+                    session_duration: *session_duration,
                 };
                 
                 // Test the role configuration before saving
