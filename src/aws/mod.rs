@@ -76,9 +76,8 @@ impl AwsClient {
             .credentials
             .ok_or_else(|| AppError::AwsError("No credentials returned".to_string()))?;
 
-        let expiration = Some(
-            UNIX_EPOCH + std::time::Duration::from_secs(credentials.expiration.secs() as u64)
-        );
+        let expiration =
+            Some(UNIX_EPOCH + std::time::Duration::from_secs(credentials.expiration.secs() as u64));
 
         Ok(Credentials {
             access_key_id: credentials.access_key_id,
@@ -168,7 +167,7 @@ impl AwsClient {
             secret_access_key: role_creds.secret_access_key.unwrap_or_default(),
             session_token: role_creds.session_token,
             expiration: Some(
-                UNIX_EPOCH + std::time::Duration::from_secs(role_creds.expiration as u64)
+                UNIX_EPOCH + std::time::Duration::from_secs(role_creds.expiration as u64),
             ),
         })
     }

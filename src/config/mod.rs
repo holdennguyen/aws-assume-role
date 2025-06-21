@@ -230,8 +230,12 @@ mod tests {
 
         config.add_role(role);
 
-        // Test saving
+        // Set appropriate environment variables for cross-platform compatibility
         std::env::set_var("HOME", temp_dir.path());
+        #[cfg(windows)]
+        std::env::set_var("USERPROFILE", temp_dir.path());
+
+        // Test saving
         let save_result = config.save();
         assert!(save_result.is_ok());
 
@@ -241,17 +245,31 @@ mod tests {
         let loaded_config = loaded_config.unwrap();
         assert_eq!(loaded_config.roles.len(), 1);
         assert!(loaded_config.get_role("test-role").is_some());
+
+        // Clean up environment variables
+        std::env::remove_var("HOME");
+        #[cfg(windows)]
+        std::env::remove_var("USERPROFILE");
     }
 
     #[test]
     fn test_load_nonexistent_config() {
         let temp_dir = TempDir::new().unwrap();
+
+        // Set appropriate environment variables for cross-platform compatibility
         std::env::set_var("HOME", temp_dir.path());
+        #[cfg(windows)]
+        std::env::set_var("USERPROFILE", temp_dir.path());
 
         let result = Config::load();
         assert!(result.is_ok());
         let config = result.unwrap();
         assert!(config.roles.is_empty());
+
+        // Clean up environment variables
+        std::env::remove_var("HOME");
+        #[cfg(windows)]
+        std::env::remove_var("USERPROFILE");
     }
 
     #[test]
@@ -286,10 +304,21 @@ mod tests {
     #[test]
     fn test_config_path() {
         let temp_dir = TempDir::new().unwrap();
+
+        // Set appropriate environment variables for cross-platform compatibility
         std::env::set_var("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE which dirs::home_dir() uses
+        #[cfg(windows)]
+        std::env::set_var("USERPROFILE", temp_dir.path());
 
         let path = Config::get_config_path().unwrap();
         let expected = temp_dir.path().join(".aws-assume-role").join("config.json");
         assert_eq!(path, expected);
+
+        // Clean up environment variables
+        std::env::remove_var("HOME");
+        #[cfg(windows)]
+        std::env::remove_var("USERPROFILE");
     }
 }
