@@ -214,6 +214,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_save_and_load_config() {
         let temp_dir = TempDir::new().unwrap();
         let config_dir = temp_dir.path().join(".aws-assume-role");
@@ -229,6 +230,12 @@ mod tests {
         };
 
         config.add_role(role);
+
+        // Store original environment variables to restore later
+        let original_home = std::env::var("HOME").ok();
+        
+        #[cfg(windows)]
+        let original_userprofile = std::env::var("USERPROFILE").ok();
 
         // Set appropriate environment variables for cross-platform compatibility
         std::env::set_var("HOME", temp_dir.path());
@@ -246,15 +253,29 @@ mod tests {
         assert_eq!(loaded_config.roles.len(), 1);
         assert!(loaded_config.get_role("test-role").is_some());
 
-        // Clean up environment variables
-        std::env::remove_var("HOME");
+        // Clean up environment variables - restore original values
+        match original_home {
+            Some(value) => std::env::set_var("HOME", value),
+            None => std::env::remove_var("HOME"),
+        }
+        
         #[cfg(windows)]
-        std::env::remove_var("USERPROFILE");
+        match original_userprofile {
+            Some(value) => std::env::set_var("USERPROFILE", value),
+            None => std::env::remove_var("USERPROFILE"),
+        }
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_load_nonexistent_config() {
         let temp_dir = TempDir::new().unwrap();
+
+        // Store original environment variables to restore later
+        let original_home = std::env::var("HOME").ok();
+        
+        #[cfg(windows)]
+        let original_userprofile = std::env::var("USERPROFILE").ok();
 
         // Set appropriate environment variables for cross-platform compatibility
         std::env::set_var("HOME", temp_dir.path());
@@ -266,10 +287,17 @@ mod tests {
         let config = result.unwrap();
         assert!(config.roles.is_empty());
 
-        // Clean up environment variables
-        std::env::remove_var("HOME");
+        // Clean up environment variables - restore original values
+        match original_home {
+            Some(value) => std::env::set_var("HOME", value),
+            None => std::env::remove_var("HOME"),
+        }
+        
         #[cfg(windows)]
-        std::env::remove_var("USERPROFILE");
+        match original_userprofile {
+            Some(value) => std::env::set_var("USERPROFILE", value),
+            None => std::env::remove_var("USERPROFILE"),
+        }
     }
 
     #[test]
@@ -302,8 +330,15 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_config_path() {
         let temp_dir = TempDir::new().unwrap();
+
+        // Store original environment variables to restore later
+        let original_home = std::env::var("HOME").ok();
+        
+        #[cfg(windows)]
+        let original_userprofile = std::env::var("USERPROFILE").ok();
 
         // Set appropriate environment variables for cross-platform compatibility
         std::env::set_var("HOME", temp_dir.path());
@@ -316,9 +351,16 @@ mod tests {
         let expected = temp_dir.path().join(".aws-assume-role").join("config.json");
         assert_eq!(path, expected);
 
-        // Clean up environment variables
-        std::env::remove_var("HOME");
+        // Clean up environment variables - restore original values
+        match original_home {
+            Some(value) => std::env::set_var("HOME", value),
+            None => std::env::remove_var("HOME"),
+        }
+        
         #[cfg(windows)]
-        std::env::remove_var("USERPROFILE");
+        match original_userprofile {
+            Some(value) => std::env::set_var("USERPROFILE", value),
+            None => std::env::remove_var("USERPROFILE"),
+        }
     }
 }
