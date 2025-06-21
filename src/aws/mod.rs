@@ -42,7 +42,6 @@ impl AwsClient {
         } else {
             config_builder.load().await
         };
-
         Ok(Self::new_with_config(&config))
     }
 
