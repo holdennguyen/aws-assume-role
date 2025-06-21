@@ -1,5 +1,6 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
+use std::fs;
 use tempfile::TempDir;
 
 /// Integration tests for AWS Assume Role CLI
@@ -101,10 +102,13 @@ mod integration {
         let _config_path = temp_dir.path().join(".aws-assume-role");
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .args(["assume", "nonexistent-role"])
-            .assert()
-            .failure();
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.args(["assume", "nonexistent-role"]).assert().failure();
     }
 
     /// Test list command with no configured roles
@@ -113,8 +117,13 @@ mod integration {
         let temp_dir = TempDir::new().unwrap();
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .arg("list")
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.arg("list")
             .assert()
             .success()
             .stdout(predicate::str::contains("No roles configured"));
@@ -134,7 +143,6 @@ mod integration {
 #[cfg(test)]
 mod config_integration {
     use super::*;
-    use std::fs;
 
     /// Test configuration workflow end-to-end
     #[test]
@@ -145,38 +153,56 @@ mod config_integration {
 
         // Test configure command
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .args([
-                "configure",
-                "--name",
-                "test-role",
-                "--role-arn",
-                "arn:aws:iam::123456789012:role/TestRole",
-                "--account-id",
-                "123456789012",
-            ])
-            .assert()
-            .success();
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.args([
+            "configure",
+            "--name",
+            "test-role",
+            "--role-arn",
+            "arn:aws:iam::123456789012:role/TestRole",
+            "--account-id",
+            "123456789012",
+        ])
+        .assert()
+        .success();
 
         // Test list command shows the configured role
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .arg("list")
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.arg("list")
             .assert()
             .success()
             .stdout(predicate::str::contains("test-role"));
 
         // Test remove command
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .args(["remove", "test-role"])
-            .assert()
-            .success();
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.args(["remove", "test-role"]).assert().success();
 
         // Test list command shows no roles after removal
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .arg("list")
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.arg("list")
             .assert()
             .success()
             .stdout(predicate::str::contains("No roles configured"));
@@ -193,19 +219,24 @@ mod error_handling {
         let temp_dir = TempDir::new().unwrap();
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .args([
-                "configure",
-                "--name",
-                "invalid-role",
-                "--role-arn",
-                "invalid-arn",
-                "--account-id",
-                "123456789012",
-            ])
-            .assert()
-            .success()
-            .stdout(predicate::str::contains("could not verify"));
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.args([
+            "configure",
+            "--name",
+            "invalid-role",
+            "--role-arn",
+            "invalid-arn",
+            "--account-id",
+            "123456789012",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("could not verify"));
     }
 
     /// Test error handling for invalid account ID (graceful degradation)
@@ -214,18 +245,23 @@ mod error_handling {
         let temp_dir = TempDir::new().unwrap();
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.env("HOME", temp_dir.path())
-            .args([
-                "configure",
-                "--name",
-                "test-role",
-                "--role-arn",
-                "arn:aws:iam::123456789012:role/TestRole",
-                "--account-id",
-                "invalid-id",
-            ])
-            .assert()
-            .success()
-            .stdout(predicate::str::contains("could not verify"));
+        cmd.env("HOME", temp_dir.path());
+
+        // On Windows, also set USERPROFILE for proper home directory detection
+        #[cfg(windows)]
+        cmd.env("USERPROFILE", temp_dir.path());
+
+        cmd.args([
+            "configure",
+            "--name",
+            "test-role",
+            "--role-arn",
+            "arn:aws:iam::123456789012:role/TestRole",
+            "--account-id",
+            "invalid-id",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("could not verify"));
     }
 }
