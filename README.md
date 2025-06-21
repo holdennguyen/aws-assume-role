@@ -168,11 +168,35 @@ eval $(awsr assume <role-name>)
 - AWS CLI v2
 - Valid AWS credentials
 
-### Build
+### Build & Test
 ```bash
+# Build release version
 cargo build --release
-cargo test
+
+# Run comprehensive test suite (55 tests)
+cargo test                                 # All tests
+cargo test --lib                           # Unit tests (23)
+cargo test --test integration_tests        # Integration tests (14)
+cargo test --test shell_integration_tests  # Shell integration tests (18)
+
+# Performance benchmarks
+cargo bench
+
+# Code quality checks
+cargo fmt --all -- --check                 # Formatting
+cargo clippy -- -D warnings                # Linting
+cargo audit                                # Security audit
 ```
+
+### Testing Framework (v1.2.0+)
+Our comprehensive testing covers:
+- **55 total tests** across unit, integration, and shell integration
+- **Cross-platform validation** (Ubuntu, Windows, macOS)
+- **Shell wrapper testing** (Bash, PowerShell, Fish, CMD)
+- **Performance benchmarking** with regression detection
+- **Security scanning** with automated vulnerability detection
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for complete testing documentation.
 
 ### Release Management
 ```bash

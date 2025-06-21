@@ -84,11 +84,13 @@ wiremock = "0.5"             # HTTP mocking
 
 ## Testing Framework (v1.2.0+)
 
-### Test Coverage
-- **Unit Tests**: 23 tests covering config and error modules
-- **Integration Tests**: 14 tests for CLI functionality and workflows
+### Comprehensive Test Matrix (55 Total Tests)
+- **Unit Tests**: 23 tests covering config (10) and error (13) modules
+- **Integration Tests**: 14 tests for CLI functionality and end-to-end workflows
+- **Shell Integration Tests**: 18 tests for wrapper scripts and cross-platform compatibility ← NEW v1.2.0
 - **Performance Tests**: 9 benchmarks with Criterion for regression detection
 - **Cross-Platform**: Automated testing on Ubuntu, Windows, macOS
+- **Shell Coverage**: Bash, Zsh, PowerShell, Fish, CMD wrapper validation
 - **Isolated Environments**: Temporary directories with automatic cleanup
 
 ### Test Utilities
@@ -123,12 +125,14 @@ impl TestHelper {
 - cargo-audit for security scanning
 
 ### Testing Environment  
-- Unit testing with cargo test (23 tests)
-- Integration testing with assert_cmd (14 tests)
-- Performance testing with criterion (9 benchmarks)
-- Cross-platform testing (macOS, Linux, Windows)
-- AWS SDK mocking for isolated tests
-- Temporary directory isolation for test safety
+- **Unit Testing**: cargo test --lib (23 tests covering config and error modules)
+- **Integration Testing**: assert_cmd framework (14 tests for CLI workflows)
+- **Shell Integration Testing**: wrapper script validation (18 tests) ← NEW v1.2.0
+- **Performance Testing**: criterion benchmarks (9 performance tests)
+- **Cross-Platform Testing**: Ubuntu, Windows, macOS automated validation
+- **Shell Compatibility**: Bash, Zsh, PowerShell, Fish, CMD wrapper testing
+- **AWS SDK Mocking**: Isolated test environments without real AWS calls
+- **Temporary Directory Isolation**: Secure test environments with automatic cleanup
 
 ### Git Flow Workflow
 - **Branches**: master (production) → develop (integration) → feature/* branches
@@ -189,8 +193,11 @@ let expiration = Some(
 - **Security**: Modern cryptographic backend with enterprise-grade security
 - **Compliance Ready**: Optional FIPS mode for government/enterprise use
 
-## Quality Metrics
-- **Test Success Rate**: 100% (37/37 tests passing)
+## Quality Metrics (v1.2.0)
+- **Test Success Rate**: 100% (55/55 tests passing)
+- **Test Coverage**: 55 total tests (23 unit + 14 integration + 18 shell integration)
+- **Platform Coverage**: Ubuntu, Windows, macOS validation
+- **Shell Coverage**: Bash, Zsh, PowerShell, Fish, CMD compatibility
 - **Security Status**: Clean audit (only minor test dependency warnings)
 - **Performance**: Sub-second operations with benchmark monitoring
 - **Code Quality**: Enforced formatting, linting, and documentation standards
