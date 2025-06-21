@@ -1,8 +1,6 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
-use std::fs;
 use tempfile::TempDir;
-use std::env;
 
 /// Integration tests for AWS Assume Role CLI
 /// 
@@ -97,7 +95,7 @@ mod integration {
     #[test]
     fn test_assume_nonexistent_role() {
         let temp_dir = TempDir::new().unwrap();
-        let config_path = temp_dir.path().join(".aws-assume-role");
+        let _config_path = temp_dir.path().join(".aws-assume-role");
         
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
