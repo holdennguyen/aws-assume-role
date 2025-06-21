@@ -29,7 +29,7 @@ pub struct CallerIdentity {
 impl AwsClient {
     pub async fn new() -> AppResult<Self> {
         // Check if region is already configured via environment or AWS config
-        let config_builder = aws_config::from_env();
+        let config_builder = aws_config::defaults(aws_config::BehaviorVersion::latest());
 
         // If no region is explicitly set, use a default to prevent IMDS timeout
         let config = if std::env::var("AWS_REGION").is_err()
@@ -76,14 +76,14 @@ impl AwsClient {
             .credentials
             .ok_or_else(|| AppError::AwsError("No credentials returned".to_string()))?;
 
-        let expiration = credentials.expiration.map(|exp| {
-            UNIX_EPOCH + std::time::Duration::from_secs(exp.secs().try_into().unwrap_or(0))
-        });
+        let expiration = Some(
+            UNIX_EPOCH + std::time::Duration::from_secs(credentials.expiration.secs() as u64)
+        );
 
         Ok(Credentials {
-            access_key_id: credentials.access_key_id.unwrap_or_default(),
-            secret_access_key: credentials.secret_access_key.unwrap_or_default(),
-            session_token: credentials.session_token,
+            access_key_id: credentials.access_key_id,
+            secret_access_key: credentials.secret_access_key,
+            session_token: Some(credentials.session_token),
             expiration,
         })
     }
@@ -168,10 +168,7 @@ impl AwsClient {
             secret_access_key: role_creds.secret_access_key.unwrap_or_default(),
             session_token: role_creds.session_token,
             expiration: Some(
-                UNIX_EPOCH
-                    + std::time::Duration::from_secs(
-                        u64::try_from(role_creds.expiration).unwrap_or(0),
-                    ),
+                UNIX_EPOCH + std::time::Duration::from_secs(role_creds.expiration as u64)
             ),
         })
     }
