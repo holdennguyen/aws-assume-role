@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum AppError {
     AwsError(String),
     ConfigError(String),
@@ -126,9 +127,12 @@ mod tests {
 
     #[test]
     fn test_app_result_ok() {
-        let result: AppResult<String> = Ok("Success".to_string());
+        let success_value = "Success".to_string();
+        let result: AppResult<String> = Ok(success_value.clone());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Success");
+        if let Ok(value) = result {
+            assert_eq!(value, success_value);
+        }
     }
 
     #[test]

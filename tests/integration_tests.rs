@@ -6,7 +6,6 @@ use tempfile::TempDir;
 ///
 /// These tests verify the end-to-end functionality of the CLI application
 /// without requiring actual AWS credentials or network access.
-
 #[cfg(test)]
 mod integration {
     use super::*;
@@ -35,7 +34,7 @@ mod integration {
     #[test]
     fn test_configure_help() {
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.args(&["configure", "--help"])
+        cmd.args(["configure", "--help"])
             .assert()
             .success()
             .stdout(predicate::str::contains("Configure a new AWS IAM role"));
@@ -45,7 +44,7 @@ mod integration {
     #[test]
     fn test_assume_help() {
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.args(&["assume", "--help"])
+        cmd.args(["assume", "--help"])
             .assert()
             .success()
             .stdout(predicate::str::contains("Assume a configured role"));
@@ -55,7 +54,7 @@ mod integration {
     #[test]
     fn test_list_help() {
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.args(&["list", "--help"])
+        cmd.args(["list", "--help"])
             .assert()
             .success()
             .stdout(predicate::str::contains(
@@ -67,7 +66,7 @@ mod integration {
     #[test]
     fn test_verify_help() {
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.args(&["verify", "--help"])
+        cmd.args(["verify", "--help"])
             .assert()
             .success()
             .stdout(predicate::str::contains(
@@ -79,7 +78,7 @@ mod integration {
     #[test]
     fn test_remove_help() {
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.args(&["remove", "--help"])
+        cmd.args(["remove", "--help"])
             .assert()
             .success()
             .stdout(predicate::str::contains("Remove a configured AWS IAM role"));
@@ -89,7 +88,7 @@ mod integration {
     #[test]
     fn test_configure_missing_args() {
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
-        cmd.args(&["configure"])
+        cmd.args(["configure"])
             .assert()
             .failure()
             .stderr(predicate::str::contains("required"));
@@ -103,7 +102,7 @@ mod integration {
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
-            .args(&["assume", "nonexistent-role"])
+            .args(["assume", "nonexistent-role"])
             .assert()
             .failure();
     }
@@ -147,7 +146,7 @@ mod config_integration {
         // Test configure command
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
-            .args(&[
+            .args([
                 "configure",
                 "--name",
                 "test-role",
@@ -170,7 +169,7 @@ mod config_integration {
         // Test remove command
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
-            .args(&["remove", "test-role"])
+            .args(["remove", "test-role"])
             .assert()
             .success();
 
@@ -195,7 +194,7 @@ mod error_handling {
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
-            .args(&[
+            .args([
                 "configure",
                 "--name",
                 "invalid-role",
@@ -216,7 +215,7 @@ mod error_handling {
 
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
-            .args(&[
+            .args([
                 "configure",
                 "--name",
                 "test-role",

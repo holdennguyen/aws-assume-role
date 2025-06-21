@@ -491,7 +491,6 @@ async fn verify_prerequisites(
         Err(e) => {
             println!("❌ Failed to initialize AWS SDK: {}", e);
             println!("   Check your AWS credentials configuration");
-            all_checks_passed = false;
             return Ok(());
         }
     };

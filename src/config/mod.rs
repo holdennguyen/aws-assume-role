@@ -1,5 +1,5 @@
 use crate::error::{AppError, AppResult};
-use dirs;
+
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -19,6 +19,12 @@ pub struct RoleConfig {
     pub account_id: String,
     pub source_profile: Option<String>,
     pub session_duration: Option<i64>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Config {
