@@ -194,4 +194,4 @@ rpmlint packaging/rpm/aws-assume-role.spec
 ---
 
 **Last Updated**: January 2025  
-**Version**: 1.1.1 
+**Version**: 1.1.2 

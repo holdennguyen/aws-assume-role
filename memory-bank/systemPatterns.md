@@ -1,112 +1,79 @@
 # System Patterns
 
 ## Architecture Overview
+AWS Assume Role follows a modular Rust architecture with clear separation of concerns.
 
-### Core Components
-1. CLI Interface
-   - Command parsing and validation
-   - User input handling
-   - Output formatting
-
-2. AWS Integration Layer
-   - SSO credential management
-   - IAM role operations
-   - Token handling
-
-3. Configuration Management
-   - Profile management
-   - Credential storage
-   - Environment settings
+### Core Modules
+```
+src/
+├── cli/        # Command parsing and user interface
+├── aws/        # AWS SDK integration and role operations  
+├── config/     # Configuration management and persistence
+├── error/      # Error handling and user messaging
+└── main.rs     # Application entry point
+```
 
 ### Design Patterns
 
-1. Command Pattern
-   - Structured command handling
-   - Extensible command architecture
-   - Clear separation of concerns
+#### Command Pattern
+- Structured command handling with clap derive macros
+- Clear command-to-function mapping
+- Extensible architecture for future commands
 
-2. Factory Pattern
-   - Credential provider factories
-   - Profile manager factories
-   - Platform-specific implementations
+#### Configuration Strategy
+- JSON-based persistent storage in user home directory
+- CRUD operations for role management
+- Validation and error recovery
 
-3. Strategy Pattern
-   - Different authentication strategies
-   - Multiple output formats
-   - Platform-specific behaviors
+#### Error Handling Strategy
+- Comprehensive error types with context
+- User-friendly error messages with troubleshooting guidance
+- Graceful degradation and recovery suggestions
 
-## Error Handling
+## Data Flow
+```
+User Input → CLI Parser → Command Handler → AWS SDK → Credential Output
+     ↓
+Configuration Storage ← Role Management ← AWS Integration
+```
 
-### Logging System
-1. Log Levels
-   - ERROR: Critical failures requiring immediate attention
-   - WARN: Important issues that don't stop execution
-   - INFO: General operation information
-   - DEBUG: Detailed information for troubleshooting
+### Key Implementation Decisions
 
-2. Log Content
-   - Timestamp
-   - Operation context
-   - Error details
-   - User context (when relevant)
+#### AWS SDK Integration
+- Uses aws-sdk-sts for role assumption
+- Handles temporary credentials and session tokens
+- Automatic region detection with us-east-1 fallback
 
-### Error Management
-1. Error Categories
-   - Authentication errors
-   - Permission errors
-   - Configuration errors
-   - Network errors
-   - System errors
+#### Configuration Management
+- JSON format for human readability and debugging
+- Stored in `~/.aws-assume-role/config.json`
+- Atomic write operations for data consistency
 
-2. Error Recovery
-   - Graceful degradation
-   - Clear error messages
-   - Recovery suggestions
-   - State preservation
+#### Cross-Platform Support
+- Single binary per platform (no runtime dependencies)
+- Platform-specific binary distribution
+- Shell wrapper scripts for enhanced integration
 
-## Component Relationships
+#### Error Categories
+- **Authentication**: AWS credential and permission issues
+- **Configuration**: Role setup and validation problems  
+- **Network**: AWS API connectivity issues
+- **System**: File I/O and environment problems
 
-### Data Flow
-1. User Input → Command Parser → Operation Handler
-2. Operation Handler → AWS Integration → Credential Management
-3. Credential Management → Output Formatter → User Display
+## Performance Characteristics
+- **Fast Startup**: Minimal initialization overhead
+- **Efficient AWS Calls**: Direct STS operations without unnecessary requests
+- **Low Memory**: Single-threaded design with minimal allocations
+- **Quick Response**: Sub-second role switching
 
-### State Management
-1. Credential State
-   - Current role
-   - Active credentials
-   - Token expiration
+## Testing Strategy
+- **Unit Tests**: Per-module functionality testing
+- **Integration Tests**: End-to-end command workflows
+- **Cross-Platform**: Automated testing on multiple OS/shell combinations
+- **AWS Mocking**: Isolated testing without real AWS calls
 
-2. Configuration State
-   - User preferences
-   - Default settings
-   - Cached data
-
-## Implementation Guidelines
-
-### Code Organization
-1. Module Structure
-   - cli/: Command line interface
-   - aws/: AWS integration
-   - config/: Configuration management
-   - error/: Error handling
-   - utils/: Utility functions
-
-2. Testing Strategy
-   - Unit tests per module
-   - Integration tests for workflows
-   - Mock AWS services
-   - Cross-platform testing
-
-### Best Practices
-1. Code Quality
-   - Comprehensive documentation
-   - Consistent error handling
-   - Clear naming conventions
-   - Type safety
-
-2. Performance
-   - Efficient resource usage
-   - Quick command execution
-   - Minimal external calls
-   - Optimized credential handling 
+## Security Patterns
+- **Credential Handling**: No persistent storage of AWS credentials
+- **Temporary Tokens**: Proper session token management
+- **Permissions**: Minimal required AWS permissions
+- **Error Privacy**: No credential leakage in error messages 

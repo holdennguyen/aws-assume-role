@@ -1,86 +1,89 @@
 # Technical Context
 
 ## Technology Stack
-### Core Technology
-- **Programming Language**: Rust
-  - Chosen for performance and cross-platform compilation
-  - Strong type system and memory safety
-  - Excellent CLI application support
 
-### AWS Integration
-- AWS SDK for Rust
-- AWS CLI compatibility
-- Support for AWS SSO and IAM role operations
+### Core Technology
+- **Language**: Rust 1.70+ (chosen for performance, safety, and cross-platform support)
+- **CLI Framework**: clap 4.0+ with derive macros
+- **AWS Integration**: aws-sdk-sts 0.30.0, aws-config 0.56.1
+- **Async Runtime**: tokio 1.0+ with full features
+- **Serialization**: serde + serde_json for configuration management
+
+### Key Dependencies
+```toml
+aws-config = "0.56.1"        # AWS SDK configuration
+aws-sdk-sts = "0.30.0"       # STS role assumption
+clap = "4.0"                 # CLI argument parsing
+serde = "1.0"                # JSON serialization
+tokio = "1.0"                # Async runtime
+dirs = "5.0"                 # Cross-platform directory detection
+anyhow = "1.0"               # Error handling
+tracing = "0.1"              # Structured logging
+```
+
+## Build & Distribution
+
+### Cross-Platform Compilation
+- **Targets**: x86_64-apple-darwin, aarch64-apple-darwin, x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu
+- **Build Script**: `build-releases.sh` for automated multi-platform builds
+- **Output**: Single binary per platform, no runtime dependencies
+
+### Package Distribution
+- **Automated CI/CD**: GitHub Actions workflow for all package managers
+- **Cargo**: Published to crates.io
+- **Homebrew**: Personal tap (holdennguyen/homebrew-tap)
+- **APT**: Launchpad PPA (ppa:holdennguyen/aws-assume-role)
+- **YUM/DNF**: COPR repository (holdennguyen/aws-assume-role)
+
+## Performance Characteristics
+
+### Resource Usage
+- **Binary Size**: ~8-15MB per platform (optimized release builds)
+- **Memory**: <10MB runtime footprint
+- **Startup**: <100ms cold start
+- **AWS Calls**: Single STS AssumeRole operation per role switch
+
+### Security Features
+- **No Credential Storage**: Only stores role ARNs, never AWS credentials
+- **Minimal Permissions**: Requires only sts:AssumeRole permission
+- **Session Management**: Proper handling of temporary credentials
+- **Error Safety**: No credential leakage in logs or error messages
 
 ## Development Requirements
 
-### Build System
-1. Cross-Platform Compilation
-   - Target multiple operating systems:
-     - MacOS (Intel/ARM)
-     - Linux (various distributions)
-     - Windows
-   - Single binary output per platform
+### Development Environment
+- Rust 1.70+ with stable toolchain
+- AWS CLI v2 configured for testing
+- Cross-compilation targets for release builds
+- Git with proper repository access
 
-2. Dependencies
-   - Minimize external dependencies
-   - Use stable, well-maintained crates
-   - Ensure compatibility across platforms
+### Testing Environment  
+- Unit testing with cargo test
+- Integration testing with assert_cmd
+- Cross-platform testing (macOS, Linux, Windows)
+- AWS SDK mocking for isolated tests
 
-### Installation Requirements
-1. Minimal Setup
-   - Self-contained binary
-   - No additional runtime dependencies
-   - Easy installation process
+## Configuration Management
 
-2. Distribution
-   - Package managers support where applicable
-   - Direct binary downloads
-   - Clear installation instructions
+### Storage Location
+- **Path**: `~/.aws-assume-role/config.json`
+- **Format**: JSON with role configurations
+- **Permissions**: User-only read/write (600)
 
-## Technical Constraints
+### File Structure
+```json
+{
+  "roles": {
+    "role-name": {
+      "role_arn": "arn:aws:iam::123456789012:role/MyRole",
+      "session_duration": 3600
+    }
+  }
+}
+```
 
-### Security
-1. Credential Handling
-   - Secure storage of temporary credentials
-   - Safe handling of AWS access keys
-   - Protection against credential exposure
-
-2. Permission Management
-   - Proper handling of AWS role assumptions
-   - Validation of SSO permissions
-   - Secure token management
-
-### Performance
-1. Response Time
-   - Quick role switching
-   - Efficient credential management
-   - Minimal latency in operations
-
-2. Resource Usage
-   - Low memory footprint
-   - Efficient CPU utilization
-   - Minimal disk I/O
-
-## Development Tools
-1. Required Tools
-   - Rust toolchain
-   - Cargo package manager
-   - Cross-compilation tools
-   - AWS SDK development kit
-
-2. Testing Environment
-   - Unit testing framework
-   - Integration testing setup
-   - Cross-platform testing capabilities
-
-## Documentation Requirements
-1. Technical Documentation
-   - API documentation
-   - Integration guides
-   - Development setup instructions
-
-2. User Documentation
-   - Installation guides
-   - Usage examples
-   - Troubleshooting guides 
+## Deployment Architecture
+- **Single Binary**: Self-contained executable per platform
+- **No Dependencies**: No external runtime requirements
+- **Shell Integration**: Wrapper scripts for enhanced shell integration
+- **Container Support**: Docker image available via GitHub Container Registry 

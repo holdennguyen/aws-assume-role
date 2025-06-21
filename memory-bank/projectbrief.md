@@ -1,53 +1,32 @@
 # AWS Assume Role - Project Brief
 
 ## Project Purpose
-The AWS Assume Role project aims to simplify the process of switching between AWS IAM roles in CLI environments for users with SSO federated access. This tool bridges the gap between SSO-based access and IAM role-based permissions, making it easier for users to manage their AWS credentials and role assumptions.
+AWS Assume Role simplifies switching between AWS IAM roles in CLI environments for users with SSO federated access. This production-ready tool bridges the gap between SSO-based access and IAM role-based permissions.
 
-## Core Requirements
-1. Simple and Quick Usage
-   - Minimal user interaction required
-   - Fast role switching capabilities
-   - Intuitive command interface
-
-2. Cross-Platform Compatibility
-   - Support for MacOS, Linux, and Windows
-   - Compatible with bash shell, zshell, and git bash
-   - Consistent experience across platforms
-
-3. User-Friendly Experience
-   - Clear feedback and error messages
-   - Minimal setup requirements
-   - Straightforward credential management
+## Core Features ✅
+- **Simple Usage**: Minimal user interaction with intuitive commands
+- **Cross-Platform**: macOS, Linux, Windows support (bash, zsh, PowerShell)
+- **Prerequisites Verification**: Built-in `verify` command for system checks
+- **Multiple Output Formats**: Shell export and JSON formats
+- **Persistent Configuration**: Role configurations stored locally
 
 ## Target Users
 Software engineers who:
-- Are familiar with coding but not necessarily AWS authentication/authorization
 - Work with multiple AWS accounts and roles
-- Need to frequently switch between different IAM roles
-- Use AWS CLI as part of their daily workflow
+- Need frequent role switching in CLI workflows
+- Have SSO federated access to AWS
+- Want streamlined credential management
 
-## Problem Statement
-### Current Challenges
-1. Migration from SSO Permission Sets to IAM Roles
-   - Users previously had dedicated SSO permission sets in AWS accounts
-   - These permissions have been replaced by IAM roles per account
-   - Users now need SSO permissions specifically to assume these IAM roles
+## Current Status: PRODUCTION READY v1.1.2
+**Complete Solution** with automated package distribution across 4 major channels:
+- 🦀 **Cargo**: `cargo install aws-assume-role`
+- 🍺 **Homebrew**: `brew tap holdennguyen/tap && brew install aws-assume-role`
+- 📦 **APT**: `sudo add-apt-repository ppa:holdennguyen/aws-assume-role && sudo apt install aws-assume-role`
+- 📦 **YUM/DNF**: `sudo dnf copr enable holdennguyen/aws-assume-role && sudo dnf install aws-assume-role`
 
-2. Complex Credential Management
-   - Users must manage multiple sets of credentials:
-     - aws_access_key_id
-     - aws_secret_access_key
-     - session tokens
-     - AWS profiles
-
-3. Multi-Step Process
-   - Users must first obtain short-term SSO credentials
-   - Then set up CLI configurations
-   - Finally assume specific IAM roles
-   - Process needs to be repeated for different accounts/roles
-
-### Solution Goals
-1. Streamline the role assumption process
-2. Simplify credential management
-3. Reduce the number of manual steps required
-4. Provide a consistent experience across different shells and operating systems 
+## Key Commands
+- `awsr configure <role-name>`: Add/update role configurations
+- `awsr assume <role-name>`: Assume role and output credentials
+- `awsr list`: Display configured roles
+- `awsr verify`: Check prerequisites and system configuration
+- `awsr remove <role-name>`: Delete role configurations 
