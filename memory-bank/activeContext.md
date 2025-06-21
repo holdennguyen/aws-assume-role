@@ -1,5 +1,44 @@
 # Active Context
 
+## ⚠️ CRITICAL PATTERN: Formatting After Code Changes
+**RECURRING ISSUE**: Every code change triggers formatting failures in CI/CD pipeline.
+
+### Pattern Recognition
+1. **Root Cause**: `cargo fmt` applies automatic formatting that differs from manual edits
+2. **Trigger**: ANY code modification (clippy fixes, test updates, feature changes)
+3. **Manifestation**: CI fails at "Check formatting" step with trailing whitespace/spacing diffs
+4. **Impact**: Blocks all PR merges and deployment pipeline
+
+### Mandatory Workflow (ALWAYS FOLLOW)
+```bash
+# After ANY code changes (fixes, features, etc.)
+cargo fmt                    # Apply automatic formatting
+cargo fmt --check          # Verify no formatting issues
+cargo test                  # Ensure tests still pass
+git add -A && git commit -m "fix: apply cargo fmt after [change description]"
+git push origin [branch]
+```
+
+### Historical Occurrences (Learn from Pattern)
+- **2024-12-XX**: Clippy fixes → formatting failure → fixed with cargo fmt
+- **2024-12-XX**: Windows test compatibility → formatting failure → fixed with cargo fmt  
+- **2024-12-XX**: Shell integration tests → formatting failure → fixed with cargo fmt
+- **Pattern**: EVERY significant code change requires formatting fix
+
+### Prevention Strategy
+1. **Local Development**: Always run `cargo fmt` before committing
+2. **Git Hooks**: Consider pre-commit hook for automatic formatting
+3. **IDE Integration**: Configure editor to auto-format on save
+4. **Memory Bank**: Document this pattern to prevent future occurrences
+
+### Technical Details
+- **Formatter**: rustfmt with default settings
+- **Common Issues**: Trailing whitespace, line length, bracket placement
+- **CI Check**: `cargo fmt --all -- --check` (zero tolerance)
+- **Solution**: Always `cargo fmt` after any code modification
+
+---
+
 ## Current Status: ENHANCED SECURITY v1.2.0+ with AWS SDK v1.x
 AWS Assume Role now features **modern cryptographic security** with AWS SDK v1.x and `aws-lc-rs`, **completely resolving ring vulnerabilities**, in addition to comprehensive testing framework and production-ready automated distribution.
 
