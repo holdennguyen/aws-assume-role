@@ -1,5 +1,27 @@
 # Development Guide
 
+## 🔒 Security First
+
+### Latest Security Enhancement (v1.2.0+)
+AWS Assume Role has been upgraded to AWS SDK v1.x with `aws-lc-rs` cryptographic backend, **completely resolving all ring vulnerabilities**:
+
+- ✅ **RUSTSEC-2025-0009**: ring AES panic issue - FIXED
+- ✅ **RUSTSEC-2025-0010**: ring unmaintained warning - FIXED  
+- ✅ **Clean Security Audit**: Modern, AWS-maintained cryptography
+- ✅ **FIPS Ready**: Optional FIPS 140-3 compliance available
+- ✅ **Post-Quantum Crypto**: Future-proof cryptographic support
+
+See `memory-bank/security-upgrade.md` for complete security upgrade details.
+
+### Security Practices
+```bash
+# Always run security audit before commits
+cargo audit
+
+# Should show only minor test dependency warnings
+# No critical vulnerabilities should be present
+```
+
 ## 🔄 Git Flow Workflow
 
 We use a modified Git Flow branching strategy to manage development:
