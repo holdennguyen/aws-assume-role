@@ -26,6 +26,10 @@ exclude = [
 name = "aws-assume-role"
 path = "src/main.rs"
 
+[lib]
+name = "aws_assume_role"
+path = "src/lib.rs"
+
 [dependencies]
 aws-config = "0.56.1"
 aws-sdk-sts = "0.30.0"
@@ -43,3 +47,17 @@ tracing-subscriber = "0.3"
 tempfile = "3.0"
 assert_cmd = "2.0"
 predicates = "3.0"
+tokio-test = "0.4"
+mock_instant = "0.3"
+serial_test = "3.0"
+env_logger = "0.10"
+test-log = "0.2"
+rstest = "0.18"
+proptest = "1.0"
+criterion = "0.5"
+wiremock = "0.5"
+
+# For benchmarking
+[[bench]]
+name = "performance"
+harness = false
