@@ -1,6 +1,6 @@
-use tempfile::TempDir;
-use std::fs;
 use aws_assume_role::config::{Config, RoleConfig};
+use std::fs;
+use tempfile::TempDir;
 
 /// Test utilities and helper functions for AWS Assume Role testing
 pub struct TestHelper {
@@ -14,10 +14,10 @@ impl TestHelper {
         let temp_dir = TempDir::new().expect("Failed to create temp directory");
         let config_dir = temp_dir.path().join(".aws-assume-role");
         fs::create_dir_all(&config_dir).expect("Failed to create config directory");
-        
+
         // Set HOME environment variable for isolated testing
         std::env::set_var("HOME", temp_dir.path());
-        
+
         Self {
             temp_dir,
             config_dir,
@@ -37,10 +37,10 @@ impl TestHelper {
 
     /// Create a sample role configuration with custom parameters
     pub fn create_custom_role(
-        name: &str, 
-        account_id: &str, 
+        name: &str,
+        account_id: &str,
         role_name: &str,
-        duration: Option<i64>
+        duration: Option<i64>,
     ) -> RoleConfig {
         RoleConfig {
             name: name.to_string(),
@@ -54,7 +54,7 @@ impl TestHelper {
     /// Create a config with multiple sample roles
     pub fn create_sample_config(&self) -> Config {
         let mut config = Config::new();
-        
+
         let roles = vec![
             Self::create_sample_role("dev"),
             Self::create_sample_role("staging"),
@@ -107,9 +107,12 @@ impl TestHelper {
 
     /// Create a config file with permissions issues (Unix only)
     #[cfg(unix)]
-    pub fn create_readonly_config(&self, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn create_readonly_config(
+        &self,
+        config: &Config,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         use std::os::unix::fs::PermissionsExt;
-        
+
         self.save_config(config)?;
         let config_path = self.config_path();
         let mut perms = fs::metadata(&config_path)?.permissions();
@@ -122,7 +125,7 @@ impl TestHelper {
     #[cfg(unix)]
     pub fn restore_config_permissions(&self) -> Result<(), std::io::Error> {
         use std::os::unix::fs::PermissionsExt;
-        
+
         let config_path = self.config_path();
         if config_path.exists() {
             let mut perms = fs::metadata(&config_path)?.permissions();
@@ -171,7 +174,7 @@ pub mod test_data {
     pub const VALID_ACCOUNT_ID: &str = "123456789012";
     pub const INVALID_ACCOUNT_ID: &str = "invalid-id";
     pub const TEST_ROLE_NAME: &str = "test-role";
-    
+
     pub const SAMPLE_CONFIG_JSON: &str = r#"{
         "roles": [
             {
@@ -206,7 +209,8 @@ mod tests {
 
     #[test]
     fn test_custom_role_creation() {
-        let role = TestHelper::create_custom_role("custom", "987654321098", "CustomRole", Some(7200));
+        let role =
+            TestHelper::create_custom_role("custom", "987654321098", "CustomRole", Some(7200));
         assert_eq!(role.name, "custom");
         assert_eq!(role.role_arn, "arn:aws:iam::987654321098:role/CustomRole");
         assert_eq!(role.account_id, "987654321098");
@@ -229,8 +233,8 @@ mod tests {
         let creds = MockCredentials::new();
         assert_eq!(creds.access_key_id, "AKIAIOSFODNN7EXAMPLE");
         assert!(creds.session_token.is_some());
-        
+
         let creds_no_token = MockCredentials::new().with_session_token(None);
         assert!(creds_no_token.session_token.is_none());
     }
-} 
+}
