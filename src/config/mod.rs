@@ -75,6 +75,22 @@ impl Config {
     }
 
     fn get_config_path() -> AppResult<PathBuf> {
+        #[cfg(test)]
+        {
+            // In tests, respect environment variables for cross-platform testing
+            if let Ok(test_home) = std::env::var("HOME") {
+                return Ok(PathBuf::from(test_home)
+                    .join(".aws-assume-role")
+                    .join("config.json"));
+            }
+            #[cfg(windows)]
+            if let Ok(test_userprofile) = std::env::var("USERPROFILE") {
+                return Ok(PathBuf::from(test_userprofile)
+                    .join(".aws-assume-role")
+                    .join("config.json"));
+            }
+        }
+
         let home_dir = dirs::home_dir()
             .ok_or_else(|| AppError::ConfigError("Could not find home directory".to_string()))?;
 
