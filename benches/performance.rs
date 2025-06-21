@@ -1,5 +1,5 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use aws_assume_role::config::{Config, RoleConfig};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use tempfile::TempDir;
 
 fn benchmark_config_operations(c: &mut Criterion) {
@@ -105,7 +105,7 @@ fn benchmark_role_operations(c: &mut Criterion) {
     });
 
     let mut config = Config::new();
-    
+
     c.bench_function("multiple_role_additions", |b| {
         b.iter(|| {
             for i in 0..10 {
@@ -118,7 +118,7 @@ fn benchmark_role_operations(c: &mut Criterion) {
                 };
                 config.add_role(role);
             }
-            
+
             // Clean up for next iteration
             for i in 0..10 {
                 config.remove_role(&format!("temp-role-{}", i));
@@ -133,4 +133,4 @@ criterion_group!(
     benchmark_config_io,
     benchmark_role_operations
 );
-criterion_main!(benches); 
+criterion_main!(benches);

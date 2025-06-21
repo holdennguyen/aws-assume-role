@@ -3,7 +3,7 @@ use predicates::prelude::*;
 use tempfile::TempDir;
 
 /// Integration tests for AWS Assume Role CLI
-/// 
+///
 /// These tests verify the end-to-end functionality of the CLI application
 /// without requiring actual AWS credentials or network access.
 
@@ -58,7 +58,9 @@ mod integration {
         cmd.args(&["list", "--help"])
             .assert()
             .success()
-            .stdout(predicate::str::contains("List all configured AWS IAM roles"));
+            .stdout(predicate::str::contains(
+                "List all configured AWS IAM roles",
+            ));
     }
 
     /// Test verify command help
@@ -68,7 +70,9 @@ mod integration {
         cmd.args(&["verify", "--help"])
             .assert()
             .success()
-            .stdout(predicate::str::contains("Verify that all prerequisites are met"));
+            .stdout(predicate::str::contains(
+                "Verify that all prerequisites are met",
+            ));
     }
 
     /// Test remove command help
@@ -96,7 +100,7 @@ mod integration {
     fn test_assume_nonexistent_role() {
         let temp_dir = TempDir::new().unwrap();
         let _config_path = temp_dir.path().join(".aws-assume-role");
-        
+
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
             .args(&["assume", "nonexistent-role"])
@@ -108,7 +112,7 @@ mod integration {
     #[test]
     fn test_list_empty() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
             .arg("list")
@@ -145,9 +149,12 @@ mod config_integration {
         cmd.env("HOME", temp_dir.path())
             .args(&[
                 "configure",
-                "--name", "test-role",
-                "--role-arn", "arn:aws:iam::123456789012:role/TestRole",
-                "--account-id", "123456789012"
+                "--name",
+                "test-role",
+                "--role-arn",
+                "arn:aws:iam::123456789012:role/TestRole",
+                "--account-id",
+                "123456789012",
             ])
             .assert()
             .success();
@@ -185,14 +192,17 @@ mod error_handling {
     #[test]
     fn test_invalid_role_arn() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
             .args(&[
                 "configure",
-                "--name", "invalid-role",
-                "--role-arn", "invalid-arn",
-                "--account-id", "123456789012"
+                "--name",
+                "invalid-role",
+                "--role-arn",
+                "invalid-arn",
+                "--account-id",
+                "123456789012",
             ])
             .assert()
             .success()
@@ -203,17 +213,20 @@ mod error_handling {
     #[test]
     fn test_invalid_account_id() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         let mut cmd = Command::cargo_bin("aws-assume-role").unwrap();
         cmd.env("HOME", temp_dir.path())
             .args(&[
                 "configure",
-                "--name", "test-role",
-                "--role-arn", "arn:aws:iam::123456789012:role/TestRole",
-                "--account-id", "invalid-id"
+                "--name",
+                "test-role",
+                "--role-arn",
+                "arn:aws:iam::123456789012:role/TestRole",
+                "--account-id",
+                "invalid-id",
             ])
             .assert()
             .success()
             .stdout(predicate::str::contains("could not verify"));
     }
-} 
+}

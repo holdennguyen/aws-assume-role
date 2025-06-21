@@ -1,8 +1,8 @@
 use crate::error::{AppError, AppResult};
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::fs;
 use dirs;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -51,11 +51,12 @@ impl Config {
 
     pub fn save(&self) -> AppResult<()> {
         let config_path = Self::get_config_path()?;
-        
+
         // Ensure the config directory exists
         if let Some(parent) = config_path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|e| AppError::ConfigError(format!("Failed to create config directory: {}", e)))?;
+            fs::create_dir_all(parent).map_err(|e| {
+                AppError::ConfigError(format!("Failed to create config directory: {}", e))
+            })?;
         }
 
         let content = serde_json::to_string_pretty(self)
@@ -70,7 +71,7 @@ impl Config {
     fn get_config_path() -> AppResult<PathBuf> {
         let home_dir = dirs::home_dir()
             .ok_or_else(|| AppError::ConfigError("Could not find home directory".to_string()))?;
-        
+
         Ok(home_dir.join(".aws-assume-role").join("config.json"))
     }
 
@@ -99,8 +100,8 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     #[test]
     fn test_role_config_creation() {
@@ -152,7 +153,7 @@ mod tests {
         };
 
         config.add_role(role);
-        
+
         let retrieved_role = config.get_role("test-role");
         assert!(retrieved_role.is_some());
         assert_eq!(retrieved_role.unwrap().name, "test-role");
@@ -195,10 +196,10 @@ mod tests {
         };
 
         config.add_role(role);
-        
+
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: Config = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(deserialized.roles.len(), 1);
         let role = deserialized.get_role("test-role").unwrap();
         assert_eq!(role.role_arn, "arn:aws:iam::123456789012:role/TestRole");
@@ -240,7 +241,7 @@ mod tests {
     fn test_load_nonexistent_config() {
         let temp_dir = TempDir::new().unwrap();
         std::env::set_var("HOME", temp_dir.path());
-        
+
         let result = Config::load();
         assert!(result.is_ok());
         let config = result.unwrap();
@@ -250,7 +251,7 @@ mod tests {
     #[test]
     fn test_duplicate_role_names() {
         let mut config = Config::new();
-        
+
         let role1 = RoleConfig {
             name: "test-role".to_string(),
             role_arn: "arn:aws:iam::123456789012:role/TestRole1".to_string(),
@@ -280,7 +281,7 @@ mod tests {
     fn test_config_path() {
         let temp_dir = TempDir::new().unwrap();
         std::env::set_var("HOME", temp_dir.path());
-        
+
         let path = Config::get_config_path().unwrap();
         let expected = temp_dir.path().join(".aws-assume-role").join("config.json");
         assert_eq!(path, expected);
