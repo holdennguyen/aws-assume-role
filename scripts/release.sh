@@ -41,21 +41,19 @@ show_usage() {
     echo "  build               - Build binaries for all platforms"
     echo "  package [ver]       - Create distribution packages"
     echo "  publish [ver]       - Publish to package managers"
-    echo "  release <ver>       - Complete release (prepare + build + package + publish)"
     echo "  help                - Show this help"
     echo ""
     echo "Examples:"
-    echo "  $0 version 1.2.1            # Update version only"
-    echo "  $0 notes 1.2.1              # Create release notes only"
-    echo "  $0 prepare 1.2.1            # Update version + create notes"
+    echo "  $0 version x.y.z            # Update version only"
+    echo "  $0 notes x.y.z              # Create release notes only"
+    echo "  $0 prepare x.y.z            # Update version + create notes"
     echo "  $0 build                    # Build binaries"
-    echo "  $0 package v1.2.1          # Create distribution packages"
-    echo "  $0 release 1.2.1           # Complete release process"
+    echo "  $0 package vx.y.z          # Create distribution packages"
     echo ""
     echo "Workflow:"
-    echo "  1. $0 prepare 1.2.1         # Prepare version and notes"
+    echo "  1. $0 prepare x.y.z         # Prepare version and notes"
     echo "  2. Edit release notes and commit changes"
-    echo "  3. $0 release 1.2.1         # Complete release"
+    echo "  3. Push to 'develop', wait for CI, then create git tag"
     echo ""
 }
 
@@ -64,7 +62,7 @@ update_version() {
     local version="$1"
     if [ -z "$version" ]; then
         log_error "Version required for version update"
-        echo "Usage: $0 version 1.2.1"
+        echo "Usage: $0 version x.y.z"
         exit 1
     fi
     
@@ -109,6 +107,19 @@ update_version() {
     fi
     
     log_info "✅ Version updated to $version successfully!"
+    
+    echo ""
+    log_info "🎯 Release preparation completed!"
+    echo ""
+    echo "📋 Next steps (Safe Release Process):"
+    echo "1. Review all changes: git diff"
+    echo "2. Commit changes: git add . && git commit -m \"🔖 Prepare release v$version\""
+    echo "3. Push to the integration branch: git push origin develop"
+    echo "4. ⚠️  CRITICAL: Wait for GitHub Actions to PASS for the 'develop' branch."
+    echo "5. After CI passes, create the tag: git tag -a v$version -m \"Release v$version\""
+    echo "6. Push the tag to trigger the release pipeline: git push origin v$version"
+    echo ""
+    log_warn "Do not proceed to tagging until CI has passed on the 'develop' branch."
 }
 
 # Create release notes from template
@@ -116,7 +127,7 @@ create_release_notes() {
     local version="$1"
     if [ -z "$version" ]; then
         log_error "Version required for release notes creation"
-        echo "Usage: $0 notes 1.2.1"
+        echo "Usage: $0 notes x.y.z"
         exit 1
     fi
     
@@ -137,8 +148,8 @@ create_release_notes() {
         read -p "Do you want to overwrite? (y/N): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            log_info "❌ Cancelled."
-            return 1
+            log_info "✅ Skipping overwrite of existing release notes."
+            return 0
         fi
     fi
     
@@ -195,7 +206,7 @@ prepare_release() {
     local version="$1"
     if [ -z "$version" ]; then
         log_error "Version required for release preparation"
-        echo "Usage: $0 prepare 1.2.1"
+        echo "Usage: $0 prepare x.y.z"
         exit 1
     fi
     
@@ -212,15 +223,15 @@ prepare_release() {
     echo ""
     log_info "🎯 Release preparation completed!"
     echo ""
-    echo "📋 Next steps:"
-    echo "1. Edit the release notes file (should be open in your editor)"
-    echo "2. Update release-notes/README.md with new version entry"
-    echo "3. Review all changes: git diff"
-    echo "4. Test the build: cargo build --release && cargo test"
-    echo "5. Commit changes: git add . && git commit -m \"🔖 Prepare release v$version\""
-    echo "6. Continue with: $0 release $version"
+    echo "📋 Next steps (Safe Release Process):"
+    echo "1. Review all changes: git diff"
+    echo "2. Commit changes: git add . && git commit -m \"🔖 Prepare release v$version\""
+    echo "3. Push to the integration branch: git push origin develop"
+    echo "4. ⚠️  CRITICAL: Wait for GitHub Actions to PASS for the 'develop' branch."
+    echo "5. After CI passes, create the tag: git tag -a v$version -m \"Release v$version\""
+    echo "6. Push the tag to trigger the release pipeline: git push origin v$version"
     echo ""
-    log_warn "⚠️  Don't create git tags yet! Do that after committing version changes."
+    log_warn "Do not proceed to tagging until CI has passed on the 'develop' branch."
 }
 
 # Build binaries
@@ -414,70 +425,6 @@ publish_homebrew() {
     cd ..
 }
 
-# Complete release process
-complete_release() {
-    local version="$1"
-    if [ -z "$version" ]; then
-        log_error "Version required for complete release"
-        echo "Usage: $0 release 1.2.1"
-        exit 1
-    fi
-    
-    # Remove 'v' prefix if present for internal use
-    local clean_version=${version#v}
-    
-    log_info "🚀 Starting complete release process for v$clean_version"
-    
-    # Check if version and release notes preparation is needed
-    local current_version=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-    local release_notes_file="release-notes/RELEASE_NOTES_v$clean_version.md"
-    
-    if [[ "$current_version" != "$clean_version" ]] || [[ ! -f "$release_notes_file" ]]; then
-        log_warn "⚠️  Release preparation needed!"
-        echo ""
-        echo "Current Cargo.toml version: $current_version"
-        echo "Target version: $clean_version"
-        echo "Release notes exist: $([ -f "$release_notes_file" ] && echo "Yes" || echo "No")"
-        echo ""
-        read -p "Run preparation step? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            prepare_release "$clean_version"
-            echo ""
-            log_warn "⚠️  Please complete the preparation steps above before continuing with the release."
-            log_info "After editing release notes and committing, run: $0 release $version"
-            return 0
-        else
-            log_warn "⚠️  Continuing without preparation. Ensure version and release notes are ready."
-        fi
-    fi
-    
-    # Step 1: Build
-    build_binaries
-    
-    # Step 2: Package
-    create_packages "$clean_version"
-    
-    # Step 3: Publish
-    echo ""
-    read -p "Continue to publishing? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        publish_packages "$clean_version"
-    else
-        log_info "📦 Packages created but not published. Run: $0 publish $clean_version"
-    fi
-    
-    echo ""
-    log_info "🎉 Release process completed!"
-    echo ""
-    echo "📋 Final steps:"
-    echo "1. Create git tag: git tag -a v$clean_version -m \"Release v$clean_version\""
-    echo "2. Push changes: git push origin main && git push origin v$clean_version"
-    echo "3. Upload distribution packages to GitHub releases"
-    echo "4. Announce the release!"
-}
-
 # Main command processing
 case "${1:-help}" in
     "version")
@@ -497,9 +444,6 @@ case "${1:-help}" in
         ;;
     "publish")
         publish_packages "$2"
-        ;;
-    "release")
-        complete_release "$2"
         ;;
     "help"|*)
         show_usage
