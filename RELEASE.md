@@ -411,4 +411,49 @@ brew analytics --install aws-assume-role
 - [Cargo Publishing Guide](https://doc.rust-lang.org/cargo/reference/publishing.html)
 - [GitHub Releases Documentation](https://docs.github.com/en/repositories/releasing-projects-on-github)
 - [Homebrew Formula Cookbook](https://docs.brew.sh/Formula-Cookbook)
-- [Launchpad PPA Guide](https://help.launchpad.net/Packaging/PPA) 
+- [Launchpad PPA Guide](https://help.launchpad.net/Packaging/PPA)
+
+## Release Process
+
+## Issue: Version Mismatch Between Git Tags and crates.io
+
+### Problem
+During the v1.2.0 release, version 1.1.2 was published to crates.io instead of 1.2.0. This occurred because:
+
+1. The git tag `v1.2.0` was created before updating `Cargo.toml` to version "1.2.0"
+2. The GitHub Actions workflow published the version from `Cargo.toml` at the time the tag was created
+3. The workflow has been improved to detect and prevent this issue
+
+### Solution
+1. **Manual Fix**: Authenticate with crates.io and publish the correct version:
+   ```bash
+   cargo login
+   cargo publish
+   ```
+
+2. **Prevention**: Always update version files BEFORE creating tags:
+   ```bash
+   # Use the update script
+   ./scripts/update-version.sh 1.2.0
+   
+   # Review changes
+   git diff
+   
+   # Test build
+   cargo build --release
+   cargo test
+   
+   # Commit version changes FIRST
+   git add .
+   git commit -m "🔖 Bump version to v1.2.0"
+   
+   # Then create tag
+   git tag -a v1.2.0 -m "Release v1.2.0"
+   
+   # Push both
+   git push origin master
+   git push origin v1.2.0
+   ```
+
+### Workflow Improvements
+The GitHub Actions workflow now includes version validation to prevent publishing mismatched versions to crates.io. 

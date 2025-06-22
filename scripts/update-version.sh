@@ -48,11 +48,22 @@ sed -i.bak "s/org.opencontainers.image.version=\".*\"/org.opencontainers.image.v
 echo "🧹 Cleaning up backup files..."
 find . -name "*.bak" -type f -delete
 
+# Verify Cargo.toml was updated correctly
+CURRENT_VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
+    echo "❌ Error: Failed to update Cargo.toml version. Expected $NEW_VERSION, got $CURRENT_VERSION"
+    exit 1
+fi
+
 echo "✅ Version updated to $NEW_VERSION successfully!"
 echo ""
 echo "📋 Next steps:"
 echo "1. Review changes: git diff"
 echo "2. Build and test: cargo build --release"
-echo "3. Commit changes: git add . && git commit -m \"🔖 Bump version to v$NEW_VERSION\""
-echo "4. Create tag: git tag -a v$NEW_VERSION -m \"Release v$NEW_VERSION\""
-echo "5. Push: git push origin master && git push origin v$NEW_VERSION" 
+echo "3. Run tests: cargo test"
+echo "4. Commit changes: git add . && git commit -m \"🔖 Bump version to v$NEW_VERSION\""
+echo "5. Create tag: git tag -a v$NEW_VERSION -m \"Release v$NEW_VERSION\""
+echo "6. Push: git push origin master && git push origin v$NEW_VERSION"
+echo ""
+echo "🚨 Important: Make sure to create the tag AFTER committing the version changes!"
+echo "   This ensures Cargo.toml version matches the git tag for crates.io publishing." 
