@@ -43,6 +43,28 @@ cargo test  # Should pass all 79 tests
 
 ## 🔄 Daily Development Flow
 
+### ⚠️ CRITICAL: Mandatory Quality Gates Before ANY Push
+
+**ZERO TOLERANCE POLICY**: These checks MUST pass before every commit/push to prevent CI failures.
+
+```bash
+# MANDATORY before every commit - NO EXCEPTIONS
+cargo fmt                          # Fix formatting (REQUIRED)
+cargo fmt --check                  # Verify formatting (REQUIRED)
+cargo clippy -- -D warnings        # Fix linting (REQUIRED)
+cargo test                         # All 79 tests must pass (REQUIRED)
+
+# Only commit after ALL checks pass
+git add . && git commit -m "your message"
+git push origin your-branch
+```
+
+**Why This is Critical**:
+- GitHub Actions has ZERO TOLERANCE for formatting violations
+- CI fails immediately on any formatting differences
+- Pattern observed: Developers forget `cargo fmt` → CI fails → Wasted time
+- **ALWAYS run `cargo fmt` after ANY code changes**
+
 ### Feature Development Cycle
 
 ```bash
@@ -76,8 +98,9 @@ awsr --version
 ```bash
 # Pre-PR checklist (ALL MANDATORY)
 git rebase main
+cargo fmt && cargo fmt --check     # Format AND verify (CRITICAL)
+cargo clippy -- -D warnings        # Zero warnings
 cargo test                         # All 79 tests pass
-cargo fmt && cargo clippy -- -D warnings
 ./scripts/build-releases.sh        # Cross-platform validation
 
 # Create PR with conventional commits
@@ -210,13 +233,39 @@ gh run view <run-id> --log
 
 ### Common CI Failures and Fixes
 
-| Failure Type | Common Cause | Fix |
-|-------------|--------------|-----|
-| Format Check | Unformatted code | `cargo fmt` |
-| Clippy Warnings | Linting violations | `cargo clippy -- -D warnings` |
-| Test Failures | Broken functionality | Fix code, `cargo test` |
-| Cross-Compilation | Missing toolchain | Install musl-cross, mingw-w64 |
-| Missing Files | Incomplete build | Ensure all required files exist |
+| Failure Type | Common Cause | Fix | Prevention |
+|-------------|--------------|-----|------------|
+| **Format Check** | Unformatted code | `cargo fmt` | **ALWAYS** run `cargo fmt` after code changes |
+| Clippy Warnings | Linting violations | `cargo clippy -- -D warnings` | Run clippy during development |
+| Test Failures | Broken functionality | Fix code, `cargo test` | Write tests first, run frequently |
+| Cross-Compilation | Missing toolchain | Install musl-cross, mingw-w64 | Verify toolchain setup |
+| Missing Files | Incomplete build | Ensure all required files exist | Run build scripts before push |
+
+### ⚠️ CRITICAL: Formatting Issue Prevention
+
+**Most Common CI Failure**: Code formatting violations
+
+```bash
+# WRONG - This WILL cause CI failure:
+# 1. Edit code
+# 2. git add . && git commit -m "changes"
+# 3. git push  # ❌ CI fails on formatting
+
+# RIGHT - This prevents CI failure:
+# 1. Edit code
+# 2. cargo fmt                    # ✅ MANDATORY
+# 3. cargo fmt --check           # ✅ Verify formatting
+# 4. git add . && git commit -m "changes"
+# 5. git push                    # ✅ CI passes
+```
+
+**Formatting Emergency Fix**:
+```bash
+# If you already pushed and CI is failing on formatting:
+cargo fmt                          # Fix formatting
+git add . && git commit -m "fix: apply formatting"
+git push origin your-branch        # Push fix
+```
 
 ## 🔧 Troubleshooting
 
