@@ -167,7 +167,9 @@ fn test_export_format_integration() {
 }
 
 /// Test executable permissions on Unix systems
+/// Test that Unix executable files have proper permissions (Unix only)
 #[test]
+#[cfg(unix)]
 fn test_unix_executable_permissions() {
     use std::os::unix::fs::PermissionsExt;
 
@@ -192,6 +194,28 @@ fn test_unix_executable_permissions() {
                 executable,
                 mode
             );
+        }
+    }
+}
+
+/// Test that files exist on Windows (Windows only)
+#[test]
+#[cfg(windows)]
+fn test_windows_file_existence() {
+    let files = [
+        "releases/aws-assume-role-bash.sh",
+        "releases/INSTALL.sh",
+        "releases/UNINSTALL.sh",
+        "releases/aws-assume-role-windows.exe",
+    ];
+
+    for file in &files {
+        if Path::new(file).exists() {
+            let metadata =
+                fs::metadata(file).unwrap_or_else(|_| panic!("Should read metadata for {}", file));
+
+            // On Windows, just check that files exist and are not empty
+            assert!(metadata.len() > 0, "{} should not be empty", file);
         }
     }
 }
