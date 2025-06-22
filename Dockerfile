@@ -33,6 +33,6 @@ CMD ["/bin/bash"]
 
 # Labels for GitHub Container Registry
 LABEL org.opencontainers.image.title="AWS Assume Role CLI"
-LABEL org.opencontainers.image.description="Simple CLI tool to easily switch between AWS IAM roles"
+LABEL org.opencontainers.image.description="A simple command-line tool to easily switch between AWS IAM roles."
 LABEL org.opencontainers.image.source="https://github.com/holdennguyen/aws-assume-role"
-LABEL org.opencontainers.image.licenses="MIT" 
+LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later" 

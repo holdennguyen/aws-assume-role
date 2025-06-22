@@ -4,7 +4,7 @@
 
 [![CI/CD Pipeline](https://github.com/holdennguyen/aws-assume-role/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/holdennguyen/aws-assume-role/actions/workflows/ci-cd.yml)
 [![Crates.io](https://img.shields.io/crates/v/aws-assume-role.svg)](https://crates.io/crates/aws-assume-role)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## ✨ Key Features
 
@@ -204,7 +204,7 @@ cargo test  # All 79 tests should pass
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU AGPLv3 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
