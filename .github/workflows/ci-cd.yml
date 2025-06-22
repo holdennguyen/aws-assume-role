@@ -190,7 +190,7 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: binaries
+        name: binary-${{ matrix.os }}-${{ matrix.target }}
         path: releases/${{ matrix.asset_name }}
 
   # ============================================================================
@@ -206,10 +206,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download build artifacts
+    - name: Download Linux binary
       uses: actions/download-artifact@v4
       with:
-        name: binaries
+        name: binary-ubuntu-latest-x86_64-unknown-linux-gnu
+        path: releases/
+
+    - name: Download Windows binary
+      uses: actions/download-artifact@v4
+      with:
+        name: binary-windows-latest-x86_64-pc-windows-msvc
+        path: releases/
+
+    - name: Download macOS binary
+      uses: actions/download-artifact@v4
+      with:
+        name: binary-macos-latest-aarch64-apple-darwin
         path: releases/
 
     - name: Make binaries executable
@@ -284,10 +296,22 @@ jobs:
         name: distribution-packages
         path: releases/dist/
 
-    - name: Download binaries
+    - name: Download Linux binary
       uses: actions/download-artifact@v4
       with:
-        name: binaries
+        name: binary-ubuntu-latest-x86_64-unknown-linux-gnu
+        path: releases/
+
+    - name: Download Windows binary
+      uses: actions/download-artifact@v4
+      with:
+        name: binary-windows-latest-x86_64-pc-windows-msvc
+        path: releases/
+
+    - name: Download macOS binary
+      uses: actions/download-artifact@v4
+      with:
+        name: binary-macos-latest-aarch64-apple-darwin
         path: releases/
 
     - name: Extract version from tag
