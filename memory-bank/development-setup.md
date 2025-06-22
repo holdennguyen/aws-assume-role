@@ -1,115 +1,74 @@
-# Development Setup
+# 🛠️ Development Setup Guide
 
-## Quick Start
+This document outlines the one-time setup and standard commands for developing the AWS Assume Role CLI.
+
+## 🚀 One-Time Setup
+
+### 1. Prerequisites
+- **Rust**: Version 1.70 or newer.
+- **Git**: For source control.
+- **Homebrew** (macOS): For installing the cross-compilation toolchain.
+
+### 2. Clone the Repository
 ```bash
-# Clone and build
 git clone https://github.com/holdennguyen/aws-assume-role.git
 cd aws-assume-role
-cargo build
-
-# Run tests
-cargo test
-
-# Build release
-./build-releases.sh
 ```
 
-## Prerequisites
-- **Rust**: 1.70+ with stable toolchain
-- **AWS CLI**: v2 configured with SSO access
-- **Git**: Configured with repository access
-
-## Installation
+### 3. Install Cross-Compilation Toolchain (Required for Release Builds)
+This is a one-time setup to enable building for Linux and Windows from a macOS environment.
 ```bash
-# Install Rust (if needed)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Install required tools via Homebrew
+brew install musl-cross mingw-w64 cmake
 
-# Install AWS CLI (macOS)
-brew install awscli
-
-# Verify setup
-rustc --version
-cargo --version
-aws --version
+# Add the Rust target platforms
+rustup target add x86_64-unknown-linux-musl
+rustup target add x86_64-pc-windows-gnu
 ```
+After this step, verify that the `.cargo/config.toml` file exists and is configured for the linkers.
 
-## Development Commands
+## 🔄 Standard Development Commands
+
+### ✅ The Only Command You Need for Quality Checks
+For all local development—building, testing, formatting, and linting—use the standard pre-commit script. This is the same script the CI pipeline uses.
+
 ```bash
-# Build debug version
-cargo build
-
-# Build optimized release
-cargo build --release
-
-# Run all tests
-cargo test
-
-# Run specific tests
-cargo test test_name
-
-# Format code
-cargo fmt
-
-# Lint code
-cargo clippy
-
-# Clean build artifacts
-cargo clean
+# Run all quality checks (format, clippy, test, build)
+./scripts/pre-commit-hook.sh
 ```
 
-## Cross-Platform Release Build
+### Building Release Binaries
+To build the binaries for all target platforms (macOS, Linux, Windows), use the dedicated build script.
+
 ```bash
-# Build for all platforms
-./build-releases.sh
-
-# Manually build for specific target
-cargo build --release --target x86_64-apple-darwin
+# Build binaries for all platforms
+./scripts/build-releases.sh
 ```
 
-## Project Structure
+The compiled binaries will be available in the `releases/` directory.
+
+## 릴 Release Process
+The release process is strictly defined by the **Safe Release Process**. All developers must follow the steps outlined in:
+- `docs/DEVELOPER_WORKFLOW.md`
+
+Attempting to release without following this workflow will be blocked by CI checks.
+
+## 📂 Project Structure
 ```
 aws-assume-role/
-├── src/                    # Source code
-│   ├── cli/               # CLI interface
-│   ├── aws/               # AWS integration
-│   ├── config/            # Configuration management
+├── src/                    # Rust source code
+│   ├── cli/               # Command-Line Interface logic
+│   ├── aws/               # AWS integration using the Rust SDK
+│   ├── config/            # Role configuration management
 │   └── error/             # Error handling
-├── tests/                 # Integration tests
-├── packaging/             # Package configurations
-├── scripts/               # Build and release scripts
-├── .github/workflows/     # CI/CD automation
-└── memory-bank/           # Documentation
+├── tests/                 # Integration and shell integration tests
+├── scripts/               # Build, release, and quality-gate scripts
+├── .github/workflows/     # CI/CD automation pipeline (ci-cd.yml)
+├── docs/                  # Project documentation (architecture, workflow)
+└── memory-bank/           # Internal project memory and context
 ```
 
-## Testing Strategy
-```bash
-# Unit tests (fast)
-cargo test --lib
-
-# Integration tests
-cargo test --test integration
-
-# Test specific feature
-cargo test assume
-
-# Test with output
-cargo test -- --nocapture
-```
-
-## IDE Setup (VS Code)
-Essential extensions:
-- **rust-analyzer**: Rust language support
-- **CodeLLDB**: Debugging support
-- **crates**: Dependency management
-
-## Troubleshooting
-**Build Issues**: Run `cargo clean && cargo build`
-**Test Failures**: Ensure AWS CLI is configured with valid credentials
-**Cross-compilation**: Install required targets with `rustup target add <target>`
-
-## Release Process
-1. Update version in `Cargo.toml`
-2. Run `./scripts/release.sh version <version>` to sync all package versions
-3. Build releases with `./build-releases.sh`
-4. Test on multiple platforms
-5. Create GitHub release (triggers automated package publishing) 
+##  troubleshooting
+**Build Issues**: Run `./scripts/pre-commit-hook.sh`. If it fails, it will provide guidance on how to fix the issue.
+**Cross-compilation**: Ensure the toolchain is installed correctly as described in the one-time setup. Check that the required `rustup` targets are installed.
+**CI Failures**: CI failures should not happen if the pre-commit script passes locally. If they do, it indicates a problem with the CI environment itself. 

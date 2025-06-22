@@ -13,7 +13,7 @@ Complete development workflow, patterns, and best practices for AWS Assume Role 
 - ✅ **Test Suite Expansion**: 79 comprehensive tests (updated shell integration tests)
 - ✅ **Release Process**: Fully automated with distribution packaging
 - ✅ **Documentation Updated**: All docs reflect universal wrapper approach
-- ✅ **GitHub Actions Fixed**: Updated deprecated v3 actions to v4 (Dec 2024)
+- ✅ **GitHub Actions Fixed**: Upgraded deprecated actions (v3 to v4) and resolved artifact naming conflicts.
 - ✅ **Pre-Commit Script**: Automated quality gates preventing CI failures (Dec 2024)
 - ✅ **Windows CI Fix**: Cross-platform test compatibility resolved with conditional compilation
 
@@ -77,22 +77,83 @@ fn test_windows_file_existence() { /* Windows-compatible code */ }
 
 **Key Learning**: Pre-commit script is essential for cross-platform development
 
-## 🔄 Enhanced Development Workflow (v1.3.0)
+## 🔄 The Standard Development Workflow (v1.3.0)
 
-### **⚡ Safe Release Process (CRITICAL UPDATE - v1.3.0)**
+### **The "Safe Release Process"**
 
-**NEW: Pre-Commit Script Integration**
-- ✅ **Automated Quality Gates**: `scripts/pre-commit-hook.sh` prevents CI failures
-- ✅ **Cross-Platform Validation**: Catches Windows/Unix compatibility issues early
-- ✅ **Comprehensive Checks**: Format, clippy, tests, build in single command
-- ✅ **Real-World Validation**: Successfully prevented Windows CI failure in v1.3.0
+This process, enforced by the `DEVELOPER_WORKFLOW.md` and the `release.sh` script, is the required method for creating new releases. It is designed to be robust and prevent broken releases.
+
+**Core Principles**:
+1.  **Single Quality Gate**: `scripts/pre-commit-hook.sh` is the one command to run for all local validation.
+2.  **Release from `develop`**: The `develop` branch is the integration point for releases.
+3.  **CI Before Tagging**: A release tag is **only** created after all checks have passed on the `develop` branch.
+4.  **`master` is Production**: The `master` branch contains the history of successful, tagged releases.
+
+### **📋 Phase 1: Feature Development**
+
+**The Standard Daily Cycle:**
+```bash
+# 1. Start from a clean master branch
+git checkout master && git pull origin master
+git checkout -b feature/your-feature
+
+# 2. Implement your changes and add tests
+
+# 3. Run the standard quality checks
+#    This is the only validation command you need.
+./scripts/pre-commit-hook.sh
+
+# 4. Commit when all checks pass
+git add .
+git commit -m "feat: your descriptive commit message"
+
+# 5. Push and create a pull request to the 'develop' branch
+git push origin feature/your-feature
+```
+
+### **🎯 Phase 2: The SAFE Release Workflow**
+
+This workflow begins after all features for a release have been merged into the `develop` branch.
+
+**The Official Release Steps:**
+```bash
+# 1. Prepare the release with the unified script
+#    This updates the version in Cargo.toml and other files.
+./scripts/release.sh prepare 1.3.0
+
+# 2. Commit the version bump
+git add . && git commit -m "🔖 Prepare release v1.3.0"
+
+# 3. Push to the 'develop' branch to trigger CI
+git push origin develop
+
+# 4. CRITICAL: Wait for GitHub Actions to PASS
+#    Do not proceed until all checks are green for your commit on the 'develop' branch.
+
+# 5. ONLY after CI passes, create and push the release tag
+git tag -a v1.3.0 -m "Release v1.3.0"
+git push origin v1.3.0
+
+# The tag push triggers the automated release pipeline in GitHub Actions.
+
+# 6. Finalize by merging 'develop' into 'master'
+git checkout master
+git pull origin master
+git merge develop
+git push origin master
+```
+
+**CRITICAL PATTERN: Never Tag Before CI Passes**
+The entire safety of the workflow depends on this rule. Pushing a tag to `develop` before CI has validated the commit can lead to a broken release.
 
 ```bash
-# SAFE Release Lifecycle - Enhanced with Pre-Commit Automation
-Phase 1: Development → Pre-commit validation → Feature branch → Cross-platform build → Test → PR → Merge to main
-Phase 2: Validation   → Push to develop → Wait for GitHub Actions SUCCESS → Create tag
-Phase 3: Release      → Tag triggers automated release pipeline
-Phase 4: Maintenance  → Monitor → Bug fixes → Documentation updates
+# WRONG:
+git push origin develop && git push origin v1.3.0 # Pushing tag immediately is dangerous
+
+# RIGHT:
+git push origin develop
+# ... wait for CI ...
+git push origin v1.3.0 # Push tag only after CI passes
 ```
 
 ### **📋 Phase 1: Feature Development (Enhanced)**
@@ -408,56 +469,3 @@ fn test_cross_platform() {
 # Focus on cross-platform binary discovery and error handling
 # Verify role assumption with eval and --format export
 ```
-
-### **GitHub Actions Debugging Pattern**
-```bash
-# When CI fails, systematic debugging approach:
-# 1. Check the specific job that failed
-# 2. Look for common patterns:
-#    - Formatting violations: run cargo fmt
-#    - Clippy warnings: run cargo clippy -- -D warnings
-#    - Test failures: run cargo test
-#    - Cross-compilation issues: check toolchain setup
-#    - Missing files: ensure all required files exist
-
-# 3. Fix locally and test before pushing:
-cargo fmt && cargo clippy -- -D warnings && cargo test
-./scripts/build-releases.sh  # Verify cross-platform builds
-
-# 4. Push fix and wait for CI again
-git add . && git commit -m "fix: resolve CI issues"
-git push origin develop
-```
-
-## 📊 Quality Standards & Metrics (Enhanced v1.3.0)
-
-### **Zero-Tolerance Quality Gates**
-- ✅ **Formatting**: `cargo fmt --check` must pass (zero violations)
-- ✅ **Linting**: `cargo clippy -- -D warnings` must pass (zero warnings)  
-- ✅ **Testing**: All 79 tests must pass (100% success rate)
-- ✅ **Security**: `cargo audit` must pass (zero vulnerabilities)
-- ✅ **Cross-Platform**: All 3 platforms must build successfully
-
-### **Test Coverage (79 Tests Total)**
-- **Unit Tests**: 23 tests covering core functionality
-- **Integration Tests**: 14 tests covering AWS integration
-- **Shell Integration**: 19 tests covering wrapper scripts
-- **Cross-Platform**: Tests run on Ubuntu, Windows, macOS
-
-### **Release Quality Standards**
-- ✅ **CI Validation**: All GitHub Actions must pass before tagging
-- ✅ **Cross-Platform Builds**: Linux musl, macOS aarch64, Windows MSVC
-- ✅ **Distribution Packages**: tar.gz, zip with checksums
-- ✅ **Universal Wrapper**: Single bash script for all platforms
-- ✅ **Documentation**: Release notes, migration guides, updated docs
-
-### **Performance Benchmarks**
-- **Binary Size**: < 10MB per platform
-- **Startup Time**: < 100ms for basic commands
-- **Memory Usage**: < 50MB peak during operation
-- **Cross-Compilation**: < 5 minutes for all platforms
-
----
-
-**Last Updated**: December 2024 - Post cross-compilation setup and safe release process
-**Next Review**: When development workflows change or upon explicit request 

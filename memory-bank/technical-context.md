@@ -14,9 +14,9 @@ AWS Assume Role CLI follows a layered architecture pattern with clear separation
 ├─────────────────────────────────────────┤
 │          Application Layer              │  Command parsing, validation
 ├─────────────────────────────────────────┤
-│           Business Logic Layer          │  AWS operations, config mgmt
+│           Business Logic Layer          │  AWS operations via SDK, config mgmt
 ├─────────────────────────────────────────┤
-│          Infrastructure Layer           │  File I/O, process execution
+│          Infrastructure Layer           │  File I/O, network requests
 └─────────────────────────────────────────┘
 ```
 
@@ -48,7 +48,6 @@ pub enum Commands {
     Assume { role: String, duration: Option<u32> },
     List,
     Configure,
-    Verify,
 }
 
 impl Commands {
@@ -59,7 +58,6 @@ impl Commands {
             }
             Commands::List => list_roles_handler(config),
             Commands::Configure => configure_handler(config),
-            Commands::Verify => verify_handler(config),
         }
     }
 }
@@ -108,7 +106,7 @@ awsr() {
 
 **Role Assumption Flow**:
 ```
-User Command → CLI Parser → Config Loader → AWS CLI Executor → Credential Parser → Shell Exporter
+User Command → CLI Parser → Config Loader → AWS SDK Client → AWS API Call → Credential Parser → Shell Exporter
 ```
 
 **Configuration Management Flow**:
@@ -162,9 +160,7 @@ Low-Level Error → Context Addition → Error Chain → User-Friendly Message �
 |---------|----------|------------|--------|
 | **Cargo** | crates.io | ✅ Automated | Active |
 | **Homebrew** | holdennguyen/tap | ✅ Automated | Active |
-| **APT** | Launchpad PPA | ✅ Automated | Active |
-| **DNF/YUM** | COPR | ✅ Automated | Active |
-| **Docker** | GitHub Container Registry | ✅ Automated | Active |
+| **Container** | GitHub Container Registry | ✅ Automated | Active |
 | **GitHub** | Releases | ✅ Automated | Active |
 
 ## 🔧 Implementation Patterns
@@ -217,44 +213,38 @@ pub fn save_config(config: &Config) -> Result<()> {
 }
 ```
 
-### **AWS Integration Pattern**
+### **AWS Integration Pattern (AWS SDK for Rust)**
 
-**Command Execution with Error Handling**:
+**STS Client Initialization**:
 ```rust
-pub fn execute_aws_command(args: &[&str]) -> Result<String> {
-    let output = Command::new("aws")
-        .args(args)
-        .output()
-        .map_err(|_| CliError::AwsCliNotFound)?;
-    
-    if !output.status.success() {
-        let error = String::from_utf8_lossy(&output.stderr);
-        return Err(CliError::AwsCommandFailed { error: error.to_string() });
-    }
-    
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+async fn get_sts_client(config: &aws_config::SdkConfig) -> aws_sdk_sts::Client {
+    aws_sdk_sts::Client::new(config)
 }
 ```
 
-**JSON Response Parsing**:
+**Assume Role API Call**:
 ```rust
-#[derive(Deserialize)]
-pub struct AssumeRoleResponse {
-    #[serde(rename = "Credentials")]
-    pub credentials: Credentials,
-}
+pub async fn assume_role(
+    client: &aws_sdk_sts::Client,
+    role_arn: &str,
+    session_name: &str,
+) -> Result<aws_sdk_sts::model::Credentials, aws_sdk_sts::Error> {
+    let response = client
+        .assume_role()
+        .role_arn(role_arn)
+        .role_session_name(session_name)
+        .send()
+        .await?;
 
-#[derive(Deserialize)]
-pub struct Credentials {
-    #[serde(rename = "AccessKeyId")]
-    pub access_key_id: String,
-    #[serde(rename = "SecretAccessKey")]
-    pub secret_access_key: String,
-    #[serde(rename = "SessionToken")]
-    pub session_token: String,
-    #[serde(rename = "Expiration")]
-    pub expiration: String,
+    Ok(response.credentials.unwrap())
 }
+```
+
+**Response Handling**:
+```rust
+// The SDK provides strongly-typed structs for responses.
+let credentials = assume_role(&client, "arn:...", "session").await?;
+println!("Access Key: {}", credentials.access_key_id().unwrap());
 ```
 
 ### **Cross-Platform Testing Pattern**

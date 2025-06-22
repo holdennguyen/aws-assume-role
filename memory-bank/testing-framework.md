@@ -1,81 +1,36 @@
-# Testing Framework Documentation
+# 🧪 Testing Framework Documentation
 
 ## Overview
 
-AWS Assume Role implements a comprehensive testing framework with 55 total tests covering all aspects of functionality, cross-platform compatibility, and shell integration. This document details our testing strategy, test matrix, and development processes.
+AWS Assume Role implements a comprehensive testing framework with **79 total tests** covering all aspects of functionality, cross-platform compatibility, and shell integration. This document details our testing strategy, test matrix, and development processes.
 
-## Test Matrix (v1.2.0)
+## Test Matrix (v1.3.0)
 
-### Complete Test Coverage (55 Tests)
+### Complete Test Coverage (79 Tests)
 
 ```
 Testing Architecture:
 ├── Unit Tests (23 tests)
 │   ├── Config Module (10 tests)
-│   │   ├── test_config_new_default() - Config creation and defaults
-│   │   ├── test_config_add_role() - Role addition functionality
-│   │   ├── test_config_remove_role() - Role removal functionality
-│   │   ├── test_config_get_role() - Role retrieval
-│   │   ├── test_config_list_roles() - Role listing
-│   │   ├── test_config_serialization() - JSON serialization/deserialization
-│   │   ├── test_config_save_and_load() - File I/O operations
-│   │   ├── test_config_path() - Cross-platform path handling
-│   │   ├── test_config_ensure_directory() - Directory creation
-│   │   └── test_config_file_permissions() - Security permissions
 │   └── Error Module (13 tests)
-│       ├── test_app_error_creation() - Error type creation
-│       ├── test_app_error_display() - Display formatting
-│       ├── test_app_error_debug() - Debug formatting
-│       ├── test_config_error_creation() - Config error handling
-│       ├── test_config_error_display() - Config error formatting
-│       ├── test_aws_error_creation() - AWS error handling
-│       ├── test_aws_error_display() - AWS error formatting
-│       ├── test_error_conversion() - Error type conversion
-│       ├── test_error_chaining() - Error context chaining
-│       ├── test_result_types() - Result type handling
-│       ├── test_error_from_implementations() - From trait implementations
-│       ├── test_anyhow_integration() - anyhow error integration
-│       └── test_error_source_chain() - Error source tracking
 ├── Integration Tests (14 tests)
 │   ├── CLI Functionality (8 tests)
-│   │   ├── test_help_output() - Main help display
-│   │   ├── test_configure_help() - Configure command help
-│   │   ├── test_list_help() - List command help
-│   │   ├── test_remove_help() - Remove command help
-│   │   ├── test_version_output() - Version information
-│   │   ├── test_invalid_command() - Invalid command handling
-│   │   ├── test_missing_args() - Missing argument validation
-│   │   └── test_command_validation() - Command structure validation
 │   ├── Error Handling (3 tests)
-│   │   ├── test_graceful_error_handling() - Error recovery
-│   │   ├── test_invalid_input_handling() - Input validation
-│   │   └── test_filesystem_error_handling() - File system errors
 │   └── Config Integration (3 tests)
-│       ├── test_config_workflow() - End-to-end configuration
-│       ├── test_role_management_workflow() - Role CRUD operations
-│       └── test_error_scenarios() - Error scenario handling
-└── Shell Integration Tests (18 tests) ← NEW v1.2.0
-    ├── Wrapper Script Structure (4 tests)
-    │   ├── test_bash_wrapper_structure() - Bash/Zsh wrapper validation
-    │   ├── test_powershell_wrapper_structure() - PowerShell wrapper validation
-    │   ├── test_fish_wrapper_structure() - Fish shell wrapper validation
-    │   └── test_cmd_wrapper_structure() - CMD batch wrapper validation
-    ├── Cross-Platform Features (8 tests)
-    │   ├── test_wrapper_binary_discovery() - Binary path detection
-    │   ├── test_wrapper_error_handling() - Error handling patterns
-    │   ├── test_wrapper_usage_information() - Usage/help display
-    │   ├── test_shell_export_format_integration() - Export format validation
-    │   ├── test_unix_file_permissions() - Unix executable permissions
-    │   ├── test_installation_scripts() - Install/uninstall scripts
-    │   ├── test_readme_documentation() - Documentation validation
-    │   └── test_version_consistency() - Version consistency across scripts
-    └── Test Utilities (6 tests)
-        ├── test_sample_config_creation() - Mock configuration generation
-        ├── test_mock_credentials() - Test credential creation
-        ├── test_temp_directory_isolation() - Environment isolation
-        ├── test_cross_platform_paths() - Path handling utilities
-        ├── test_file_permission_helpers() - Permission testing utilities
-        └── test_cleanup_verification() - Automatic cleanup validation
+├── Shell Integration Tests (19 tests)
+│   ├── Universal Wrapper Validation (5 tests)
+│   │   ├── test_universal_wrapper_structure() - Universal bash wrapper
+│   │   ├── test_installation_script_structure()
+│   │   ├── test_uninstallation_script_structure()
+│   │   └── ...
+│   ├── Cross-Platform Features (8 tests)
+│   │   ├── test_wrapper_binary_discovery() - Binary path detection
+│   │   ├── test_wrapper_error_handling() - Error handling
+│   │   ├── test_shell_export_format_integration() - Export format
+│   │   ├── test_unix_file_permissions() - Unix executable permissions
+│   │   └── ...
+│   └── Test Utilities (6 tests)
+└── Additional Tests (23 tests)
 ```
 
 ## Testing Strategies
@@ -123,29 +78,29 @@ fn test_help_output() {
 }
 ```
 
-### 3. Shell Integration Testing Strategy ← NEW v1.2.0
+### 3. Shell Integration Testing Strategy (Universal Wrapper)
 
-**Scope**: Wrapper scripts and cross-platform shell compatibility
-**Framework**: File system validation and script structure analysis
-**Coverage**: All shell wrappers and installation scripts (18 tests)
+**Scope**: Validates the single, universal bash wrapper (`aws-assume-role-bash.sh`) and its cross-platform compatibility.
+**Framework**: File system validation and script structure analysis.
+**Coverage**: Universal wrapper, installer, uninstaller, and cross-platform behavior (19 tests).
 
 ```rust
-// Example: Shell wrapper validation
+// Example: Universal Wrapper Validation
 #[test]
-fn test_bash_wrapper_structure() {
+fn test_universal_wrapper_structure() {
     let wrapper_path = Path::new("releases/aws-assume-role-bash.sh");
     assert!(wrapper_path.exists());
     
     let content = fs::read_to_string(wrapper_path).unwrap();
     assert!(content.contains("#!/bin/bash"));
-    assert!(content.contains("aws-assume-role"));
+    assert!(content.contains("Platform detection logic")); // Placeholder for actual check
     
     // Validate executable permissions on Unix
     #[cfg(unix)]
     {
         let metadata = fs::metadata(wrapper_path).unwrap();
         let permissions = metadata.permissions();
-        assert!(permissions.mode() & 0o111 != 0); // Executable
+        assert!(permissions.mode() & 0o111 != 0, "Script should be executable");
     }
 }
 ```
@@ -222,50 +177,35 @@ impl TestHelper {
 ## Test Execution
 
 ### Local Development
+The standard method for running all tests is to use the pre-commit script. This ensures you are running the exact same checks as the CI pipeline.
 
 ```bash
-# Complete test suite (55 tests)
-cargo test
+# Run the complete test suite (unit, integration, shell)
+./scripts/pre-commit-hook.sh
+```
 
-# Test categories
-cargo test --lib                           # Unit tests (23)
-cargo test --test integration_tests        # Integration tests (14)
-cargo test --test shell_integration_tests  # Shell integration tests (18)
+For debugging specific parts of the test suite, you may still use manual `cargo test` commands, but the pre-commit script is the standard for validation.
 
-# Performance benchmarks
+```bash
+# Optional: Run a specific test category
+cargo test --test integration_tests
+
+# Optional: Run performance benchmarks
 cargo bench
-
-# Test with coverage
-cargo tarpaulin --verbose --all-features --workspace --timeout 120
 ```
 
 ### CI/CD Pipeline
+Our continuous integration pipeline runs on a matrix of operating systems to ensure full cross-platform compatibility.
 
 ```yaml
-# GitHub Actions Test Matrix
-Strategy:
+# .github/workflows/ci-cd.yml
+# This file contains the single, unified workflow.
+strategy:
   matrix:
     os: [ubuntu-latest, windows-latest, macos-latest]
     rust: [stable]
-
-Jobs:
-├── Code Quality
-│   ├── cargo fmt --all -- --check
-│   ├── cargo clippy -- -D warnings
-│   └── cargo audit
-├── Unit Tests (23 tests)
-│   └── cargo test --lib
-├── Integration Tests (14 tests)
-│   └── cargo test --test integration_tests
-├── Shell Integration Tests (18 tests)
-│   └── cargo test --test shell_integration_tests
-├── Performance Tests
-│   └── cargo bench
-└── Cross-Compilation
-    ├── x86_64-pc-windows-gnu
-    ├── x86_64-unknown-linux-gnu
-    └── x86_64-apple-darwin
 ```
+All tests are executed on every push to the `develop` and `master` branches, and on every pull request.
 
 ## Quality Metrics
 

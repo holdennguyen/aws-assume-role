@@ -84,12 +84,13 @@ awsr assume production
 - ✅ **Core Functionality**: Complete and stable
 - ✅ **Cross-Compilation Toolchain**: Full setup for Linux (musl), macOS (Apple Silicon), Windows
 - ✅ **Universal Bash Wrapper**: Single wrapper for all platforms (streamlined from multi-shell approach)
-- ✅ **Automated Build Pipeline**: Complete cross-platform build automation
+- ✅ **Automated Build Pipeline**: Fully automated unified pipeline
 - ✅ **Package Distribution**: Homebrew, Cargo, direct download, container (optimized)
 - ✅ **CI/CD Pipeline**: Fully automated unified pipeline
 - ✅ **Security**: All vulnerabilities resolved, modern cryptography
 - ✅ **Documentation**: Consolidated and streamlined structure
 - ✅ **Test Suite**: 79 comprehensive tests (unit, integration, shell) - all passing
+- ✅ **Standardized Workflow**: The entire development and release process is now standardized and documented in `DEVELOPER_WORKFLOW.md`.
 
 ### **Recent Major Achievements (v1.3.0 - December 2024)**
 
@@ -145,11 +146,10 @@ awsr assume production
 **Documentation Structure**:
 1. `README.md` - Central hub with navigation (root only)
 2. `docs/DEPLOYMENT.md` - Installation and deployment guide
-3. `docs/DEVELOPER_WORKFLOW.md` - Complete development guide
-4. `docs/RELEASE.md` - Release process and distribution management
-5. `docs/ARCHITECTURE.md` - Technical architecture
-6. `release-notes/` - Version history (RELEASE_NOTES_v1.3.0.md)
-7. `memory-bank/` - AI agent context (this directory)
+3. `docs/DEVELOPER_WORKFLOW.md` - The single source of truth for the development and release lifecycle.
+4. `docs/ARCHITECTURE.md` - Technical architecture
+5. `release-notes/` - Version history (RELEASE_NOTES_v1.3.0.md)
+6. `memory-bank/` - AI agent context (this directory)
 
 **Distribution Channels (Optimized)**:
 1. **Direct Binaries**: GitHub Releases with universal bash wrapper and installer
@@ -167,7 +167,7 @@ awsr assume production
 
 **Architecture Choices**:
 - **Rust Language**: For performance, safety, and cross-platform compatibility
-- **AWS CLI Integration**: Leverage existing AWS CLI rather than reimplementing
+- **AWS SDK for Rust**: Direct integration with AWS APIs, replacing the previous method of shelling out to the AWS CLI.
 - **Universal Bash Wrapper**: Single wrapper script for all platforms (major simplification)
 - **Configuration Management**: JSON-based user configuration with sensible defaults
 - **Static Linking**: Reduce runtime dependencies and improve portability
@@ -194,11 +194,9 @@ awsr assume production
 - Error handling pattern: clear messages for unsupported OS or missing binaries
 - Role assumption pattern: `eval $($binary_path assume "$2" "${@:3}" --format export)`
 
-**CRITICAL PATTERN: Formatting After Code Changes**
-- ANY code modification requires immediate `cargo fmt` application
-- CI has zero tolerance for formatting violations
-- Pattern observed in multiple CI failure cycles
-- Must be documented and enforced in development workflow
+**CRITICAL PATTERN: The Pre-Commit Script is Mandatory**
+- ALL code modifications must be validated with `./scripts/pre-commit-hook.sh` before committing.
+- This script handles formatting, linting, testing, and building, and is the key to preventing CI failures.
 
 **Cross-Platform Environment Variables**:
 - Windows uses `USERPROFILE`, Unix uses `HOME`
@@ -207,12 +205,9 @@ awsr assume production
 - Integration tests must set both variables for cross-platform compatibility
 
 **Automation-Driven Release Workflow**:
-- `./scripts/release.sh prepare 1.3.0` - Updates version + creates release notes
-- `./scripts/release.sh build` - Cross-platform builds with toolchain
-- `./scripts/release.sh package 1.3.0` - Creates distribution archives
-- `git tag -a v1.3.0 -m "Release v1.3.0" && git push origin v1.3.0` - Triggers automated release
-- GitHub Actions handles complete pipeline automatically
-- Local and automated workflows are consistent
+- The release process is initiated with `./scripts/release.sh prepare <version>`.
+- The subsequent steps are governed by the **Safe Release Process** documented in `DEVELOPER_WORKFLOW.md`.
+- This process requires a successful CI run on the `develop` branch before a release tag can be created and pushed.
 
 ## 📈 Progress Summary
 
