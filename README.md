@@ -24,7 +24,7 @@ brew tap holdennguyen/tap && brew install aws-assume-role
 cargo install aws-assume-role
 
 # APT (Ubuntu/Debian)
-sudo add-apt-repository ppa:holdennguyen/aws-assume-role && sudo apt install aws-assume-role
+In-progress
 ```
 **→ [Complete installation guide](DEPLOYMENT.md)**
 
@@ -107,8 +107,8 @@ cargo test  # 59 tests across all platforms
 |--------|--------|---------|
 | 🦀 **Cargo** | ✅ Live | `cargo install aws-assume-role` |
 | 🍺 **Homebrew** | ✅ Live | `brew tap holdennguyen/tap && brew install aws-assume-role` |
-| 📦 **APT** | ✅ Live | `sudo add-apt-repository ppa:holdennguyen/aws-assume-role && sudo apt install aws-assume-role` |
-| 📦 **YUM/DNF** | ✅ Live | `sudo dnf copr enable holdennguyen/aws-assume-role && sudo dnf install aws-assume-role` |
+| 📦 **APT** | 🔄 Pending | `sudo add-apt-repository ppa:holdennguyen/aws-assume-role && sudo apt install aws-assume-role` |
+| 📦 **YUM/DNF** | 🔄 Pending | `sudo dnf copr enable holdennguyen/aws-assume-role && sudo dnf install aws-assume-role` |
 | 🐳 **Container** | ✅ Live | `docker pull ghcr.io/holdennguyen/aws-assume-role:latest` |
 
 ## 🤝 Contributing
