@@ -14,7 +14,7 @@
 - 📋 **Multiple output formats** (shell exports, JSON, environment variables)
 - 💾 **Persistent configuration** with intuitive JSON storage
 - ⏱️ **Flexible session control** with custom durations and automatic refresh
-- 🧪 **Battle-tested reliability** (59 comprehensive tests across all platforms)
+- 🧪 **Battle-tested reliability** (79 comprehensive tests across all platforms)
 - 🚀 **Zero-config installation** via popular package managers
 
 ## 🚀 Quick Start
@@ -40,16 +40,13 @@ cd aws-assume-role-cli-* && ./INSTALL.sh
 ### Basic Usage
 
 ```bash
-# 1. Verify your AWS CLI setup
-awsr verify
-
-# 2. Configure your first role
+# 1. Configure your first role
 awsr configure --name dev --role-arn arn:aws:iam::123456789012:role/DevRole --account-id 123456789012
 
-# 3. Assume the role (exports credentials to your shell)
-awsr assume dev
+# 2. Assume the role (exports credentials to your shell)
+eval $(awsr assume dev)
 
-# 4. Verify it worked
+# 3. Verify it worked by checking your AWS identity
 aws sts get-caller-identity
 ```
 
@@ -57,9 +54,8 @@ aws sts get-caller-identity
 
 | Command | Purpose | Example |
 |---------|---------|---------|
-| `awsr verify` | Check prerequisites and setup | `awsr verify --role dev` |
-| `awsr configure` | Add or update role configuration | `awsr configure --name prod --role-arn arn:aws:iam::987654321098:role/ProdRole` |
-| `awsr assume` | Switch to a configured role | `awsr assume dev --duration 7200 --format json` |
+| `awsr configure` | Add or update a role configuration | `awsr configure --name prod` |
+| `awsr assume` | Assume a configured role and export credentials | `awsr assume dev --duration 7200` |
 | `awsr list` | Show all configured roles | `awsr list` |
 | `awsr remove` | Delete a role configuration | `awsr remove dev` |
 
@@ -85,7 +81,7 @@ aws-whoami      # Check current identity
 | **[📋 Installation & Deployment](docs/DEPLOYMENT.md)** | Complete installation guide, prerequisites, enterprise deployment | **End Users, DevOps Teams** |
 | **[👨‍💻 Development Guide](docs/DEVELOPER_WORKFLOW.md)** | Development setup, testing, contributing, release workflow | **Contributors, Maintainers** |
 | **[🏗️ Technical Architecture](docs/ARCHITECTURE.md)** | System design, security architecture, technical deep-dive | **Technical Users, Architects** |
-| **[📖 Release Notes](release-notes/)** | Version history, changelog, migration guides | **All Users** |
+| **[📖 Release Notes](release-notes/README.md)** | Version history, changelog, migration guides | **All Users** |
 
 ## 🔧 Configuration
 
@@ -146,9 +142,9 @@ aws-whoami      # Check current identity
 
 ### **🔧 For Contributors**
 1. **Development Setup**: Follow the [Development Guide](docs/DEVELOPER_WORKFLOW.md)
-2. **Testing**: Run our comprehensive test suite (79 tests)
+2. **Testing**: Run our comprehensive test suite (`cargo test`)
 3. **Contributing**: Submit PRs following our development workflow
-4. **Release Process**: Maintainers see [Release Documentation](docs/DEVELOPER_WORKFLOW.md#release-workflow)
+4. **Release Process**: Maintainers see our [Safe Release Process](docs/DEVELOPER_WORKFLOW.md#safe-release-process-critical)
 
 ## 🎯 Why Choose AWS Assume Role CLI?
 
@@ -179,18 +175,15 @@ awsr assume dev
 
 We welcome contributions! Here's how to get started:
 
-1. **🔍 Check Prerequisites**: Ensure you have Rust and AWS CLI v2 installed
-2. **📖 Read the Development Guide**: [docs/DEVELOPER_WORKFLOW.md](docs/DEVELOPER_WORKFLOW.md)
-3. **🧪 Run Tests**: `cargo test` (should pass all 79 tests)
-4. **🚀 Submit Changes**: Follow our git flow workflow
-5. **📋 Release Process**: Maintainers see release documentation
+1. **📖 Read the Development Guide**: [docs/DEVELOPER_WORKFLOW.md](docs/DEVELOPER_WORKFLOW.md)
+2. **🧪 Run Tests**: `cargo test` (all 79 tests must pass)
+3. **🚀 Submit Changes**: Follow our git flow workflow as described in the development guide.
 
 **Quick development setup:**
 ```bash
 git clone https://github.com/holdennguyen/aws-assume-role.git
 cd aws-assume-role
-cargo build --release
-cargo test  # All 79 tests should pass
+./scripts/pre-commit-hook.sh  # Run all quality checks
 ./target/release/aws-assume-role --help
 ```
 
