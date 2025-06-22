@@ -182,6 +182,59 @@ docker pull ghcr.io/holdennguyen/aws-assume-role:v1.2.1
 docker pull ghcr.io/holdennguyen/aws-assume-role:latest
 ```
 
+## 🍺 Package Manager Publishing
+
+### Homebrew Formula Maintenance
+
+**CRITICAL**: The Homebrew formula must be updated for every release with correct SHA256 checksums.
+
+#### Required Binaries for GitHub Release
+```bash
+# Create platform-specific binaries from universal builds
+cd releases/multi-shell
+
+# macOS binaries (both architectures)
+cp aws-assume-role-macos aws-assume-role-macos-arm64
+cp aws-assume-role-macos aws-assume-role-macos-x86_64
+
+# Linux binary
+cp aws-assume-role-unix aws-assume-role-linux-x86_64
+
+# Calculate checksums
+shasum -a 256 aws-assume-role-macos-arm64 aws-assume-role-macos-x86_64 aws-assume-role-linux-x86_64
+```
+
+#### Homebrew Formula Update Process
+1. **Upload binaries to GitHub release** (required first)
+2. **Clone homebrew-tap repository**:
+   ```bash
+   git clone https://github.com/holdennguyen/homebrew-tap.git
+   ```
+3. **Update formula with correct checksums**:
+   ```bash
+   # Update version and SHA256 checksums in Formula/aws-assume-role.rb
+   # ARM64 SHA256: [calculated checksum]
+   # x86_64 SHA256: [calculated checksum] 
+   # Linux SHA256: [calculated checksum]
+   ```
+4. **Commit and push changes**:
+   ```bash
+   cd homebrew-tap
+   git add Formula/aws-assume-role.rb
+   git commit -m "Update aws-assume-role to v[VERSION]"
+   git push origin main
+   ```
+5. **Clean up**: Remove homebrew-tap directory from main project
+
+#### Automated Publishing Script
+Use the enhanced publishing script:
+```bash
+./scripts/publish-to-package-managers.sh
+# Choose option 1: Publish to Homebrew tap
+```
+
+**Repository**: https://github.com/holdennguyen/homebrew-tap
+
 ## ✅ Release Checklist
 
 ### **Pre-Release Validation**
@@ -205,9 +258,14 @@ docker pull ghcr.io/holdennguyen/aws-assume-role:latest
 
 ### **Distribution Validation**
 - [ ] **GitHub Release Published**: Release visible on GitHub
-- [ ] **Binaries Uploaded**: All release artifacts attached
+- [ ] **Binaries Uploaded**: All release artifacts attached (including ARM64, x86_64, Linux, Windows)
 - [ ] **Cargo Published**: Package available on crates.io
-- [ ] **Homebrew Updated**: Formula updated in tap
+- [ ] **🍺 Homebrew Updated**: **CRITICAL** - Formula updated in tap with correct SHA256 checksums
+  - [ ] ARM64 binary (`aws-assume-role-macos-arm64`) uploaded to GitHub release
+  - [ ] x86_64 binary (`aws-assume-role-macos-x86_64`) uploaded to GitHub release
+  - [ ] Linux binary (`aws-assume-role-linux-x86_64`) uploaded to GitHub release
+  - [ ] Homebrew formula updated with all three SHA256 checksums
+  - [ ] Formula tested: `brew install holdennguyen/tap/aws-assume-role`
 - [ ] **APT Package Available**: PPA updated with new version
 - [ ] **COPR Package Available**: Fedora COPR updated
 - [ ] **Docker Images Published**: Containers available in registry

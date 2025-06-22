@@ -43,6 +43,11 @@ publish_homebrew() {
     echo "Calculating checksums..."
     
     # Download binaries if they don't exist
+    if [ ! -f "aws-assume-role-macos-arm64" ]; then
+        curl -L -o aws-assume-role-macos-arm64 \
+            "https://github.com/holdennguyen/aws-assume-role/releases/download/v${VERSION}/aws-assume-role-macos-arm64"
+    fi
+    
     if [ ! -f "aws-assume-role-macos-x86_64" ]; then
         curl -L -o aws-assume-role-macos-x86_64 \
             "https://github.com/holdennguyen/aws-assume-role/releases/download/v${VERSION}/aws-assume-role-macos-x86_64"
@@ -53,10 +58,12 @@ publish_homebrew() {
             "https://github.com/holdennguyen/aws-assume-role/releases/download/v${VERSION}/aws-assume-role-linux-x86_64"
     fi
     
-    MACOS_SHA256=$(shasum -a 256 aws-assume-role-macos-x86_64 | cut -d' ' -f1)
+    MACOS_ARM64_SHA256=$(shasum -a 256 aws-assume-role-macos-arm64 | cut -d' ' -f1)
+    MACOS_X86_64_SHA256=$(shasum -a 256 aws-assume-role-macos-x86_64 | cut -d' ' -f1)
     LINUX_SHA256=$(shasum -a 256 aws-assume-role-linux-x86_64 | cut -d' ' -f1)
     
-    echo "macOS SHA256: $MACOS_SHA256"
+    echo "macOS ARM64 SHA256: $MACOS_ARM64_SHA256"
+    echo "macOS x86_64 SHA256: $MACOS_X86_64_SHA256"
     echo "Linux SHA256: $LINUX_SHA256"
     
     # Update formula
@@ -64,7 +71,8 @@ publish_homebrew() {
     
     # Replace placeholders
     sed -i '' "s/version \".*\"/version \"${VERSION}\"/" homebrew-tap/Formula/aws-assume-role.rb
-    sed -i '' "s/PLACEHOLDER_X86_64_SHA256/$MACOS_SHA256/" homebrew-tap/Formula/aws-assume-role.rb
+    sed -i '' "s/PLACEHOLDER_ARM64_SHA256/$MACOS_ARM64_SHA256/" homebrew-tap/Formula/aws-assume-role.rb
+    sed -i '' "s/PLACEHOLDER_X86_64_SHA256/$MACOS_X86_64_SHA256/" homebrew-tap/Formula/aws-assume-role.rb
     sed -i '' "s/PLACEHOLDER_LINUX_SHA256/$LINUX_SHA256/" homebrew-tap/Formula/aws-assume-role.rb
     
     # Commit and push
