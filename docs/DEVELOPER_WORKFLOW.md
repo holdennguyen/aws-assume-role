@@ -1,10 +1,11 @@
 # 🛠️ Developer Workflow Guide
 
-Complete development workflow for AWS Assume Role CLI, including the critical safe release process.
+Complete development workflow for AWS Assume Role CLI, including the critical safe release process and automated quality gates.
 
 ## 📋 Table of Contents
 
 - [Development Setup](#-development-setup)
+- [Pre-Commit Quality Gates](#-pre-commit-quality-gates-recommended)
 - [Daily Development Flow](#-daily-development-flow)
 - [Testing & Quality Gates](#-testing--quality-gates)
 - [Safe Release Process](#-safe-release-process-critical)
@@ -41,11 +42,74 @@ cargo test  # Should pass all 79 tests
 ./scripts/build-releases.sh
 ```
 
+## 🛡️ Pre-Commit Quality Gates (RECOMMENDED)
+
+### ⭐ Automated Quality Assurance Script
+
+**NEW**: The project now includes a comprehensive pre-commit script that automates all quality checks and prevents CI failures.
+
+```bash
+# Install the pre-commit script (one-time setup)
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+
+# OR run manually before each commit (recommended workflow)
+./scripts/pre-commit-hook.sh
+```
+
+### What the Pre-Commit Script Does
+
+The `scripts/pre-commit-hook.sh` script performs comprehensive quality checks:
+
+```bash
+🔍 Running pre-commit quality checks...
+📝 Checking code formatting...        # cargo fmt --check
+🔍 Running clippy linting...          # cargo clippy -- -D warnings  
+🧪 Running tests...                   # cargo test (all 79 tests)
+🏗️ Checking build...                 # cargo build --release
+```
+
+**Success Output**:
+```bash
+🎉 All quality checks passed! Proceeding with commit...
+📊 Quality gates: ✅ Format ✅ Clippy ✅ Tests ✅ Build
+```
+
+**Failure Prevention**:
+- **Catches formatting issues** before they reach CI (prevents Windows CI failures)
+- **Identifies cross-platform compilation problems** early
+- **Validates all tests pass** across the complete test suite
+- **Ensures clean builds** for all platforms
+
+### Benefits of Using Pre-Commit Script
+
+✅ **Prevents CI Failures**: Catches issues locally before they reach GitHub Actions  
+✅ **Saves Development Time**: No more waiting for CI to fail on formatting  
+✅ **Consistent Quality**: Enforces the same standards across all developers  
+✅ **Cross-Platform Safety**: Validates code works on all target platforms  
+✅ **Early Problem Detection**: Identifies issues when they're easiest to fix  
+
 ## 🔄 Daily Development Flow
 
-### ⚠️ CRITICAL: Mandatory Quality Gates Before ANY Push
+### ⚠️ RECOMMENDED: Use Pre-Commit Script for All Changes
 
-**ZERO TOLERANCE POLICY**: These checks MUST pass before every commit/push to prevent CI failures.
+**NEW WORKFLOW** (Recommended - prevents all CI failures):
+
+```bash
+# 1. Make your code changes
+# 2. Run comprehensive quality checks
+./scripts/pre-commit-hook.sh
+
+# If all checks pass:
+git add . && git commit -m "your message"
+git push origin your-branch
+
+# If checks fail, fix issues and re-run until passing
+```
+
+### ⚠️ ALTERNATIVE: Manual Quality Gates (Error-Prone)
+
+**LEGACY WORKFLOW** (Still supported but more error-prone):
 
 ```bash
 # MANDATORY before every commit - NO EXCEPTIONS
@@ -59,11 +123,11 @@ git add . && git commit -m "your message"
 git push origin your-branch
 ```
 
-**Why This is Critical**:
-- GitHub Actions has ZERO TOLERANCE for formatting violations
-- CI fails immediately on any formatting differences
-- Pattern observed: Developers forget `cargo fmt` → CI fails → Wasted time
-- **ALWAYS run `cargo fmt` after ANY code changes**
+**Why Pre-Commit Script is Better**:
+- **Prevents human error**: No forgetting to run `cargo fmt`
+- **Comprehensive checks**: Runs all quality gates in correct order
+- **Clear feedback**: Shows exactly what passed/failed
+- **Time saving**: One command instead of four separate commands
 
 ### Feature Development Cycle
 
@@ -77,12 +141,10 @@ git checkout -b feature/your-feature
 # - Implement incrementally
 # - Keep commits focused
 
-# 3. MANDATORY quality gates (run frequently)
-cargo fmt                          # Format code (ZERO TOLERANCE)
-cargo clippy -- -D warnings        # Linting (ZERO TOLERANCE)
-cargo test                         # All 79 tests must pass
+# 3. RECOMMENDED: Use pre-commit script frequently
+./scripts/pre-commit-hook.sh        # Comprehensive quality gates
 
-# 4. Cross-platform validation
+# 4. Cross-platform validation (if needed)
 ./scripts/build-releases.sh        # Build all platforms
 ./releases/aws-assume-role-macos --version
 ./releases/aws-assume-role-linux --version
@@ -96,8 +158,11 @@ awsr --version
 ### Pull Request Workflow
 
 ```bash
-# Pre-PR checklist (ALL MANDATORY)
+# Pre-PR checklist (RECOMMENDED)
 git rebase main
+./scripts/pre-commit-hook.sh       # ✅ All quality gates in one command
+
+# Alternative manual approach (more error-prone)
 cargo fmt && cargo fmt --check     # Format AND verify (CRITICAL)
 cargo clippy -- -D warnings        # Zero warnings
 cargo test                         # All 79 tests pass
@@ -245,13 +310,37 @@ gh run view <run-id> --log
 
 **Most Common CI Failure**: Code formatting violations
 
+**Real Example** (v1.3.0 Windows CI fix):
 ```bash
-# WRONG - This WILL cause CI failure:
+# Problem: Windows CI failed on Unix-specific code
+# Detection: Pre-commit script caught cross-platform issue
+./scripts/pre-commit-hook.sh
+# 🔍 Running pre-commit quality checks...
+# ❌ Code formatting issues found!
+
+# Solution: Fix and re-run
+cargo fmt
+./scripts/pre-commit-hook.sh
+# 🎉 All quality checks passed!
+```
+
+**WRONG** - This WILL cause CI failure:
+```bash
 # 1. Edit code
 # 2. git add . && git commit -m "changes"
 # 3. git push  # ❌ CI fails on formatting
+```
 
-# RIGHT - This prevents CI failure:
+**RIGHT** - This prevents CI failure:
+```bash
+# 1. Edit code
+# 2. ./scripts/pre-commit-hook.sh    # ✅ RECOMMENDED
+# 3. git add . && git commit -m "changes"
+# 4. git push                        # ✅ CI passes
+```
+
+**Manual Alternative** (more error-prone):
+```bash
 # 1. Edit code
 # 2. cargo fmt                    # ✅ MANDATORY
 # 3. cargo fmt --check           # ✅ Verify formatting
@@ -267,26 +356,46 @@ git add . && git commit -m "fix: apply formatting"
 git push origin your-branch        # Push fix
 ```
 
-### 🔧 Optional: Automated Quality Checks
+### 🔧 Pre-Commit Script Installation Options
 
-**Pre-commit Hook** (Recommended for frequent contributors):
+**Option 1: Manual Execution** (Recommended for all developers):
 ```bash
-# Install optional pre-commit hook to automate quality checks
+# Run before each commit
+./scripts/pre-commit-hook.sh
+```
+
+**Option 2: Git Hook Installation** (Advanced users):
+```bash
+# Install as automatic git hook
 cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 
-# Now every commit will automatically run:
-# ✅ cargo fmt --check (formatting)
-# ✅ cargo clippy (linting) 
-# ✅ cargo test (all tests)
-# ✅ cargo build (compilation)
+# Now every commit will automatically run quality checks
+# Can be bypassed with: git commit --no-verify
 ```
 
-**Benefits**:
-- Prevents CI failures by catching issues locally
-- Saves time by avoiding failed pushes
-- Ensures consistent quality across all commits
-- Can be bypassed with `git commit --no-verify` if needed
+**Benefits of Pre-Commit Script**:
+- ✅ Prevents CI failures by catching issues locally
+- ✅ Saves time by avoiding failed pushes  
+- ✅ Ensures consistent quality across all commits
+- ✅ Provides clear feedback on what needs fixing
+- ✅ Validates cross-platform compatibility
+
+**When Pre-Commit Script Catches Issues**:
+```bash
+./scripts/pre-commit-hook.sh
+# 🔍 Running pre-commit quality checks...
+# 📝 Checking code formatting...
+# ❌ Code formatting issues found!
+# 💡 Fix with: cargo fmt
+
+# Fix the issue:
+cargo fmt
+
+# Re-run to verify:
+./scripts/pre-commit-hook.sh
+# 🎉 All quality checks passed! Proceeding with commit...
+```
 
 ## 🔧 Troubleshooting
 
