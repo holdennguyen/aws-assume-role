@@ -2,6 +2,22 @@
 
 Complete guide for releasing AWS Assume Role CLI, including version management, testing, and distribution.
 
+## ⚡ Quick Release Process
+
+```bash
+# 1. Update version and create release notes
+./scripts/update-version.sh 1.2.1
+./scripts/create-release-notes.sh 1.2.1
+# (Edit release notes and commit changes)
+
+# 2. Validate quality
+cargo fmt --check && cargo clippy -- -D warnings && cargo test
+
+# 3. Release (triggers automated publishing)
+git tag -a v1.2.1 -m "Release v1.2.1"
+git push origin master && git push origin v1.2.1
+```
+
 ## 📋 Release Process Overview
 
 ### Release Types
@@ -35,151 +51,71 @@ Complete guide for releasing AWS Assume Role CLI, including version management, 
 # - v2.0.0 (major: breaking changes)
 ```
 
-#### 2. Update Version
+#### 2. Update Version & Create Release Notes
 ```bash
-# Use automated version updater
+# STEP 1: Update version across all files
 ./scripts/update-version.sh 1.2.1
 
-# This updates:
-# - Cargo.toml version
-# - Documentation references
-# - Package configurations (Homebrew, APT, RPM)
-# - Docker tags
+# STEP 2: Create release notes (MANDATORY)
+./scripts/create-release-notes.sh 1.2.1
+
+# STEP 3: Edit release notes and fill in all placeholders
+# - Update release-notes/README.md index
+# - Remove empty sections from release notes
+# - Verify all links and installation commands
+
+# CRITICAL: Commit version changes BEFORE creating git tags
+# This ensures Cargo.toml version matches the tag for crates.io publishing
+git add .
+git commit -m "🔖 Bump version to v1.2.1"
 ```
 
-#### 3. Create Release Notes
+### **Phase 2: Quality Validation**
+
+#### 3. Comprehensive Testing & Validation
 ```bash
-# Create comprehensive release notes
-# Location: releases/multi-shell/RELEASE_NOTES_v1.2.1.md
-# Include:
-# - New features
-# - Bug fixes
-# - Breaking changes
-# - Migration guide (if needed)
-# - Known issues
-```
+# Code quality (CRITICAL - must pass before release)
+cargo fmt --check                    # Format validation
+cargo clippy -- -D warnings          # Zero warnings policy
+cargo test                          # All 59 tests must pass
+cargo audit                         # Security vulnerability check
+cargo bench                         # Performance regression check
 
-### **Phase 2: Quality Assurance**
-
-#### 4. Complete Testing Suite
-```bash
-# Run all tests (59 total)
-cargo test
-
-# Expected output:
-# test result: ok. 59 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
-
-# Run with verbose output
-cargo test -- --nocapture
-
-# Platform-specific testing
-cargo test --test integration_tests
-cargo test --test shell_integration_tests
-```
-
-#### 5. Code Quality Validation
-```bash
-# Format check (CRITICAL)
-cargo fmt --check
-
-# Clippy validation (zero warnings policy)
-cargo clippy -- -D warnings
-
-# Security audit
-cargo audit
-
-# Performance benchmarks
-cargo bench
-```
-
-#### 6. Cross-Platform Build Testing
-```bash
-# Build all release binaries
-./build-releases.sh
-
-# Verify binaries work correctly
+# Cross-platform build testing
+./build-releases.sh                  # Build all platform binaries
 ./releases/multi-shell/aws-assume-role-macos --version
 ./releases/multi-shell/aws-assume-role-unix --version
 ./releases/multi-shell/aws-assume-role.exe --version
-
-# Test installation scripts
-./releases/multi-shell/INSTALL.sh --test
-./releases/multi-shell/INSTALL.ps1 -Test
 ```
 
-### **Phase 3: Release Creation**
+### **Phase 3: Release & Distribution**
 
-#### 7. Git Workflow
+#### 4. Git Release Workflow
 ```bash
-# Ensure on develop branch with latest changes
-git checkout develop
-git pull origin develop
-
-# Create release branch
-git checkout -b release/v1.2.1
-
-# Commit version updates and release notes
-git add .
-git commit -m "release: prepare v1.2.1"
-git push origin release/v1.2.1
-
-# Create pull request to master
-# Title: "Release v1.2.1"
-# Include release notes in PR description
-```
-
-#### 8. Master Branch Merge
-```bash
-# After PR approval, merge to master
-git checkout master
-git pull origin master
-git merge release/v1.2.1
-git push origin master
-
-# Create and push git tag
+# Create and push git tag (triggers automated publishing)
 git tag -a v1.2.1 -m "Release v1.2.1"
+git push origin master
 git push origin v1.2.1
 
-# Merge back to develop
-git checkout develop
-git merge master
-git push origin develop
+# GitHub Actions will automatically:
+# - Validate Cargo.toml version matches tag
+# - Build cross-platform binaries
+# - Publish to crates.io, Homebrew, APT, COPR
+# - Create GitHub release with binaries
 ```
 
-### **Phase 4: Distribution**
-
-#### 9. GitHub Release
-1. Go to [GitHub Releases](https://github.com/holdennguyen/aws-assume-role/releases)
-2. Click "Draft a new release"
-3. Choose tag: `v1.2.1`
-4. Release title: `AWS Assume Role CLI v1.2.1`
-5. Copy release notes from `RELEASE_NOTES_v1.2.1.md`
-6. Upload binaries from `releases/multi-shell/`:
-   - `aws-assume-role-cli-v1.2.1-YYYYMMDD.tar.gz`
-   - Individual binaries and scripts
-7. Publish release
-
-#### 10. Automated Package Publishing
-
-**GitHub Actions automatically publishes to:**
-
-- ✅ **Cargo (crates.io)**: Rust package manager
-- ✅ **Homebrew**: macOS/Linux package manager
-- ✅ **APT (Launchpad PPA)**: Debian/Ubuntu packages
-- ✅ **COPR**: Fedora/CentOS/RHEL packages
-- ✅ **Docker**: Container images
-
-**Manual Verification:**
+#### 5. Post-Release Verification
 ```bash
-# Verify package manager updates (wait 10-30 minutes)
-brew search aws-assume-role
-apt search aws-assume-role
-dnf search aws-assume-role
-cargo search aws-assume-role
-
-# Verify container images
-docker pull ghcr.io/holdennguyen/aws-assume-role:v1.2.1
+# Wait 10-30 minutes for package managers to update, then verify:
+cargo search aws-assume-role         # Should show new version
+brew search aws-assume-role          # Homebrew update
 docker pull ghcr.io/holdennguyen/aws-assume-role:latest
+
+# Manual GitHub release (if automated release fails):
+# 1. Go to GitHub Releases
+# 2. Tag v1.2.1 should have auto-created release
+# 3. Edit release and copy content from release-notes/RELEASE_NOTES_v1.2.1.md
+# 4. Verify all binaries are attached
 ```
 
 ## 🍺 Package Manager Publishing
@@ -237,45 +173,21 @@ Use the enhanced publishing script:
 
 ## ✅ Release Checklist
 
-### **Pre-Release Validation**
-- [ ] **Version Updated**: All files show correct version number
-- [ ] **Release Notes Created**: Comprehensive notes in `RELEASE_NOTES_v1.2.x.md`
-- [ ] **All Tests Pass**: 59/59 tests passing (`cargo test`)
-- [ ] **Code Formatted**: No formatting issues (`cargo fmt --check`)
-- [ ] **No Clippy Warnings**: Clean clippy output (`cargo clippy -- -D warnings`)
-- [ ] **Security Audit Clean**: No critical vulnerabilities (`cargo audit`)
-- [ ] **Binaries Built**: All platform binaries generated and tested
-- [ ] **Installation Scripts Tested**: Unix and Windows installers work
-- [ ] **Documentation Updated**: README and guides reflect current version
+### **Pre-Release** 
+- [ ] **Version & Release Notes**: Updated via scripts and committed
+- [ ] **Quality Gates**: `cargo fmt --check && cargo clippy -- -D warnings && cargo test`
+- [ ] **Binaries Built**: `./build-releases.sh` completes successfully
 
-### **Release Creation**
-- [ ] **Release Branch Created**: `release/v1.2.x` branch exists
-- [ ] **Pull Request Created**: PR from release branch to master
-- [ ] **PR Approved**: Code review completed
-- [ ] **Master Updated**: Release merged to master branch
-- [ ] **Git Tag Created**: Version tag `v1.2.x` pushed
-- [ ] **Develop Updated**: Changes merged back to develop
+### **Release**
+- [ ] **Git Tag**: Created and pushed (`git tag -a v1.2.x -m "Release v1.2.x"`)
+- [ ] **GitHub Actions**: All workflows completed successfully
+- [ ] **GitHub Release**: Auto-generated with binaries and release notes
 
-### **Distribution Validation**
-- [ ] **GitHub Release Published**: Release visible on GitHub
-- [ ] **Binaries Uploaded**: All release artifacts attached (including ARM64, x86_64, Linux, Windows)
-- [ ] **Cargo Published**: Package available on crates.io
-- [ ] **🍺 Homebrew Updated**: **CRITICAL** - Formula updated in tap with correct SHA256 checksums
-  - [ ] ARM64 binary (`aws-assume-role-macos-arm64`) uploaded to GitHub release
-  - [ ] x86_64 binary (`aws-assume-role-macos-x86_64`) uploaded to GitHub release
-  - [ ] Linux binary (`aws-assume-role-linux-x86_64`) uploaded to GitHub release
-  - [ ] Homebrew formula updated with all three SHA256 checksums
-  - [ ] Formula tested: `brew install holdennguyen/tap/aws-assume-role`
-- [ ] **APT Package Available**: PPA updated with new version
-- [ ] **COPR Package Available**: Fedora COPR updated
-- [ ] **Docker Images Published**: Containers available in registry
-
-### **Post-Release Verification**
-- [ ] **Installation Testing**: Package managers install correctly
-- [ ] **Functionality Testing**: Basic CLI operations work
-- [ ] **Documentation Links**: All links point to correct versions
-- [ ] **CI/CD Pipeline**: All checks passing on master
-- [ ] **User Communication**: Release announced (if applicable)
+### **Verification**
+- [ ] **crates.io**: New version published (`cargo search aws-assume-role`)
+- [ ] **Homebrew**: Formula updated (`brew search aws-assume-role`)
+- [ ] **Docker**: New image available (`docker pull ghcr.io/holdennguyen/aws-assume-role:latest`)
+- [ ] **Functionality**: Basic CLI operations work with new version
 
 ## 🔧 Manual Publishing (Backup)
 
@@ -326,44 +238,17 @@ copr build-package holdennguyen/aws-assume-role \
   --git-branch v1.2.1
 ```
 
-## 🚨 Release Troubleshooting
-
-### Common Issues
-
-**❌ Tests Failing**
-- **Solution**: Fix all test failures before proceeding
-- **Command**: `cargo test -- --nocapture` for detailed output
-
-**❌ Formatting Issues**
-- **Solution**: Run `cargo fmt` and commit changes
-- **Prevention**: Always run `cargo fmt --check` before release
-
-**❌ Clippy Warnings**
-- **Solution**: Fix all warnings, don't suppress them
-- **Command**: `cargo clippy -- -D warnings`
-
-**❌ Binary Build Failures**
-- **Solution**: Check cross-compilation setup
-- **Command**: `cargo build --release --target <target-triple>`
-
-**❌ Package Manager Publishing Fails**
-- **Solution**: Check credentials and repository access
-- **Fallback**: Use manual publishing methods above
-
 ### Emergency Procedures
 
 **Critical Bug in Released Version:**
-1. Create hotfix branch from master: `git checkout -b hotfix/v1.2.2`
-2. Fix the critical issue
-3. Follow abbreviated release process (skip feature testing)
-4. Release as patch version (v1.2.2)
-5. Communicate urgency to users
+1. Create hotfix: `git checkout -b hotfix/v1.2.2`
+2. Fix the issue and follow abbreviated release process
+3. Release as patch version (v1.2.2)
 
 **Rollback Release:**
 1. Remove Git tag: `git tag -d v1.2.1 && git push origin :refs/tags/v1.2.1`
 2. Delete GitHub release
 3. Yank from Cargo: `cargo yank --version 1.2.1`
-4. Contact package maintainers for removal
 
 ## 📊 Release Metrics
 
@@ -413,47 +298,52 @@ brew analytics --install aws-assume-role
 - [Homebrew Formula Cookbook](https://docs.brew.sh/Formula-Cookbook)
 - [Launchpad PPA Guide](https://help.launchpad.net/Packaging/PPA)
 
-## Release Process
+## 📋 Release Information
 
-## Issue: Version Mismatch Between Git Tags and crates.io
+**Current Version**: v1.2.0
 
-### Problem
-During the v1.2.0 release, version 1.1.2 was published to crates.io instead of 1.2.0. This occurred because:
+**📖 [View All Release Notes](release-notes/)** | **🔗 [GitHub Releases](https://github.com/holdennguyen/aws-assume-role/releases)**
 
-1. The git tag `v1.2.0` was created before updating `Cargo.toml` to version "1.2.0"
-2. The GitHub Actions workflow published the version from `Cargo.toml` at the time the tag was created
-3. The workflow has been improved to detect and prevent this issue
+## 📝 Release Notes Process
 
-### Solution
-1. **Manual Fix**: Authenticate with crates.io and publish the correct version:
-   ```bash
-   cargo login
-   cargo publish
-   ```
+### 📝 Mandatory Release Notes
 
-2. **Prevention**: Always update version files BEFORE creating tags:
-   ```bash
-   # Use the update script
-   ./scripts/update-version.sh 1.2.0
-   
-   # Review changes
-   git diff
-   
-   # Test build
-   cargo build --release
-   cargo test
-   
-   # Commit version changes FIRST
-   git add .
-   git commit -m "🔖 Bump version to v1.2.0"
-   
-   # Then create tag
-   git tag -a v1.2.0 -m "Release v1.2.0"
-   
-   # Push both
-   git push origin master
-   git push origin v1.2.0
-   ```
+**Every release requires comprehensive release notes before publication.**
 
-### Workflow Improvements
-The GitHub Actions workflow now includes version validation to prevent publishing mismatched versions to crates.io. 
+#### Quick Process
+```bash
+# 1. Create release notes using helper script
+./scripts/create-release-notes.sh 1.2.1
+
+# 2. Edit the file and fill in all placeholders
+# 3. Update release-notes/README.md with new version
+# 4. Include in GitHub release
+```
+
+#### File Structure
+```
+release-notes/
+├── README.md              # Index of all releases
+├── TEMPLATE.md            # Template for new releases
+└── RELEASE_NOTES_v{VERSION}.md
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues & Solutions
+
+**❌ Version Mismatch on crates.io**
+- **Problem**: Wrong version published (e.g., v1.1.2 instead of v1.2.0)
+- **Cause**: Git tag created before committing version changes
+- **Solution**: Always commit version changes BEFORE creating git tags
+- **Prevention**: Follow Step 3 in the workflow above
+
+**❌ Tests Failing**
+- **Solution**: Fix all test failures before proceeding: `cargo test -- --nocapture`
+
+**❌ Clippy Warnings**  
+- **Solution**: Fix all warnings: `cargo clippy -- -D warnings`
+
+**❌ Package Publishing Fails**
+- **Solution**: Check GitHub Actions workflow for errors
+- **Fallback**: Use manual publishing commands in sections below 

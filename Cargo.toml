@@ -15,6 +15,7 @@ exclude = [
     "releases/",
     "packaging/",
     "memory-bank/",
+    "release-notes/",
     "tests/",
     ".gitignore",
     "build-releases.sh",

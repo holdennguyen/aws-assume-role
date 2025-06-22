@@ -1,40 +1,26 @@
-# AWS Assume Role CLI
+# AWS Assume Role CLI - Multi-Shell Distribution
 
-A simple command-line tool to easily switch between AWS IAM roles across different accounts, designed for SSO users.
+This directory contains platform-specific binaries and shell integration scripts for AWS Assume Role CLI.
 
-## ✨ Features
+## 📦 Quick Installation
 
-- 🔄 Easy role switching between AWS accounts
-- 🔐 SSO credential management  
-- 🌍 Cross-platform support (macOS, Linux, Windows, Git Bash)
-- 📋 Multiple output formats (shell exports, JSON)
-- 💾 Persistent role configuration
-- ⏱️ Session duration control
+1. **Download and extract** the appropriate package:
+   - `aws-assume-role-cli-v{VERSION}-YYYYMMDD.zip` for Windows
+   - `aws-assume-role-cli-v{VERSION}-YYYYMMDD.tar.gz` for Unix/Linux/macOS
 
-## 📦 Installation Instructions
-
-### Quick Installation (Recommended)
-
-1. **Download and extract** the appropriate package for your system:
-   - `aws-assume-role-cli-v1.0.1-YYYYMMDD.zip` for Windows
-- `aws-assume-role-cli-v1.0.1-YYYYMMDD.tar.gz` for Unix/Linux/macOS
-
-2. **Run the automated installer**:
+2. **Run the installer**:
    ```bash
-   # For Unix/Linux/macOS/Git Bash
+   # Unix/Linux/macOS/Git Bash
    ./INSTALL.sh
    
-   # For Windows PowerShell
+   # Windows PowerShell  
    .\INSTALL.ps1
    ```
 
-3. **Choose installation location** when prompted:
-   - **Option 1**: Current directory (for testing)
-   - **Option 2**: `/usr/local/bin` (system-wide, requires sudo)
-   - **Option 3**: `~/.local/bin` (user-specific, recommended)
-   - **Option 4**: Custom directory
-
-4. **Cleanup**: If you chose option 2 or 3, you can safely delete the extracted folder after installation.
+3. **Choose installation location**:
+   - **System-wide**: `/usr/local/bin` (requires sudo)
+   - **User-specific**: `~/.local/bin` (recommended)  
+   - **Current directory**: For testing only
 
 ### 🧹 After Installation
 
@@ -61,43 +47,20 @@ rmdir /s aws-assume-role-cli-v1.0.1-YYYYMMDD
 
 ## 🚀 Quick Start
 
-### Configure Your First Role
-```bash
-awsr configure --name "dev-role" \
-  --role-arn "arn:aws:iam::123456789012:role/DeveloperRole" \
-  --account-id "123456789012"
-```
+After installation, configure and use roles:
 
-### Assume the Role
 ```bash
-awsr assume dev-role
-```
+# Configure a role
+awsr configure --name dev --role-arn arn:aws:iam::123456789012:role/DevRole --account-id 123456789012
 
-### Verify
-```bash
+# Assume the role  
+awsr assume dev
+
+# Verify current identity
 aws sts get-caller-identity
-# Should show the assumed role
 ```
 
-## 📖 Commands
-
-### Configure Roles
-```bash
-awsr configure --name <name> --role-arn <arn> --account-id <id>
-```
-
-### Assume Roles
-```bash
-awsr assume <role-name>                    # Shell export format
-awsr assume <role-name> --format json      # JSON format
-awsr assume <role-name> --duration 7200    # Custom duration (2 hours)
-```
-
-### Manage Roles
-```bash
-awsr list                                  # List configured roles
-awsr remove <role-name>                    # Remove a role
-```
+**→ [Complete usage guide in main README](../../README.md)**
 
 ## 💡 Shell Integration
 

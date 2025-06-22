@@ -68,7 +68,8 @@ alias aws-whoami='aws sts get-caller-identity'
 |-------|---------|----------|
 | **[DEPLOYMENT.md](DEPLOYMENT.md)** | Installation, prerequisites, enterprise deployment | Users, DevOps |
 | **[DEVELOPMENT.md](DEVELOPMENT.md)** | Development setup, testing, contributing | Developers |
-| **[RELEASE.md](RELEASE.md)** | Release process and publishing | Maintainers |
+| **[RELEASE.md](RELEASE.md)** | Release process, version management, publishing | Maintainers |
+| **[release-notes/](release-notes/)** | Release notes and version history | All users |
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Technical architecture and design | Technical users |
 
 ## 🔧 Configuration
