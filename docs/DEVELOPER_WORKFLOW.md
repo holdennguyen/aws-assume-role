@@ -194,6 +194,45 @@ cargo audit                        # Zero security vulnerabilities
 
 ## 🎯 Safe Release Process (CRITICAL)
 
+### The "Release from Develop" Workflow Philosophy
+
+This project uses a **GitFlow-like** branching model where releases are tagged from the `develop` branch *before* merging into `main`. This is a deliberate and robust strategy.
+
+**Branch Roles:**
+- **`develop`**: The integration branch for the "next release." All CI checks run here.
+- **`main`**: The production branch. It only contains code from successfully completed releases.
+- **`tags` (e.g., `v1.3.0`)**: Immutable pointers to a specific commit on `develop` that represents a formal, published release.
+
+**Why Release Before Merging to `main`?**
+- ✅ **Maximum Confidence**: The release is built from the *exact* commit that passed all CI checks on `develop`, eliminating any chance of last-minute issues.
+- ✅ **`main` is Always Production-Ready**: The `main` branch is a clean, stable history of official releases. You can trust it completely.
+- ✅ **Clear Automation Trigger**: A Git tag is the perfect, unambiguous trigger for the automated release pipeline.
+- ✅ **Decoupled Process**: It separates the *act of releasing* from the *act of updating the production branch*. The merge to `main` is a simple, safe finalization step.
+
+### Visual Workflow
+
+```mermaid
+graph TD
+    subgraph "Development"
+        A[Feature Branch] -->|Pull Request| B(Merge to develop)
+    end
+    subgraph "Validation"
+        B -->|Git Push| C{CI Checks on 'develop'}
+        C -->|All Pass ✅| D[Ready for Release]
+    end
+    subgraph "Release Trigger"
+        D -->|Manual Action| E(Git Tag 'v1.3.0')
+    end
+    subgraph "Automated Release"
+        E -->|Triggers Workflow| F{Release Pipeline}
+        F --> G[Publish Artifacts]
+    end
+    subgraph "Finalization"
+        G -->|Release Success ✅| H(Merge 'develop' to 'main')
+        H --> I[Push 'main']
+    end
+```
+
 ### ⚠️ CRITICAL RULE: Never Tag Before CI Passes
 
 The GitHub Actions workflow can fail for various reasons. **ALWAYS** wait for CI validation before creating release tags.
@@ -246,7 +285,23 @@ Key Features:
 git push origin v1.3.0
 ```
 
-### Phase 4: Automated Release Pipeline
+### Phase 4: Finalize the Release (Merge to Main)
+
+After the tag is pushed, the automated release pipeline will run. **Once you confirm the release was successful**, the final step is to merge the `develop` branch into `main` to bring the production branch up to date.
+
+```bash
+# 1. Switch to the main branch and pull latest changes
+git checkout main
+git pull origin main
+
+# 2. Merge the develop branch into main
+git merge develop
+
+# 3. Push the updated main branch
+git push origin main
+```
+
+### Phase 5: Automated Release Pipeline
 
 The tag push triggers the full automated release pipeline:
 
