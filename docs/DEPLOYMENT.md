@@ -7,14 +7,14 @@ Complete guide for installing, configuring, and deploying AWS Assume Role CLI ac
 ### **Recommended Methods**
 
 ```bash
-# 🍺 Homebrew (macOS/Linux) - Most Popular
+# 🍺 Homebrew (macOS/Linux)
 brew tap holdennguyen/tap
 brew install aws-assume-role
 
 # 🦀 Cargo (Rust Users)
 cargo install aws-assume-role
 
-# 📦 Universal Installer (Any Platform)
+# 📦 Universal Installer (Linux/macOS)
 curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
 cd aws-assume-role-cli-* && ./INSTALL.sh
 ```
@@ -28,15 +28,15 @@ cd aws-assume-role-cli-* && ./INSTALL.sh
 | Requirement | Version | Purpose | Installation |
 |-------------|---------|---------|--------------|
 | **AWS CLI** | v2.0+ | Core AWS operations | [AWS CLI Install Guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
-| **Bash/Zsh** | Any recent | Shell integration | Pre-installed on most systems |
+| **Bash/Zsh**| Any recent| Shell integration | Pre-installed on most systems |
 
 ### **Platform Requirements**
 
 | Platform | Architecture | Status | Notes |
 |----------|-------------|--------|-------|
-| **Linux** | x86_64 | ✅ Fully Supported | Ubuntu 18.04+, RHEL 7+, most distributions |
-| **macOS** | Apple Silicon (M1/M2) | ✅ Fully Supported | macOS 11.0+ (Big Sur) |
-| **Windows** | x86_64 | ✅ Git Bash Support | Requires Git Bash or WSL |
+| **Linux** | x86_64 | ✅ Fully Supported | Statically linked binary for broad compatibility. |
+| **macOS** | Apple Silicon & Intel | ✅ Fully Supported | Universal binary for M1/M2 and Intel. |
+| **Windows** | x86_64 | ✅ Fully Supported | Requires Git Bash, WSL, or another bash-like environment. |
 
 ### **AWS Prerequisites**
 
@@ -49,29 +49,14 @@ cd aws-assume-role-cli-* && ./INSTALL.sh
 2. **AWS Credentials Configured**:
    - Via `aws configure` (access keys)
    - Via AWS SSO (`aws sso login`)
-   - Via IAM roles (EC2, Lambda, etc.)
    - Via environment variables
 
 3. **IAM Permissions**:
    Your AWS identity needs `sts:AssumeRole` permission for target roles.
 
-### **Verification**
-
-Run our built-in verification:
-```bash
-awsr verify
-```
-
-This checks:
-- ✅ AWS CLI installation and version
-- ✅ AWS credentials configuration
-- ✅ Basic AWS connectivity
-- ✅ Shell compatibility
-- ✅ File system permissions
-
 ## 🔧 Installation Methods
 
-### **Method 1: Homebrew (Recommended for macOS/Linux)**
+### **Method 1: Homebrew (Recommended for macOS & Linux)**
 
 ```bash
 # Add our tap
@@ -82,14 +67,13 @@ brew install aws-assume-role
 
 # Verify installation
 awsr --version
-awsr verify
 ```
 
 **Advantages**:
 - ✅ Automatic dependency management
 - ✅ Easy updates with `brew upgrade`
 - ✅ Trusted package manager
-- ✅ Automatic PATH configuration
+- ✅ Automatic `PATH` configuration
 
 ### **Method 2: Cargo (Rust Package Manager)**
 
@@ -99,7 +83,6 @@ cargo install aws-assume-role
 
 # Verify installation
 awsr --version
-awsr verify
 ```
 
 **Advantages**:
@@ -111,7 +94,7 @@ awsr verify
 **Requirements**:
 - Rust toolchain installed (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
 
-### **Method 3: Universal Installer (Any Platform)**
+### **Method 3: Universal Installer (Linux & macOS)**
 
 ```bash
 # Download and extract
@@ -133,7 +116,7 @@ cd aws-assume-role-cli-*
 - ✅ Works on any Unix-like system
 - ✅ No package manager required
 - ✅ Interactive configuration
-- ✅ Includes all dependencies
+- ✅ Includes all required binaries
 
 ### **Method 4: Container/Docker**
 
@@ -147,7 +130,6 @@ source ~/.bashrc
 
 # Use normally
 awsr --version
-awsr verify
 ```
 
 **Advantages**:

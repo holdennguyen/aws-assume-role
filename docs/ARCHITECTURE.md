@@ -4,59 +4,42 @@ Comprehensive technical architecture documentation for AWS Assume Role CLI.
 
 ## 🎯 System Overview
 
-AWS Assume Role CLI is a cross-platform command-line tool built in Rust that simplifies AWS role assumption through multiple interfaces:
+AWS Assume Role CLI is a cross-platform command-line tool built in Rust that simplifies AWS role assumption. It is designed for performance, security, and ease of use.
 
-- **Core Binary**: High-performance Rust CLI (`awsr`)
-- **Shell Wrappers**: Platform-specific scripts for shell integration
-- **Package Distribution**: Multi-format packaging for various platforms
-- **CI/CD Pipeline**: Automated testing and distribution
+**Core Components**:
+- **Core Binary**: A high-performance, statically-linked Rust CLI (`awsr`).
+- **Universal Shell Wrapper**: A single bash script (`aws-assume-role-bash.sh`) for seamless integration with bash-compatible shells (Bash, Zsh, Git Bash).
+- **AWS SDK for Rust**: Direct integration with AWS services for robust and secure credential handling, replacing the previous dependency on the AWS CLI.
+- **CI/CD Pipeline**: An automated testing and distribution pipeline using GitHub Actions.
 
 ## 📊 Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     User Interface Layer                        │
-├─────────────────────────────────────────────────────────────────┤
-│  Shell Wrappers          │  Direct CLI Usage                   │
-│  ├─ Bash/Zsh (.sh)      │  ├─ awsr assume role-name          │
-│  ├─ PowerShell (.ps1)   │  ├─ awsr list                      │
-│  ├─ Fish (.fish)        │  ├─ awsr configure                 │
-│  └─ CMD (.bat)          │  └─ awsr --help                    │
-└─────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     CLI Application Layer                       │
-├─────────────────────────────────────────────────────────────────┤
-│  Command Parser (clap)    │  Argument Validation               │
-│  ├─ assume               │  ├─ Role name validation           │
-│  ├─ list                 │  ├─ Duration validation            │
-│  ├─ configure            │  ├─ Profile validation             │
-│  ├─ verify               │  └─ Output format validation       │
-│  └─ help/version         │                                    │
-└─────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Business Logic Layer                        │
-├─────────────────────────────────────────────────────────────────┤
-│  AWS Integration          │  Configuration Management          │
-│  ├─ STS AssumeRole       │  ├─ Role definitions               │
-│  ├─ Credential handling  │  ├─ User preferences              │
-│  ├─ Session management   │  ├─ Default values                │
-│  └─ Error translation    │  └─ Cross-platform paths          │
-└─────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Infrastructure Layer                        │
-├─────────────────────────────────────────────────────────────────┤
-│  AWS CLI Integration      │  File System Operations            │
-│  ├─ Command execution    │  ├─ Config file I/O               │
-│  ├─ Output parsing       │  ├─ Cross-platform paths          │
-│  ├─ Error handling       │  ├─ Temporary file management     │
-│  └─ Process management   │  └─ Permission handling           │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph "User Interface Layer"
+        A["Shell (Bash, Zsh, Git Bash)"] -->|source| B(aws-assume-role-bash.sh)
+        B -->|alias 'awsr'| C{Core Binary (aws-assume-role)}
+        D["Direct Usage"] --> C
+    end
+
+    subgraph "CLI Application Layer (clap)"
+        C --> E{Command Parser}
+        E -->|assume| F[Assume Role Logic]
+        E -->|list| G[List Roles Logic]
+        E -->|configure| H[Configuration Logic]
+        E -->|--help/--version| I[Help & Version]
+    end
+
+    subgraph "Business Logic Layer (Rust)"
+        F --> J{AWS SDK Integration}
+        G --> K{Configuration Management}
+        H --> K
+    end
+
+    subgraph "Infrastructure Layer"
+        J -- "STS::AssumeRole" --> L(AWS Services via SDK)
+        K -- "Read/Write" --> M(File System: config.json)
+    end
 ```
 
 ## 🧩 Core Components
@@ -73,9 +56,9 @@ AWS Assume Role CLI is a cross-platform command-line tool built in Rust that sim
 
 **Key Patterns**:
 ```rust
-// Command structure
+// Command structure from 'clap'
 #[derive(Parser)]
-#[command(name = "awsr")]
+#[command(name = "aws-assume-role", version, about)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -86,7 +69,6 @@ pub enum Commands {
     Assume { role: String, duration: Option<u32> },
     List,
     Configure,
-    Verify,
 }
 ```
 
@@ -97,30 +79,42 @@ pub enum Commands {
 
 ### **2. AWS Layer (`src/aws/mod.rs`)**
 
-**Purpose**: AWS service integration and credential management
+**Purpose**: Direct AWS service integration using the AWS SDK for Rust.
 
 **Responsibilities**:
-- Execute AWS CLI commands for STS operations
-- Parse AWS CLI output and handle errors
-- Manage temporary credentials and sessions
-- Provide abstraction over AWS CLI complexity
+- Natively assume IAM roles using the `aws-sdk-sts` crate.
+- Load AWS configuration and credentials from standard sources (e.g., `~/.aws/config`, environment variables) using `aws-config`.
+- Handle credential caching and session management securely.
+- Provide a robust, type-safe abstraction over the AWS STS `AssumeRole` API call.
 
 **Key Patterns**:
 ```rust
-// AWS operation abstraction
-pub struct AwsClient {
-    profile: Option<String>,
-    region: Option<String>,
-}
+// Using the AWS SDK for Rust for STS operations
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_sts::Client as StsClient;
 
-impl AwsClient {
-    pub fn assume_role(&self, role_arn: &str, duration: u32) -> Result<Credentials> {
-        // Execute aws sts assume-role command
-        // Parse JSON response
-        // Return structured credentials
-    }
+pub async fn assume_role(role_arn: &str, duration: i32) -> Result<aws_sdk_sts::types::Credentials, Box<dyn std::error::Error>> {
+    let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
+    let config = aws_config::from_env().region(region_provider).load().await;
+    let client = StsClient::new(&config);
+
+    let response = client
+        .assume_role()
+        .role_arn(role_arn)
+        .role_session_name("aws-assume-role-session")
+        .duration_seconds(duration)
+        .send()
+        .await?;
+
+    Ok(response.credentials.unwrap())
 }
 ```
+
+**Architectural Shift**: This layer represents a critical architectural change from the previous version, which shelled out to the AWS CLI. By using the official AWS SDK, we gain:
+- **Performance**: No overhead from starting an external process.
+- **Security**: No risk of command injection and better handling of credentials.
+- **Reliability**: Type-safe interaction with the AWS API, reducing parsing errors.
+- **No AWS CLI Dependency**: The tool is now fully self-contained.
 
 **Integration Points**:
 - Requires AWS CLI v2 to be installed
@@ -203,54 +197,29 @@ pub enum CliError {
 
 ### **Typical Role Assumption Flow**
 
-```
-1. User Input
-   ├─ Direct: awsr assume production
-   └─ Wrapper: source aws-assume-role-bash.sh && awsr assume production
-
-2. CLI Parsing
-   ├─ Parse command and arguments
-   ├─ Validate role name and options
-   └─ Route to appropriate handler
-
-3. Configuration Lookup
-   ├─ Load user configuration file
-   ├─ Resolve role name to ARN
-   └─ Apply default settings
-
-4. AWS Integration
-   ├─ Execute: aws sts assume-role
-   ├─ Parse JSON response
-   └─ Extract temporary credentials
-
-5. Output Generation
-   ├─ Format for target shell
-   ├─ Generate export statements
-   └─ Provide usage instructions
-
-6. Shell Integration
-   ├─ Source wrapper script
-   ├─ Execute awsr command
-   └─ Apply environment variables
+```mermaid
+graph TD
+    A[User runs 'awsr assume <role>'] --> B{CLI Parser};
+    B --> C{Config Layer: Look up Role ARN};
+    C --> D{AWS Layer: Call assume_role()};
+    D --> E{AWS SDK for Rust: STS Client};
+    E -- "AssumeRole API Call" --> F[AWS STS Service];
+    F -- "Temporary Credentials" --> E;
+    E --> D;
+    D -- "Credentials Result" --> B;
+    B --> G[Output Layer: Format as shell exports];
+    G --> H[User sources output to set ENV VARS];
 ```
 
 ### **Configuration Management Flow**
 
-```
-1. Configuration Discovery
-   ├─ Check ~/.aws-assume-role/config.json
-   ├─ Create default if missing
-   └─ Validate structure
-
-2. Role Definition
-   ├─ role_name -> role_arn mapping
-   ├─ Default session duration
-   └─ Custom AWS profile/region
-
-3. Persistence
-   ├─ Atomic file writes
-   ├─ Backup on modification
-   └─ Cross-platform path handling
+```mermaid
+graph TD
+    A[User runs 'awsr configure'] --> B{CLI Parser};
+    B --> C{Prompt for Role Details};
+    C --> D{Config Layer: Read config.json};
+    D --> E{Update/Add Role Definition};
+    E --> F{Config Layer: Write to config.json};
 ```
 
 ## 🏗️ Design Patterns

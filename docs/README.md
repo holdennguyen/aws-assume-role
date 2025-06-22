@@ -8,7 +8,6 @@ This directory contains all comprehensive documentation for AWS Assume Role CLI,
 |----------|---------|-----------------|
 | **[📋 DEPLOYMENT.md](DEPLOYMENT.md)** | Complete installation guide, prerequisites, enterprise deployment | **End Users, DevOps Teams** |
 | **[👨‍💻 DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md)** | Development setup, testing, contributing, release workflow | **Contributors, Maintainers** |
-| **[🚀 RELEASE.md](RELEASE.md)** | Release process and distribution management | **Maintainers** |
 | **[🏗️ ARCHITECTURE.md](ARCHITECTURE.md)** | System design, security architecture, technical deep-dive | **Technical Users, Architects** |
 
 ## 🎯 Quick Navigation
@@ -22,11 +21,7 @@ This directory contains all comprehensive documentation for AWS Assume Role CLI,
 - **Development Setup**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#quick-start)
 - **Testing**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#testing-framework)
 - **Contributing**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#contributing-guidelines)
-
-### **For Maintainers**
-- **Release Process**: [RELEASE.md](RELEASE.md#release-workflow)
-- **Distribution**: [RELEASE.md](RELEASE.md#distribution-channels)
-- **Quality Gates**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#development-standards)
+- **Release Process**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#safe-release-process-critical)
 
 ### **For Technical Users**
 - **System Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md#system-architecture)
@@ -35,8 +30,8 @@ This directory contains all comprehensive documentation for AWS Assume Role CLI,
 
 ## 📊 Documentation Metrics
 
-- **Total Documents**: 4 comprehensive guides
-- **Coverage**: Installation, Development, Release, Architecture
+- **Total Documents**: 3 comprehensive guides
+- **Coverage**: Installation, Development, Architecture
 - **Maintenance**: Single source of truth for each topic
 - **Audience**: Segmented by user type and needs
 
