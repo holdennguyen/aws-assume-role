@@ -267,6 +267,27 @@ git add . && git commit -m "fix: apply formatting"
 git push origin your-branch        # Push fix
 ```
 
+### 🔧 Optional: Automated Quality Checks
+
+**Pre-commit Hook** (Recommended for frequent contributors):
+```bash
+# Install optional pre-commit hook to automate quality checks
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+
+# Now every commit will automatically run:
+# ✅ cargo fmt --check (formatting)
+# ✅ cargo clippy (linting) 
+# ✅ cargo test (all tests)
+# ✅ cargo build (compilation)
+```
+
+**Benefits**:
+- Prevents CI failures by catching issues locally
+- Saves time by avoiding failed pushes
+- Ensures consistent quality across all commits
+- Can be bypassed with `git commit --no-verify` if needed
+
 ## 🔧 Troubleshooting
 
 ### Release Process Issues
