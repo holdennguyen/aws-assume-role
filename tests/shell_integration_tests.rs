@@ -7,10 +7,10 @@ mod common;
 #[test]
 fn test_shell_wrappers_exist() {
     let essential_files = [
-        "releases/aws-assume-role-bash.sh",  // Universal wrapper for all platforms
-        "releases/INSTALL.sh",               // Universal installer
-        "releases/UNINSTALL.sh",             // Universal uninstaller
-        "releases/README.md",                // Documentation
+        "releases/aws-assume-role-bash.sh", // Universal wrapper for all platforms
+        "releases/INSTALL.sh",              // Universal installer
+        "releases/UNINSTALL.sh",            // Universal uninstaller
+        "releases/README.md",               // Documentation
     ];
 
     for file in &essential_files {
@@ -50,14 +50,8 @@ fn test_bash_wrapper_structure() {
     );
 
     // Check platform detection
-    assert!(
-        content.contains("Linux*"),
-        "Should detect Linux platform"
-    );
-    assert!(
-        content.contains("Darwin*"),
-        "Should detect macOS platform"
-    );
+    assert!(content.contains("Linux*"), "Should detect Linux platform");
+    assert!(content.contains("Darwin*"), "Should detect macOS platform");
     assert!(
         content.contains("MINGW*") || content.contains("MSYS*") || content.contains("CYGWIN*"),
         "Should detect Windows Git Bash platform"
@@ -70,10 +64,7 @@ fn test_bash_wrapper_structure() {
     );
 
     // Check convenience alias
-    assert!(
-        content.contains("alias awsr"),
-        "Should provide awsr alias"
-    );
+    assert!(content.contains("alias awsr"), "Should provide awsr alias");
 }
 
 /// Test cross-platform binary discovery logic
@@ -126,10 +117,7 @@ fn test_wrapper_error_handling() {
         content.contains("binary not found"),
         "Should handle missing binary"
     );
-    assert!(
-        content.contains("return 1"),
-        "Should return error codes"
-    );
+    assert!(content.contains("return 1"), "Should return error codes");
     assert!(
         content.contains("if [ -z"),
         "Should check for empty variables"
@@ -162,8 +150,8 @@ fn test_wrapper_usage_info() {
 #[test]
 fn test_export_format_integration() {
     let script_path = "releases/aws-assume-role-bash.sh";
-    let content = fs::read_to_string(script_path)
-        .unwrap_or_else(|_| panic!("Should read shell script"));
+    let content =
+        fs::read_to_string(script_path).unwrap_or_else(|_| panic!("Should read shell script"));
 
     // Universal wrapper should use eval with --format export
     assert!(
@@ -271,8 +259,7 @@ fn test_uninstallation_scripts() {
 #[test]
 fn test_multishell_readme() {
     let readme_path = "releases/README.md";
-    let content = fs::read_to_string(readme_path)
-        .unwrap_or_else(|_| panic!("Should read README"));
+    let content = fs::read_to_string(readme_path).unwrap_or_else(|_| panic!("Should read README"));
 
     // Should mention supported platforms
     assert!(
@@ -282,7 +269,9 @@ fn test_multishell_readme() {
 
     // Should mention the universal wrapper approach
     assert!(
-        content.contains("bash") || content.contains("universal") || content.contains("cross-platform"),
+        content.contains("bash")
+            || content.contains("universal")
+            || content.contains("cross-platform"),
         "README should mention universal/cross-platform approach"
     );
 
@@ -297,14 +286,13 @@ fn test_multishell_readme() {
 #[test]
 fn test_version_consistency() {
     // Read version from Cargo.toml
-    let cargo_content = fs::read_to_string("Cargo.toml")
-        .expect("Should read Cargo.toml");
-    
+    let cargo_content = fs::read_to_string("Cargo.toml").expect("Should read Cargo.toml");
+
     let version_line = cargo_content
         .lines()
         .find(|line| line.trim().starts_with("version = "))
         .expect("Should find version in Cargo.toml");
-    
+
     let version = version_line
         .split('=')
         .nth(1)
@@ -313,9 +301,8 @@ fn test_version_consistency() {
         .trim_matches('"');
 
     // Check README mentions the version
-    let readme_content = fs::read_to_string("releases/README.md")
-        .expect("Should read README");
-    
+    let readme_content = fs::read_to_string("releases/README.md").expect("Should read README");
+
     assert!(
         readme_content.contains(version),
         "README should mention version {}",
@@ -354,27 +341,19 @@ fn test_distribution_script() {
 fn test_binary_files_exist() {
     let binaries = [
         "releases/aws-assume-role-linux",
-        "releases/aws-assume-role-macos", 
+        "releases/aws-assume-role-macos",
         "releases/aws-assume-role-windows.exe",
     ];
 
     for binary in &binaries {
-        assert!(
-            Path::new(binary).exists(),
-            "Binary {} should exist",
-            binary
-        );
+        assert!(Path::new(binary).exists(), "Binary {} should exist", binary);
     }
 
     // Check that binaries are not empty
     for binary in &binaries {
-        let metadata = fs::metadata(binary)
-            .unwrap_or_else(|_| panic!("Should read metadata for {}", binary));
-        assert!(
-            metadata.len() > 0,
-            "Binary {} should not be empty",
-            binary
-        );
+        let metadata =
+            fs::metadata(binary).unwrap_or_else(|_| panic!("Should read metadata for {}", binary));
+        assert!(metadata.len() > 0, "Binary {} should not be empty", binary);
     }
 }
 
@@ -393,7 +372,8 @@ fn test_release_notes() {
         .expect("Should read release notes directory")
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.file_name()
+            entry
+                .file_name()
                 .to_string_lossy()
                 .starts_with("RELEASE_NOTES_v")
                 && entry.file_name().to_string_lossy().ends_with(".md")
