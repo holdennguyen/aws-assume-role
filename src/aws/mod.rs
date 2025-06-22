@@ -105,6 +105,26 @@ impl AwsClient {
 
     /// Test if we can assume a specific role (dry run)
     pub async fn test_assume_role(&self, role_config: &RoleConfig) -> AppResult<bool> {
+        // Check if we're already in an assumed role session
+        if let Ok(current_identity) = self.verify_current_identity().await {
+            // If we're already in an assumed role session and it's the same role being tested
+            if current_identity.arn.contains("assumed-role") {
+                // Extract the role name from the current ARN
+                // ARN format: arn:aws:sts::123456789012:assumed-role/role-name/session-name
+                if let Some(role_part) = current_identity.arn.split('/').nth(1) {
+                    // Extract the role name from the target role ARN
+                    // ARN format: arn:aws:iam::123456789012:role/role-name
+                    if let Some(target_role_name) = role_config.role_arn.split('/').next_back() {
+                        if role_part == target_role_name {
+                            // We're already using this role - verification successful
+                            return Ok(true);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Proceed with normal assumption test if not already in the target role
         match self
             .sts_client
             .assume_role()

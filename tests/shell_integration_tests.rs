@@ -3,29 +3,29 @@ use std::path::Path;
 
 mod common;
 
-/// Test that all shell wrapper scripts exist and have basic structure
+/// Test that the universal bash wrapper exists and covers all platforms
 #[test]
 fn test_shell_wrappers_exist() {
-    let wrapper_scripts = [
-        "releases/multi-shell/aws-assume-role-bash.sh",
-        "releases/multi-shell/aws-assume-role-powershell.ps1",
-        "releases/multi-shell/aws-assume-role-fish.fish",
-        "releases/multi-shell/aws-assume-role-cmd.bat",
+    let essential_files = [
+        "releases/aws-assume-role-bash.sh",  // Universal wrapper for all platforms
+        "releases/INSTALL.sh",               // Universal installer
+        "releases/UNINSTALL.sh",             // Universal uninstaller
+        "releases/README.md",                // Documentation
     ];
 
-    for script in &wrapper_scripts {
+    for file in &essential_files {
         assert!(
-            Path::new(script).exists(),
-            "Wrapper script {} should exist",
-            script
+            Path::new(file).exists(),
+            "Essential file {} should exist",
+            file
         );
     }
 }
 
-/// Test bash/zsh wrapper script structure and functionality
+/// Test universal bash wrapper script structure and cross-platform functionality
 #[test]
 fn test_bash_wrapper_structure() {
-    let script_path = "releases/multi-shell/aws-assume-role-bash.sh";
+    let script_path = "releases/aws-assume-role-bash.sh";
     let content = fs::read_to_string(script_path)
         .unwrap_or_else(|_| panic!("Should read bash wrapper script"));
 
@@ -49,445 +49,359 @@ fn test_bash_wrapper_structure() {
         "Should use export format"
     );
 
+    // Check platform detection
+    assert!(
+        content.contains("Linux*"),
+        "Should detect Linux platform"
+    );
+    assert!(
+        content.contains("Darwin*"),
+        "Should detect macOS platform"
+    );
+    assert!(
+        content.contains("MINGW*") || content.contains("MSYS*") || content.contains("CYGWIN*"),
+        "Should detect Windows Git Bash platform"
+    );
+
     // Check error handling
     assert!(
-        content.contains("if") || content.contains("case"),
-        "Should have conditional logic"
-    );
-    assert!(content.contains("return 1"), "Should have error handling");
-}
-
-/// Test PowerShell wrapper script structure
-#[test]
-fn test_powershell_wrapper_structure() {
-    let script_path = "releases/multi-shell/aws-assume-role-powershell.ps1";
-    let content = fs::read_to_string(script_path)
-        .unwrap_or_else(|_| panic!("Should read PowerShell wrapper script"));
-
-    // Check PowerShell specific elements
-    assert!(
-        content.contains("Invoke-Expression") || content.contains("$env:"),
-        "Should handle environment variables"
-    );
-    assert!(
-        content.contains("aws-assume-role"),
-        "Should reference main binary"
+        content.contains("case") && content.contains("return 1"),
+        "Should have platform detection and error handling"
     );
 
-    // Check parameter handling
+    // Check convenience alias
     assert!(
-        content.contains("param") || content.contains("$args"),
-        "Should handle parameters"
+        content.contains("alias awsr"),
+        "Should provide awsr alias"
     );
 }
 
-/// Test Fish shell wrapper script structure
-#[test]
-fn test_fish_wrapper_structure() {
-    let script_path = "releases/multi-shell/aws-assume-role-fish.fish";
-    let content = fs::read_to_string(script_path)
-        .unwrap_or_else(|_| panic!("Should read Fish wrapper script"));
-
-    // Check Fish shell specific syntax
-    assert!(
-        content.contains("eval") && content.contains("--format export"),
-        "Should use eval with export format for environment variables"
-    );
-    assert!(
-        content.contains("aws-assume-role"),
-        "Should reference main binary"
-    );
-
-    // Check function definition (Fish uses functions)
-    assert!(content.contains("function"), "Should define function");
-}
-
-/// Test CMD batch wrapper script structure
-#[test]
-fn test_cmd_wrapper_structure() {
-    let script_path = "releases/multi-shell/aws-assume-role-cmd.bat";
-    let content = fs::read_to_string(script_path)
-        .unwrap_or_else(|_| panic!("Should read CMD wrapper script"));
-
-    // Check batch file elements
-    assert!(
-        content.contains("@echo off"),
-        "Should have batch file syntax"
-    );
-    assert!(
-        content.contains("aws-assume-role"),
-        "Should reference main binary"
-    );
-
-    // Check environment variable setting (CMD uses for loops to execute commands)
-    assert!(
-        content.contains("for /f") || content.contains("SET"),
-        "Should handle command execution"
-    );
-}
-
-/// Test binary discovery logic across platforms
+/// Test cross-platform binary discovery logic
 #[test]
 fn test_binary_discovery() {
-    let scripts = [
-        ("releases/multi-shell/aws-assume-role-bash.sh", "bash"),
-        (
-            "releases/multi-shell/aws-assume-role-powershell.ps1",
-            "powershell",
-        ),
-        ("releases/multi-shell/aws-assume-role-fish.fish", "fish"),
-    ];
+    let script_path = "releases/aws-assume-role-bash.sh";
+    let content = fs::read_to_string(script_path)
+        .unwrap_or_else(|_| panic!("Should read universal wrapper script"));
 
-    for (script_path, shell_type) in &scripts {
-        let content = fs::read_to_string(script_path)
-            .unwrap_or_else(|_| panic!("Should read {} script", shell_type));
+    // Should have logic to find platform-specific binaries
+    assert!(
+        content.contains("aws-assume-role-linux"),
+        "Should reference Linux binary"
+    );
+    assert!(
+        content.contains("aws-assume-role-macos"),
+        "Should reference macOS binary"
+    );
+    assert!(
+        content.contains("aws-assume-role-windows.exe"),
+        "Should reference Windows binary"
+    );
 
-        // Should have logic to find the binary
-        assert!(
-            content.contains("command -v")
-                || content.contains("Get-Command")
-                || content.contains("Test-Path")
-                || content.contains("test -f")
-                || content.contains("if [ -f"),
-            "{} script should have binary discovery logic",
-            shell_type
-        );
-    }
+    // Should have fallback to installed binary
+    assert!(
+        content.contains("command -v aws-assume-role"),
+        "Should have fallback to installed binary"
+    );
+
+    // Should check for file existence
+    assert!(
+        content.contains("[ -f"),
+        "Should check for binary file existence"
+    );
 }
 
-/// Test error handling patterns in wrapper scripts
+/// Test error handling patterns in universal wrapper
 #[test]
 fn test_wrapper_error_handling() {
-    let scripts = [
-        ("releases/multi-shell/aws-assume-role-bash.sh", "bash"),
-        (
-            "releases/multi-shell/aws-assume-role-powershell.ps1",
-            "powershell",
-        ),
-        ("releases/multi-shell/aws-assume-role-fish.fish", "fish"),
-        ("releases/multi-shell/aws-assume-role-cmd.bat", "cmd"),
-    ];
+    let script_path = "releases/aws-assume-role-bash.sh";
+    let content = fs::read_to_string(script_path)
+        .unwrap_or_else(|_| panic!("Should read universal wrapper script"));
 
-    for (script_path, shell_type) in &scripts {
-        let content = fs::read_to_string(script_path)
-            .unwrap_or_else(|_| panic!("Should read {} script", shell_type));
-
-        // Should have some form of error handling
-        let has_error_handling = content.contains("if")
-            || content.contains("try")
-            || content.contains("catch")
-            || content.contains("||")
-            || content.contains("&&")
-            || content.contains("exit")
-            || content.contains("return")
-            || content.contains("not found")
-            || content.contains("Error")
-            || content.contains("$?");
-
-        assert!(
-            has_error_handling,
-            "{} script should have error handling",
-            shell_type
-        );
-    }
+    // Should have comprehensive error handling
+    assert!(
+        content.contains("Unsupported operating system"),
+        "Should handle unsupported OS"
+    );
+    assert!(
+        content.contains("binary not found"),
+        "Should handle missing binary"
+    );
+    assert!(
+        content.contains("return 1"),
+        "Should return error codes"
+    );
+    assert!(
+        content.contains("if [ -z"),
+        "Should check for empty variables"
+    );
 }
 
-/// Test usage information in wrapper scripts
+/// Test usage information in universal wrapper
 #[test]
 fn test_wrapper_usage_info() {
-    let scripts = [
-        ("releases/multi-shell/aws-assume-role-bash.sh", "bash"),
-        (
-            "releases/multi-shell/aws-assume-role-powershell.ps1",
-            "powershell",
-        ),
-        ("releases/multi-shell/aws-assume-role-fish.fish", "fish"),
-    ];
+    let script_path = "releases/aws-assume-role-bash.sh";
+    let content = fs::read_to_string(script_path)
+        .unwrap_or_else(|_| panic!("Should read universal wrapper script"));
 
-    for (script_path, shell_type) in &scripts {
-        let content = fs::read_to_string(script_path)
-            .unwrap_or_else(|_| panic!("Should read {} script", shell_type));
-
-        // Should have usage information or help
-        let has_usage = content.contains("Usage")
-            || content.contains("usage")
-            || content.contains("COMMANDS")
-            || content.contains("echo")
-            || content.contains("Write-Host")
-            || content.contains("awsr");
-
-        assert!(
-            has_usage,
-            "{} script should have usage information",
-            shell_type
-        );
-    }
+    // Should provide usage information
+    assert!(
+        content.contains("Usage:") || content.contains("awsr assume"),
+        "Should provide usage information"
+    );
+    assert!(
+        content.contains("assume") && content.contains("list") && content.contains("configure"),
+        "Should document main commands"
+    );
+    assert!(
+        content.contains("AWS Assume Role loaded"),
+        "Should confirm successful loading"
+    );
 }
 
-/// Test export format integration for shell environments
+/// Test that universal wrapper supports export format for environment variables
 #[test]
 fn test_export_format_integration() {
-    let shell_scripts = [
-        (
-            "releases/multi-shell/aws-assume-role-bash.sh",
-            "--format export",
-        ),
-        (
-            "releases/multi-shell/aws-assume-role-fish.fish",
-            "--format export",
-        ),
-    ];
+    let script_path = "releases/aws-assume-role-bash.sh";
+    let content = fs::read_to_string(script_path)
+        .unwrap_or_else(|_| panic!("Should read shell script"));
 
-    for (script_path, expected_format) in &shell_scripts {
-        let content =
-            fs::read_to_string(script_path).unwrap_or_else(|_| panic!("Should read shell script"));
+    // Universal wrapper should use eval with --format export
+    assert!(
+        content.contains("eval $($binary_path assume") && content.contains("--format export"),
+        "Should use eval with --format export for environment variable setting"
+    );
 
-        assert!(
-            content.contains(expected_format),
-            "Script should use {} for environment variables",
-            expected_format
-        );
-
-        // Should handle role assumption
-        assert!(
-            content.contains("assume"),
-            "Script should handle role assumption"
-        );
-    }
+    // Should have role assumption logic
+    assert!(
+        content.contains("assume") && content.contains("Role assumed successfully"),
+        "Should handle role assumption with success feedback"
+    );
 }
 
 /// Test executable permissions on Unix systems
-#[cfg(unix)]
 #[test]
 fn test_unix_executable_permissions() {
     use std::os::unix::fs::PermissionsExt;
 
-    let unix_scripts = [
-        "releases/multi-shell/aws-assume-role-bash.sh",
-        "releases/multi-shell/aws-assume-role-fish.fish",
+    let executables = [
+        "releases/aws-assume-role-bash.sh",
+        "releases/INSTALL.sh",
+        "releases/UNINSTALL.sh",
+        "releases/aws-assume-role-linux",
+        "releases/aws-assume-role-macos",
     ];
 
-    for script_path in &unix_scripts {
-        let metadata = fs::metadata(script_path)
-            .unwrap_or_else(|_| panic!("Should read metadata for {}", script_path));
-
-        let permissions = metadata.permissions();
-        let mode = permissions.mode();
-
-        // Check if executable bit is set (at least for owner)
-        assert!(
-            mode & 0o100 != 0,
-            "Script {} should be executable",
-            script_path
-        );
-    }
-}
-
-/// Test installation script validation
-#[test]
-fn test_installation_scripts() {
-    let install_scripts = [
-        "releases/multi-shell/INSTALL.sh",
-        "releases/multi-shell/INSTALL.ps1",
-    ];
-
-    for script in &install_scripts {
-        let content = fs::read_to_string(script)
-            .unwrap_or_else(|_| panic!("Should read installation script {}", script));
-
-        // Should reference the main binary or wrapper scripts
-        assert!(
-            content.contains("aws-assume-role"),
-            "Installation script should reference aws-assume-role"
-        );
-
-        // Should have installation logic
-        let has_install_logic = content.contains("install")
-            || content.contains("copy")
-            || content.contains("cp")
-            || content.contains("Copy-Item")
-            || content.contains("mv")
-            || content.contains("Move-Item")
-            || content.contains("chmod")
-            || content.contains("mkdir");
-
-        assert!(
-            has_install_logic,
-            "Installation script {} should have installation logic",
-            script
-        );
-    }
-}
-
-/// Test uninstallation script validation  
-#[test]
-fn test_uninstallation_scripts() {
-    let uninstall_scripts = [
-        "releases/multi-shell/UNINSTALL.sh",
-        "releases/multi-shell/UNINSTALL.ps1",
-    ];
-
-    for script in &uninstall_scripts {
-        let content = fs::read_to_string(script)
-            .unwrap_or_else(|_| panic!("Should read uninstallation script {}", script));
-
-        // Should have removal logic
-        let has_removal_logic = content.contains("remove")
-            || content.contains("rm")
-            || content.contains("Remove-Item")
-            || content.contains("uninstall")
-            || content.contains("delete")
-            || content.contains("del");
-
-        assert!(
-            has_removal_logic,
-            "Uninstallation script {} should have removal logic",
-            script
-        );
-    }
-}
-
-/// Test README documentation in multi-shell directory
-#[test]
-fn test_multishell_readme() {
-    let readme_path = "releases/multi-shell/README.md";
-    let content = fs::read_to_string(readme_path)
-        .unwrap_or_else(|_| panic!("Should read multi-shell README"));
-
-    // Should document the wrapper scripts
-    assert!(
-        content.contains("bash") || content.contains("Bash"),
-        "README should mention bash support"
-    );
-    assert!(
-        content.contains("PowerShell") || content.contains("powershell"),
-        "README should mention PowerShell support"
-    );
-    assert!(
-        content.contains("fish") || content.contains("Fish"),
-        "README should mention Fish shell support"
-    );
-
-    // Should have installation instructions
-    assert!(
-        content.contains("install") || content.contains("Install"),
-        "README should have installation instructions"
-    );
-}
-
-/// Test version consistency across shell scripts
-#[test]
-fn test_version_consistency() {
-    let script_files = [
-        "releases/multi-shell/create-distribution.sh",
-        "releases/multi-shell/README.md",
-    ];
-
-    for script_path in &script_files {
-        if Path::new(script_path).exists() {
-            let content = fs::read_to_string(script_path)
-                .unwrap_or_else(|_| panic!("Should read {}", script_path));
-
-            // Should reference version information
-            let has_version = content.contains("1.")
-                || content.contains("v1.")
-                || content.contains("version")
-                || content.contains("Version");
+    for executable in &executables {
+        if Path::new(executable).exists() {
+            let metadata = fs::metadata(executable)
+                .unwrap_or_else(|_| panic!("Should read metadata for {}", executable));
+            let permissions = metadata.permissions();
+            let mode = permissions.mode();
 
             assert!(
-                has_version,
-                "File {} should contain version information",
-                script_path
+                mode & 0o111 != 0,
+                "{} should be executable (has mode {:o})",
+                executable,
+                mode
             );
         }
     }
 }
 
-/// Test distribution creation script
+/// Test installation and uninstallation scripts exist and have proper structure
+#[test]
+fn test_installation_scripts() {
+    let scripts = [
+        ("releases/INSTALL.sh", "installation"),
+        ("releases/UNINSTALL.sh", "uninstallation"),
+    ];
+
+    for (script_path, script_type) in &scripts {
+        assert!(
+            Path::new(script_path).exists(),
+            "{} script should exist",
+            script_type
+        );
+
+        let content = fs::read_to_string(script_path)
+            .unwrap_or_else(|_| panic!("Should read {} script {}", script_type, script_path));
+
+        // Check shebang
+        assert!(
+            content.starts_with("#!/bin/bash"),
+            "{} script should have bash shebang",
+            script_type
+        );
+
+        // Check for key functionality
+        assert!(
+            content.contains("aws-assume-role"),
+            "{} script should reference aws-assume-role",
+            script_type
+        );
+    }
+}
+
+/// Test uninstallation scripts
+#[test]
+fn test_uninstallation_scripts() {
+    let script_path = "releases/UNINSTALL.sh";
+    assert!(
+        Path::new(script_path).exists(),
+        "Uninstallation script should exist"
+    );
+
+    let content = fs::read_to_string(script_path)
+        .unwrap_or_else(|_| panic!("Should read uninstallation script {}", script_path));
+
+    // Should have removal logic
+    assert!(
+        content.contains("rm") || content.contains("remove"),
+        "Should have file removal logic"
+    );
+
+    // Should have path cleanup
+    assert!(
+        content.contains("PATH") || content.contains("bin"),
+        "Should handle PATH cleanup"
+    );
+}
+
+/// Test README mentions universal approach and supported platforms
+#[test]
+fn test_multishell_readme() {
+    let readme_path = "releases/README.md";
+    let content = fs::read_to_string(readme_path)
+        .unwrap_or_else(|_| panic!("Should read README"));
+
+    // Should mention supported platforms
+    assert!(
+        content.contains("Linux") && content.contains("macOS") && content.contains("Windows"),
+        "README should mention all supported platforms"
+    );
+
+    // Should mention the universal wrapper approach
+    assert!(
+        content.contains("bash") || content.contains("universal") || content.contains("cross-platform"),
+        "README should mention universal/cross-platform approach"
+    );
+
+    // Should mention Git Bash for Windows
+    assert!(
+        content.contains("Git Bash") || content.contains("MSYS") || content.contains("bash"),
+        "README should mention Windows bash compatibility"
+    );
+}
+
+/// Test version consistency across files
+#[test]
+fn test_version_consistency() {
+    // Read version from Cargo.toml
+    let cargo_content = fs::read_to_string("Cargo.toml")
+        .expect("Should read Cargo.toml");
+    
+    let version_line = cargo_content
+        .lines()
+        .find(|line| line.trim().starts_with("version = "))
+        .expect("Should find version in Cargo.toml");
+    
+    let version = version_line
+        .split('=')
+        .nth(1)
+        .expect("Should extract version")
+        .trim()
+        .trim_matches('"');
+
+    // Check README mentions the version
+    let readme_content = fs::read_to_string("releases/README.md")
+        .expect("Should read README");
+    
+    assert!(
+        readme_content.contains(version),
+        "README should mention version {}",
+        version
+    );
+}
+
+/// Test that distribution creation is handled by automation scripts
 #[test]
 fn test_distribution_script() {
-    let script_path = "releases/multi-shell/create-distribution.sh";
-    let content = fs::read_to_string(script_path)
-        .unwrap_or_else(|_| panic!("Should read distribution creation script"));
-
-    // Should have build or distribution logic
+    // The automation approach uses scripts/release.sh for distribution
+    let script_path = "scripts/release.sh";
     assert!(
-        content.contains("cp") || content.contains("copy") || content.contains("tar"),
-        "Distribution script should have build/copy logic"
+        Path::new(script_path).exists(),
+        "Release automation script should exist"
+    );
+
+    let content = fs::read_to_string(script_path)
+        .unwrap_or_else(|_| panic!("Should read release automation script"));
+
+    // Should have package creation functionality
+    assert!(
+        content.contains("package") || content.contains("distribution"),
+        "Should have packaging functionality"
     );
 
     // Should handle multiple platforms
-    let has_platform_logic = content.contains("unix")
-        || content.contains("windows")
-        || content.contains("macos")
-        || content.contains("exe")
-        || content.contains(".sh");
-
     assert!(
-        has_platform_logic,
-        "Distribution script should handle multiple platforms"
+        content.contains("tar.gz") && content.contains("zip"),
+        "Should create both tar.gz and zip distributions"
     );
 }
 
-/// Test binary files exist (basic check)
+/// Test that all required binary files exist
 #[test]
 fn test_binary_files_exist() {
     let binaries = [
-        "releases/multi-shell/aws-assume-role-macos",
-        "releases/multi-shell/aws-assume-role-unix",
-        "releases/multi-shell/aws-assume-role.exe",
+        "releases/aws-assume-role-linux",
+        "releases/aws-assume-role-macos", 
+        "releases/aws-assume-role-windows.exe",
     ];
 
     for binary in &binaries {
-        assert!(Path::new(binary).exists(), "Binary {} should exist", binary);
+        assert!(
+            Path::new(binary).exists(),
+            "Binary {} should exist",
+            binary
+        );
+    }
 
-        // Check file size (should not be empty)
-        let metadata =
-            fs::metadata(binary).unwrap_or_else(|_| panic!("Should read metadata for {}", binary));
-        assert!(metadata.len() > 0, "Binary {} should not be empty", binary);
+    // Check that binaries are not empty
+    for binary in &binaries {
+        let metadata = fs::metadata(binary)
+            .unwrap_or_else(|_| panic!("Should read metadata for {}", binary));
+        assert!(
+            metadata.len() > 0,
+            "Binary {} should not be empty",
+            binary
+        );
     }
 }
 
-/// Test release notes exist and have content
+/// Test release notes exist (managed by automation)
 #[test]
 fn test_release_notes() {
-    let release_notes_pattern = "releases/multi-shell/RELEASE_NOTES_v*.md";
+    // Release notes are now managed in the release-notes/ directory by automation
+    let release_notes_dir = "release-notes";
+    assert!(
+        Path::new(release_notes_dir).exists(),
+        "Release notes directory should exist"
+    );
 
-    // Check if any release notes files exist
-    let release_dir = Path::new("releases/multi-shell");
-    if let Ok(entries) = fs::read_dir(release_dir) {
-        let mut found_release_notes = false;
+    // Should have at least one release notes file
+    let entries = fs::read_dir(release_notes_dir)
+        .expect("Should read release notes directory")
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| {
+            entry.file_name()
+                .to_string_lossy()
+                .starts_with("RELEASE_NOTES_v")
+                && entry.file_name().to_string_lossy().ends_with(".md")
+        })
+        .count();
 
-        for entry in entries.flatten() {
-            let file_name = entry.file_name();
-            let file_str = file_name.to_string_lossy();
-
-            if file_str.starts_with("RELEASE_NOTES_v") && file_str.ends_with(".md") {
-                found_release_notes = true;
-
-                let content = fs::read_to_string(entry.path())
-                    .unwrap_or_else(|_| panic!("Should read release notes file"));
-
-                assert!(
-                    !content.trim().is_empty(),
-                    "Release notes should not be empty"
-                );
-
-                // Should contain version or release information
-                assert!(
-                    content.contains("v1.")
-                        || content.contains("Version")
-                        || content.contains("Release")
-                        || content.contains("Changes"),
-                    "Release notes should contain version/release information"
-                );
-            }
-        }
-
-        assert!(
-            found_release_notes,
-            "Should find at least one release notes file matching pattern {}",
-            release_notes_pattern
-        );
-    }
+    assert!(
+        entries > 0,
+        "Should find at least one release notes file in release-notes/ directory"
+    );
 }

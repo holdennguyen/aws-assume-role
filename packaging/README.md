@@ -1,239 +1,197 @@
-# Package Manager Distribution Guide
+# Distribution Guide - Streamlined Approach
 
-This directory contains configuration files and scripts for distributing AWS Assume Role CLI through popular package managers across different operating systems.
+This directory contains configuration files for distributing AWS Assume Role CLI through our **4 supported distribution channels**: Direct binaries, Cargo, Homebrew, and Container images.
 
-## 📦 Supported Package Managers
+## 📦 Supported Distribution Channels
 
 ### 🍺 Homebrew (macOS/Linux)
-**Installation**: `brew install holdennguyen/tap/aws-assume-role`
+**Installation**: `brew tap holdennguyen/tap && brew install aws-assume-role`
 
 **Files**:
 - `homebrew/aws-assume-role.rb` - Homebrew formula
-- Automatically creates `awsr` wrapper with shell integration
-
-**Setup**:
-1. Create a Homebrew tap repository: `homebrew-tap`
-2. Add the formula file to the tap
-3. Users can install with: `brew install holdennguyen/tap/aws-assume-role`
-
-### 🍫 Chocolatey (Windows)
-**Installation**: `choco install aws-assume-role`
-
-**Files**:
-- `chocolatey/aws-assume-role.nuspec` - Package specification
-- `chocolatey/tools/chocolateyinstall.ps1` - Installation script
-- `chocolatey/tools/chocolateyuninstall.ps1` - Uninstallation script
+- Automatically creates universal binary installation with `awsr` alias
 
 **Features**:
-- PowerShell module integration
-- Automatic shell profile configuration
-- Helper functions (Clear-AwsCredentials, Get-AwsWhoAmI)
-
-### 📦 APT (Debian/Ubuntu)
-**Installation**: `sudo apt install aws-assume-role`
-
-**Files**:
-- `apt/DEBIAN/control` - Package metadata
-- `apt/DEBIAN/postinst` - Post-installation script
-- `apt/DEBIAN/prerm` - Pre-removal script
-
-**Features**:
-- Creates `awsr` wrapper script
-- Shell helper functions
-- Automatic integration setup
-
-### 📦 RPM (RedHat/CentOS/Fedora)
-**Installation**: `sudo dnf install aws-assume-role`
-
-**Files**:
-- `rpm/aws-assume-role.spec` - RPM specification
-
-**Features**:
-- System-wide installation
-- Shell integration scripts
-- Helper functions
-
-### 🏗️ AUR (Arch Linux)
-**Installation**: `yay -S aws-assume-role`
-
-**Files**:
-- `aur/PKGBUILD` - Build script
-- `aur/.SRCINFO` - Package metadata
-
-**Features**:
-- Builds from source
+- Cross-platform support (macOS Apple Silicon, Linux x86_64)
 - Automatic dependency management
-- Shell integration
+- Easy updates with `brew upgrade`
+- Trusted package manager integration
 
-### 🦀 Cargo (Rust)
+### 🦀 Cargo (Rust Package Manager)
 **Installation**: `cargo install aws-assume-role`
 
-**Files**:
-- `../Cargo.toml` - Updated for crates.io publication
+**Registry**: crates.io (official Rust package registry)
 
 **Features**:
-- Cross-platform installation
-- Automatic dependency resolution
-- Latest Rust toolchain support
+- Always latest version available
+- Compiles optimized for your specific system
+- No external dependencies beyond Rust toolchain
+- Easy uninstall with `cargo uninstall aws-assume-role`
+- Trusted by Rust developers worldwide
 
-## 🚀 Quick Setup Guide
+### 📦 Direct Binary Downloads
+**Installation**: Download and run universal installer
 
-### For Maintainers
+**Files**:
+- GitHub Releases with platform-specific binaries
+- Universal installer script (`INSTALL.sh`)
+- Cross-platform wrapper scripts
 
-1. **Build packages locally**:
-   ```bash
-   ./packaging/build-packages.sh
-   ```
+**Features**:
+- Linux x86_64, macOS Apple Silicon, Windows Git Bash support
+- Universal bash wrapper for consistent experience
+- No package manager dependencies
+- Enterprise-friendly distribution
 
-2. **Test packages**:
-   - Test on target operating systems
-   - Verify installation and uninstallation
-   - Check shell integration
+### 🐳 Container Images
+**Installation**: `docker pull ghcr.io/holdennguyen/aws-assume-role:latest`
 
-3. **Update checksums**:
-   - Update SHA256 checksums in package configs
-   - Verify binary integrity
+**Registry**: GitHub Container Registry (ghcr.io)
 
-4. **Submit to repositories**:
-   - Follow each package manager's submission process
-   - Update documentation with installation commands
+**Features**:
+- Multi-platform container images (linux/amd64, linux/arm64)
+- Lightweight Debian-based images
+- Includes AWS CLI for complete functionality
+- CI/CD and enterprise deployment ready
 
-### For Automated CI/CD
+## 🚀 Automated Release Pipeline
 
-The GitHub Actions workflow (`.github/workflows/release.yml`) automatically:
-- Builds cross-platform binaries
-- Creates packages for all supported managers
-- Uploads to GitHub releases
-- Publishes to crates.io (with token)
+### GitHub Actions Workflow
+
+**On Release Tag (v*):**
+1. **Quality Gates**: Tests, formatting, linting, security audit
+2. **Cross-Platform Builds**: Linux x86_64, macOS aarch64, Windows x86_64
+3. **Cargo Publish**: Automatic publishing to crates.io
+4. **GitHub Release**: Binaries and distribution packages
+5. **Homebrew Update**: Automatic tap repository update
+6. **Container Build**: Multi-platform images to GitHub Container Registry
+
+### Distribution Artifacts
+
+**GitHub Releases Include:**
+```
+aws-assume-role-linux              # Linux x86_64 binary
+aws-assume-role-macos              # macOS Apple Silicon binary  
+aws-assume-role-windows.exe        # Windows binary (Git Bash)
+aws-assume-role-bash.sh            # Universal wrapper script
+aws-assume-role-cli-v1.2.x.tar.gz  # Complete package with installer
+aws-assume-role-cli-v1.2.x.zip     # Windows-friendly package
+*.sha256                           # Checksums for verification
+```
+
+## 🔧 Local Development & Testing
+
+### Build All Platforms
+```bash
+./scripts/build-releases.sh
+```
+
+### Create Distribution Packages
+```bash
+./scripts/release.sh package 1.2.x
+```
+
+### Test Installation Methods
+```bash
+# Test direct binary installation
+cd releases/dist/aws-assume-role-cli-v1.2.x
+./INSTALL.sh
+
+# Test Homebrew formula locally
+brew audit --strict packaging/homebrew/aws-assume-role.rb
+brew install --build-from-source packaging/homebrew/aws-assume-role.rb
+
+# Test container build
+docker build -t aws-assume-role:test .
+docker run --rm aws-assume-role:test awsr --version
+```
 
 ## 📋 Installation Commands Summary
 
-Once published, users can install using:
+Once released, users can install using:
 
 ```bash
-# Homebrew (macOS/Linux)
-brew install holdennguyen/tap/aws-assume-role
-
-# Chocolatey (Windows)
-choco install aws-assume-role
-
-# APT (Debian/Ubuntu)
-sudo apt update && sudo apt install aws-assume-role
-
-# DNF (Fedora)
-sudo dnf install aws-assume-role
-
-# YUM (CentOS/RHEL)
-sudo yum install aws-assume-role
-
-# AUR (Arch Linux)
-yay -S aws-assume-role
-
-# Cargo (Any platform with Rust)
+# Cargo (Rust Package Manager)
 cargo install aws-assume-role
 
-# NPM (Node.js - future)
-npm install -g aws-assume-role
+# Direct Binary Download (All Platforms)
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
+cd aws-assume-role-cli-* && ./INSTALL.sh
+
+# Homebrew (macOS/Linux)
+brew tap holdennguyen/tap
+brew install aws-assume-role
+
+# Container (Any Docker-compatible platform)
+docker pull ghcr.io/holdennguyen/aws-assume-role:latest
+docker run --rm -v ~/.aws:/home/awsuser/.aws ghcr.io/holdennguyen/aws-assume-role:latest awsr --help
 ```
 
-## 🔧 Package Features
+## 🎯 Why This Streamlined Approach?
 
-All packages include:
+### **Focused Quality**
+- **4 channels** instead of 6+ reduces maintenance complexity
+- Higher quality and reliability for supported methods
+- Faster release cycles with fewer dependencies
 
-### Core Features
-- ✅ Cross-platform binary installation
-- ✅ `awsr` wrapper command for easy use
-- ✅ Shell integration (automatically sets credentials)
-- ✅ Helper functions (`clear_aws_creds`, `aws_whoami`)
-- ✅ Automatic dependency management (AWS CLI)
+### **Broad Coverage**
+- **Cargo**: Native Rust ecosystem, always latest version
+- **Direct binaries**: Works on any system, enterprise-friendly
+- **Homebrew**: Popular choice for developers on macOS/Linux
+- **Containers**: Modern deployment, CI/CD integration
 
-### Shell Integration
-- **Bash/Zsh**: Source helper script automatically
-- **Fish**: Fish-specific integration
-- **PowerShell**: Module-based integration
-- **Command Prompt**: Batch file wrapper
+### **Simplified Maintenance**
+- **Single CI/CD pipeline** handles all distribution
+- **Automated publishing** reduces manual work
+- **Consistent experience** across all platforms
 
-### User Experience
-- **Simple commands**: `awsr assume role-name`
-- **Automatic setup**: Credentials set in current shell
-- **Clear feedback**: Success/error messages with emojis
-- **Easy cleanup**: Uninstall preserves user configurations
+### **Enterprise Ready**
+- **Direct binaries**: No external dependencies
+- **Container images**: Standardized deployment
+- **Homebrew**: Trusted by development teams
 
-## 🔍 Testing Packages
+## 🔍 Testing Matrix
 
-### Test Matrix
-Test each package on:
-- [ ] Fresh system installation
-- [ ] Existing AWS CLI installation
-- [ ] Multiple shell environments
-- [ ] Upgrade scenarios
-- [ ] Uninstallation cleanup
+### Platforms Tested
+- ✅ **Linux x86_64**: Ubuntu, CentOS, Alpine
+- ✅ **macOS Apple Silicon**: M1/M2 Macs
+- ✅ **Windows Git Bash**: Windows 10/11 with Git Bash
 
-### Test Commands
+### Installation Methods Tested
+- ✅ **Direct Download**: All platforms with universal installer
+- ✅ **Homebrew**: macOS and Linux installation
+- ✅ **Container**: Docker Desktop, Linux Docker, CI/CD systems
+
+### Verification Steps
 ```bash
-# Basic functionality
-awsr --help
-awsr configure --name test --role-arn arn:aws:iam::123:role/Test --account-id 123
-awsr list
-awsr assume test  # (will fail without proper AWS setup)
-awsr remove test
-
-# Shell integration
-clear_aws_creds  # or Clear-AwsCredentials on PowerShell
-aws_whoami       # or Get-AwsWhoAmI on PowerShell
+# After installation, verify functionality
+awsr --version                     # Version information
+awsr verify                        # System compatibility check
+awsr configure --help              # Command availability
 ```
 
-## 📚 Submission Guidelines
+## 📚 Distribution Strategy
 
-### Homebrew
-1. Fork the homebrew-core repository
-2. Add formula to `Formula/aws-assume-role.rb`
-3. Submit pull request
+### **Primary Target**: Direct Binary Downloads
+- **Reason**: Works everywhere, no dependencies
+- **Users**: Enterprise, air-gapped environments, Windows users
+- **Priority**: Highest
 
-### Chocolatey
-1. Create account on chocolatey.org
-2. Upload .nupkg file
-3. Submit for moderation
+### **Developer Target**: Cargo
+- **Reason**: Native Rust ecosystem, always latest version
+- **Users**: Rust developers, CLI tool enthusiasts
+- **Priority**: High
 
-### APT/RPM
-1. Submit to distribution repositories
-2. Or host in your own repository
-3. Provide installation instructions
+### **Secondary Target**: Homebrew
+- **Reason**: Popular with developers, trusted ecosystem
+- **Users**: macOS and Linux developers
+- **Priority**: High
 
-### AUR
-1. Create AUR account
-2. Submit PKGBUILD and .SRCINFO
-3. Maintain package updates
-
-### Crates.io
-1. Create crates.io account
-2. Add API token to GitHub secrets
-3. Automatic publishing via CI/CD
-
-## 🔄 Update Process
-
-When releasing a new version:
-
-1. **Update version numbers** in all package configs
-2. **Update checksums** for new binaries
-3. **Test packages** on target systems
-4. **Submit updates** to package repositories
-5. **Update documentation** with new installation commands
-
-## 🆘 Troubleshooting
-
-### Common Issues
-- **Missing dependencies**: Ensure AWS CLI is listed as dependency
-- **Permission errors**: Use appropriate package manager privileges
-- **Shell integration**: Verify wrapper scripts are executable
-- **Path issues**: Ensure binaries are in system PATH
-
-### Debug Steps
-1. Check package installation logs
-2. Verify binary permissions and location
-3. Test shell integration manually
-4. Check dependency installation
+### **Specialized Target**: Container Images
+- **Reason**: Modern deployment, CI/CD integration
+- **Users**: DevOps teams, containerized environments
+- **Priority**: Medium
 
 ---
 
-**Ready to distribute?** Run `./packaging/build-packages.sh` to build all packages locally! 
+**Maintenance**: This streamlined approach reduces maintenance burden while providing broad platform coverage and high-quality user experience across all supported distribution methods. 

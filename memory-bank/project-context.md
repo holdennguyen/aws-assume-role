@@ -1,5 +1,7 @@
 # 📋 Project Context
 
+**MEMORY BANK UPDATE RULE**: This file must be updated whenever significant project changes occur, including: documentation restructuring, major feature releases, architectural changes, workflow modifications, or when explicitly requested with "update memory bank" instruction.
+
 Complete project overview, current status, and active development context for AWS Assume Role CLI.
 
 ## 🎯 Project Brief
@@ -9,8 +11,8 @@ AWS Assume Role CLI is a cross-platform command-line tool that simplifies AWS ro
 
 ### **Primary Goals**
 1. **Simplify Role Assumption**: Replace complex AWS CLI commands with simple, memorable commands
-2. **Cross-Platform Support**: Work seamlessly on Linux, macOS, and Windows
-3. **Shell Integration**: Provide native integration for Bash, Zsh, PowerShell, Fish, and CMD
+2. **Cross-Platform Support**: Work seamlessly on Linux, macOS Apple Silicon, and Windows Git Bash
+3. **Shell Integration**: Provide universal bash wrapper for consistent experience
 4. **Enterprise Ready**: Support package managers and enterprise deployment scenarios
 5. **Security First**: Follow AWS security best practices and maintain audit trails
 
@@ -78,63 +80,119 @@ awsr assume production
 
 ## 🚀 Current Status & Active Context
 
-### **Version 1.2.0 Status**
+### **Version 1.3.0 Status (Latest - December 2024)**
 - ✅ **Core Functionality**: Complete and stable
-- ✅ **Cross-Platform Support**: Linux, macOS, Windows fully supported
-- ✅ **Shell Integration**: 5 shells supported (Bash, Zsh, PowerShell, Fish, CMD)
-- ✅ **Package Distribution**: 4+ package managers supported
-- ✅ **CI/CD Pipeline**: Fully automated testing and distribution
+- ✅ **Cross-Compilation Toolchain**: Full setup for Linux (musl), macOS (Apple Silicon), Windows
+- ✅ **Universal Bash Wrapper**: Single wrapper for all platforms (streamlined from multi-shell approach)
+- ✅ **Automated Build Pipeline**: Complete cross-platform build automation
+- ✅ **Package Distribution**: Homebrew, Cargo, direct download, container (optimized)
+- ✅ **CI/CD Pipeline**: Fully automated unified pipeline
 - ✅ **Security**: All vulnerabilities resolved, modern cryptography
+- ✅ **Documentation**: Consolidated and streamlined structure
+- ✅ **Test Suite**: 79 comprehensive tests (unit, integration, shell) - all passing
 
-### **Recent Major Achievements**
+### **Recent Major Achievements (v1.3.0 - December 2024)**
 
-**Windows Compatibility Breakthrough (v1.2.0)**:
-- Resolved all Windows-specific test failures
-- Enhanced cross-platform environment variable handling
-- Improved integration test coverage for Windows scenarios
-- Fixed JSON parsing issues in Windows integration tests
+**Cross-Compilation Infrastructure**:
+- Installed complete cross-compilation toolchain on macOS
+- `musl-cross` for Linux static linking (`x86_64-linux-musl-gcc`)
+- `mingw-w64` for Windows cross-compilation (`x86_64-w64-mingw32-gcc`)
+- `cmake` for native dependencies
+- Added Rust targets: `x86_64-unknown-linux-musl`, `x86_64-pc-windows-gnu`
+- Created `.cargo/config.toml` with proper linkers and environment variables
+- Updated build scripts to use musl target for better Linux compatibility
 
-**Testing Framework Maturity**:
-- 59 comprehensive tests (14 unit + 23 integration + 22 shell integration)
-- 100% test success rate across all platforms
-- Automated CI/CD pipeline with zero-tolerance quality gates
-- Cross-platform testing on Ubuntu, Windows, and macOS
+**Universal Wrapper Script Approach**:
+- Consolidated from multiple shell-specific wrappers to single universal bash wrapper
+- `releases/aws-assume-role-bash.sh` works on Linux, macOS, and Windows Git Bash
+- Auto-detects platform and selects appropriate binary
+- Includes role assumption with `eval` and `--format export`
+- Provides `awsr` convenience alias
+- Comprehensive error handling and usage information
 
-**Security Upgrade**:
-- Migrated to AWS SDK v1.x with `aws-lc-rs` cryptographic backend
-- Resolved all ring vulnerabilities (RUSTSEC-2025-0009, RUSTSEC-2025-0010)
-- Implemented FIPS-ready cryptography
-- Clean security audit results
+**Release Management Automation**:
+- Leveraged existing `scripts/release.sh` (507 lines) for complete release lifecycle
+- Automated build pipeline creates platform binaries and universal wrapper
+- Distribution packages with tar.gz and zip archives plus checksums
+- Streamlined releases directory managed by automation
 
-### **Active Development Focus**
+**Test Suite Updates**:
+- Updated shell integration tests to reflect universal wrapper approach
+- 19 shell integration tests now validate single universal wrapper
+- Tests verify cross-platform binary discovery, error handling, and usage
+- All 79 tests passing (23 unit + 14 integration + 19 shell + 23 additional)
 
-**Current Priorities**:
-1. **Documentation Consolidation**: Reducing complexity and improving developer experience
-2. **Release Process Optimization**: Streamlining version management and distribution
-3. **User Experience Enhancement**: Based on community feedback and usage patterns
-4. **Performance Optimization**: Maintaining fast startup times and efficient operations
+### **Current Architecture (v1.3.0)**
 
-**Next Sprint Goals**:
-- Complete documentation consolidation (17 → 8 files)
-- Enhance release automation
-- Improve error messages and user guidance
-- Expand package manager support
+**Cross-Platform Build System**:
+- **Linux**: Static musl builds (`x86_64-unknown-linux-musl`) for maximum compatibility
+- **macOS**: Native Apple Silicon builds (`aarch64-apple-darwin`)
+- **Windows**: MinGW cross-compilation (`x86_64-pc-windows-gnu`)
+- **Universal Wrapper**: Single bash script for all platforms
 
-### **Key Technical Decisions**
+**Streamlined Platform Support**:
+- **Linux**: x86_64 static binary with universal bash wrapper
+- **macOS**: Apple Silicon (aarch64) binary with universal bash wrapper  
+- **Windows**: Git Bash support with .exe binary and universal bash wrapper
+
+**Automated Release Pipeline**:
+1. `scripts/build-releases.sh` - Cross-platform builds with proper toolchain
+2. `scripts/release.sh` - Complete unified release management (507 lines)
+3. `scripts/install.sh` - Universal installer (355 lines)
+4. `releases/INSTALL.sh` - Distribution installer
+5. `releases/UNINSTALL.sh` - Clean uninstaller
+
+**Documentation Structure**:
+1. `README.md` - Central hub with navigation (root only)
+2. `docs/DEPLOYMENT.md` - Installation and deployment guide
+3. `docs/DEVELOPER_WORKFLOW.md` - Complete development guide
+4. `docs/RELEASE.md` - Release process and distribution management
+5. `docs/ARCHITECTURE.md` - Technical architecture
+6. `release-notes/` - Version history (RELEASE_NOTES_v1.3.0.md)
+7. `memory-bank/` - AI agent context (this directory)
+
+**Distribution Channels (Optimized)**:
+1. **Direct Binaries**: GitHub Releases with universal bash wrapper and installer
+2. **Cargo**: Official Rust package registry (crates.io)
+3. **Homebrew**: Personal tap for macOS/Linux developers
+4. **Container Images**: GitHub Container Registry for DevOps/CI-CD
+
+### **Key Technical Decisions (v1.3.0)**
+
+**Cross-Compilation Strategy**:
+- **Static Linux Builds**: Using musl for maximum compatibility across distributions
+- **Native macOS Builds**: Apple Silicon optimized for M1/M2/M3 Macs
+- **Windows MinGW**: Cross-compiled from macOS for consistent build environment
+- **Universal Wrapper**: Single bash script handles platform detection and binary selection
 
 **Architecture Choices**:
 - **Rust Language**: For performance, safety, and cross-platform compatibility
 - **AWS CLI Integration**: Leverage existing AWS CLI rather than reimplementing
-- **Shell Wrapper Strategy**: Platform-specific scripts for optimal integration
+- **Universal Bash Wrapper**: Single wrapper script for all platforms (major simplification)
 - **Configuration Management**: JSON-based user configuration with sensible defaults
+- **Static Linking**: Reduce runtime dependencies and improve portability
 
 **Quality Standards**:
 - **Zero Clippy Warnings**: Enforced by CI pipeline
 - **Mandatory Formatting**: All code must pass `cargo fmt --check`
-- **Comprehensive Testing**: 59 tests covering all functionality
-- **Cross-Platform Validation**: Every change tested on multiple platforms
+- **Comprehensive Testing**: 79 tests covering all functionality (expanded test coverage)
+- **Cross-Platform Validation**: Every change tested on multiple platforms with real toolchain
 
-### **Critical Patterns & Learnings**
+### **Critical Patterns & Learnings (Updated v1.3.0)**
+
+**CRITICAL PATTERN: Cross-Compilation Toolchain Management**
+- Complete toolchain setup required for consistent builds across platforms
+- Proper linker configuration in `.cargo/config.toml` essential
+- Environment variables needed for cross-compilation (CC, AR, etc.)
+- Static linking (musl) preferred for Linux distribution compatibility
+- Pattern: `cargo build --release --target x86_64-unknown-linux-musl`
+
+**Universal Wrapper Pattern**:
+- Single bash script more maintainable than multiple shell-specific scripts
+- Platform detection with `uname -s` covers Linux, Darwin, MINGW/MSYS/CYGWIN
+- Binary discovery pattern: local files first, then PATH fallback
+- Error handling pattern: clear messages for unsupported OS or missing binaries
+- Role assumption pattern: `eval $($binary_path assume "$2" "${@:3}" --format export)`
 
 **CRITICAL PATTERN: Formatting After Code Changes**
 - ANY code modification requires immediate `cargo fmt` application
@@ -148,100 +206,89 @@ awsr assume production
 - Tests require `#[serial_test::serial]` to prevent race conditions
 - Integration tests must set both variables for cross-platform compatibility
 
-**Shell Integration Complexity**:
-- Each shell requires different syntax for environment variable export
-- Wrapper scripts must handle error propagation correctly
-- Installation scripts need platform-specific logic
-- Testing requires validation of wrapper script content and structure
+**Automation-Driven Release Workflow**:
+- `./scripts/release.sh prepare 1.3.0` - Updates version + creates release notes
+- `./scripts/release.sh build` - Cross-platform builds with toolchain
+- `./scripts/release.sh package 1.3.0` - Creates distribution archives
+- `git tag -a v1.3.0 -m "Release v1.3.0" && git push origin v1.3.0` - Triggers automated release
+- GitHub Actions handles complete pipeline automatically
+- Local and automated workflows are consistent
 
 ## 📈 Progress Summary
 
-### **What's Working Well**
+### **What's Working Exceptionally Well**
 
 **Core Functionality**:
 - ✅ Role assumption works reliably across all platforms
 - ✅ Configuration management is robust and user-friendly
 - ✅ Error handling provides actionable feedback
-- ✅ Shell integration feels native in each environment
+- ✅ Universal bash wrapper provides consistent experience
 
 **Development Process**:
-- ✅ Comprehensive testing prevents regressions
-- ✅ Automated CI/CD pipeline ensures quality
-- ✅ Cross-platform development workflow is established
-- ✅ Security practices are mature and effective
+- ✅ Streamlined scripts reduce complexity and maintenance
+- ✅ Unified GitHub Actions pipeline ensures quality
+- ✅ Documentation consolidation improves developer experience
+- ✅ Clear separation between user and maintainer documentation
 
 **Distribution & Adoption**:
-- ✅ Multiple package managers supported
-- ✅ Container images available
+- ✅ Streamlined distribution (3 channels: binaries, Homebrew, containers)
+- ✅ Automated publishing pipeline
 - ✅ Enterprise deployment patterns documented
-- ✅ Installation process is streamlined
+- ✅ Clean, professional user experience
 
-### **Areas for Continued Improvement**
+### **Current Focus Areas**
+
+**Maintenance & Quality**:
+- Keep documentation up-to-date and accurate
+- Monitor and maintain streamlined script architecture
+- Ensure CI/CD pipeline remains reliable
+- Continue security best practices
 
 **User Experience**:
-- Enhance error messages with more specific guidance
-- Improve first-time user onboarding experience
-- Add more interactive configuration options
-- Expand documentation with real-world examples
+- Gather feedback on consolidated documentation
+- Monitor installation success rates
+- Improve error messages based on user reports
+- Expand real-world usage examples
 
-**Technical Enhancements**:
-- Consider native AWS SDK integration to reduce AWS CLI dependency
-- Explore caching mechanisms for improved performance
-- Add audit logging capabilities for enterprise users
-- Implement configuration validation and migration tools
+**Technical Excellence**:
+- Maintain test coverage and quality
+- Monitor performance and optimize as needed
+- Keep dependencies current and secure
+- Plan for future feature requests
 
-**Community & Ecosystem**:
-- Expand package manager support (Chocolatey, Scoop, etc.)
-- Create integration examples for popular CI/CD platforms
-- Develop plugins or extensions for popular development tools
-- Build community contribution guidelines and processes
+### **Known Limitations & Trade-offs**
 
-### **Known Issues & Limitations**
+**Platform Limitations**:
+- Windows support requires Git Bash (not native PowerShell/CMD)
+- macOS support focused on Apple Silicon (M1/M2)
+- Linux support limited to x86_64 architecture
 
-**Current Limitations**:
-- Requires AWS CLI v2 to be installed and configured
-- Configuration is local to each machine (no cloud sync)
-- Limited audit logging capabilities
-- No built-in role discovery mechanisms
-
-**Planned Improvements**:
-- Native AWS SDK integration (reduce AWS CLI dependency)
-- Cloud-based configuration synchronization
-- Enhanced audit and logging capabilities
-- Automatic role discovery from AWS organizations
-
-### **Success Metrics**
-
-**Quality Metrics**:
-- 📊 **Test Coverage**: 59/59 tests passing (100%)
-- 📊 **Platform Coverage**: 3/3 platforms supported (Linux, macOS, Windows)
-- 📊 **Shell Coverage**: 5/5 major shells supported
-- 📊 **Security Score**: Clean audit results, zero critical vulnerabilities
-
-**Adoption Metrics**:
-- 📦 **Package Managers**: 4+ supported (Cargo, Homebrew, APT, COPR)
-- 🐳 **Container Support**: Docker images available
-- 📚 **Documentation**: Comprehensive guides for all use cases
-- 🚀 **Release Cadence**: Regular releases with clear changelogs
+**Architectural Trade-offs**:
+- AWS CLI dependency (pro: leverage existing tool, con: external dependency)
+- Bash wrapper approach (pro: universal, con: requires bash)
+- JSON configuration (pro: human-readable, con: not as flexible as YAML)
 
 ## 🎯 Strategic Direction
 
-### **Short-Term Objectives (Next 3 Months)**
-1. Complete documentation consolidation and optimization
-2. Enhance user onboarding experience
-3. Expand package manager support
-4. Improve error messages and user guidance
+### **Immediate Priorities**
+1. **Maintain Quality**: Keep current functionality stable and reliable
+2. **User Feedback**: Gather and respond to user experience feedback
+3. **Documentation**: Keep documentation current with any changes
+4. **Security**: Continue monitoring and addressing security concerns
 
-### **Medium-Term Goals (Next 6 Months)**
-1. Native AWS SDK integration option
-2. Configuration synchronization capabilities
-3. Enhanced audit and logging features
-4. Community contribution framework
+### **Future Considerations**
+1. **Platform Expansion**: Consider broader platform support if demand exists
+2. **Feature Enhancement**: Add features based on user requests
+3. **Performance Optimization**: Optimize for speed and resource usage
+4. **Community Growth**: Build contributor community and ecosystem
 
-### **Long-Term Vision (Next Year)**
-1. Industry-standard tool for AWS role management
-2. Enterprise feature set with advanced security
-3. Plugin ecosystem for extensibility
-4. Integration with major development platforms
+### **Success Metrics**
+- **Quality**: Zero-defect releases, 100% test pass rate
+- **Usability**: Positive user feedback, low support burden
+- **Maintainability**: Low complexity, easy to update and extend
+- **Adoption**: Growing usage across different environments
 
-This project context provides the foundation for understanding the current state, active priorities, and strategic direction of AWS Assume Role CLI development. 
+---
+
+**Last Updated**: June 2024 - Distribution streamlining complete (3 channels: binaries, Homebrew, containers)
+**Next Review**: When significant changes occur or upon explicit request 

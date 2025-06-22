@@ -109,7 +109,7 @@ Essential extensions:
 
 ## Release Process
 1. Update version in `Cargo.toml`
-2. Run `./scripts/update-version.sh` to sync all package versions
+2. Run `./scripts/release.sh version <version>` to sync all package versions
 3. Build releases with `./build-releases.sh`
 4. Test on multiple platforms
 5. Create GitHub release (triggers automated package publishing) 

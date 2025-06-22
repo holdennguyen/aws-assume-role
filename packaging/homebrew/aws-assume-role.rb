@@ -1,7 +1,7 @@
 class AwsAssumeRole < Formula
   desc "Simple CLI tool to easily switch between AWS IAM roles across different accounts"
   homepage "https://github.com/holdennguyen/aws-assume-role"
-  version "1.2.0"
+  version "1.3.0"
 
   on_macos do
     if Hardware::CPU.arm?

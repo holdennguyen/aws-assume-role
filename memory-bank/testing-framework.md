@@ -133,7 +133,7 @@ fn test_help_output() {
 // Example: Shell wrapper validation
 #[test]
 fn test_bash_wrapper_structure() {
-    let wrapper_path = Path::new("releases/multi-shell/aws-assume-role-bash.sh");
+    let wrapper_path = Path::new("releases/aws-assume-role-bash.sh");
     assert!(wrapper_path.exists());
     
     let content = fs::read_to_string(wrapper_path).unwrap();
@@ -350,7 +350,7 @@ Add to tests/shell_integration_tests.rs:
 ```rust
 #[test]
 fn test_new_shell_feature() {
-    let script_path = Path::new("releases/multi-shell/new-script.sh");
+    let script_path = Path::new("releases/new-script.sh");
     assert!(script_path.exists());
     // Validation logic
 }

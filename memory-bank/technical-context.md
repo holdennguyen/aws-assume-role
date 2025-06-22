@@ -555,7 +555,7 @@ echo "✅ All pre-commit checks passed!"
 **Version Management**:
 ```bash
 #!/bin/bash
-# scripts/update-version.sh
+# scripts/release.sh (unified release management)
 
 NEW_VERSION=$1
 

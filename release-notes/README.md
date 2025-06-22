@@ -14,7 +14,7 @@ This directory contains comprehensive release notes for all versions of AWS Assu
 
 ```bash
 # Use the helper script (recommended)
-./scripts/create-release-notes.sh 1.2.1
+./scripts/release.sh notes 1.2.1
 
 # Or manually copy template
 cp release-notes/TEMPLATE.md release-notes/RELEASE_NOTES_v1.2.1.md

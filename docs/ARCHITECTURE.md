@@ -554,7 +554,7 @@ Source Structure:
 │   └── error/mod.rs         # Error handling
 ├── tests/                   # Test suite
 ├── benches/                 # Performance tests
-└── releases/multi-shell/    # Distribution artifacts
+└── releases/                # Distribution artifacts
 ```
 
 ## 📚 Technology Stack
