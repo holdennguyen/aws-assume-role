@@ -1,6 +1,6 @@
 # 🚀 AWS Assume Role CLI v1.2.0 Release Notes
 
-**Release Date**: December 21, 2024  
+**Release Date**: June 22, 2025  
 **Focus**: Windows Compatibility & CI/CD Reliability
 
 ## 🎯 Overview

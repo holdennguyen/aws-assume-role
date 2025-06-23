@@ -1,62 +1,146 @@
 # 🚀 AWS Assume Role CLI v1.3.0 Release Notes
 
-**Release Date**: 2025-06-23
-**Focus**: Developer Experience and CI/CD Streamlining
+**Release Date**: June 24, 2025  
+**Focus**: Developer Experience & Critical Windows Compatibility
 
 ## 🎯 Overview
 
-This release overhauls the developer workflow by introducing a unified `dev-cli.sh` script, which simplifies building, testing, and packaging. We've eliminated multiple disparate scripts in favor of a single, intuitive entry point. This version also includes critical bug fixes to the CI pipeline and test suite, making the development process more robust and reliable. The primary goal was to streamline all development and release operations, preparing the project for more consistent and faster updates.
+Version 1.3.0 introduces a unified developer experience with streamlined tooling, enhanced installation scripts, and **critical Windows Git Bash compatibility fixes**. This release resolves a major compatibility issue that prevented proper credential export on Windows Git Bash while maintaining the robust security and reliability established in previous versions.
 
 ## ✨ New Features
 
 ### Developer Experience
-- **Unified Developer CLI (`dev-cli.sh`)**: Introduced a single, powerful script to handle all common development tasks (`check`, `build`, `package`, `release`). This replaces the previous collection of individual scripts, creating one source of truth for all operations.
-- **Local Distribution Packaging (`./dev-cli.sh package`)**: Added a new command to build and package the application into `.tar.gz` and `.zip` archives, complete with SHA256 checksums. This allows for end-to-end testing of release artifacts locally before a final release.
+- **Unified Developer CLI**: Single `./dev-cli.sh` script for all development tasks
+- **Local Distribution Testing**: `./dev-cli.sh package <version>` for end-to-end testing
+- **Simplified Release Process**: Streamlined release preparation with `./dev-cli.sh release <version>`
+
+### Installation & Distribution
+- **Enhanced Installer Script**: Improved `INSTALL.sh` with step-by-step guidance and better user experience
+- **Professional Uninstaller**: Comprehensive `UNINSTALL.sh` with clear cleanup instructions
+- **Cross-Platform Build System**: Complete cross-compilation toolchain for Linux (musl), macOS, and Windows
 
 ## 🔧 Bug Fixes
 
-### Platform Compatibility
-- **Windows Path Resolution**: Fixed a critical bug where the application failed to resolve configuration paths correctly on Windows. This ensures that the CLI now functions reliably across all supported operating systems.
+### Windows Git Bash Compatibility
+- **Fixed Credential Export Issue**: Resolved critical compatibility problem preventing proper credential export in Git Bash on Windows
+- **Enhanced Shell Detection**: Improved platform detection logic for MINGW/MSYS/CYGWIN environments
+- **Universal Wrapper Fix**: Updated `aws-assume-role-bash.sh` to properly handle Windows Git Bash credential export
+- **Cross-Platform Testing**: Added comprehensive Windows Git Bash testing to prevent regression
 
-### CI/CD and Testing
-- **Robust Shell Integration Tests**: Reworked the shell integration tests to be more resilient. The tests now focus on functional validation rather than brittle string matching, preventing failures due to minor changes in script comments or output formatting.
-- **Corrected Build Script Logic**: Fixed a critical bug in the `build-releases.sh` script that was overwriting the correct, universal `aws-assume-role-bash.sh` wrapper with an older, incorrect version during the build process.
-- **CLI Argument Handling**: Resolved a bug in `dev-cli.sh` where version arguments were not being correctly passed to the backend release and packaging scripts, causing the commands to fail silently.
+### Installation & Uninstallation
+- **Fixed Uninstaller Logic**: Improved file removal and user guidance in `UNINSTALL.sh`
+- **Enhanced Error Handling**: Better permission checking and user feedback in installation scripts
+- **Updated Test Coverage**: Fixed shell integration tests to match new script behavior
 
-## ️ Improvements
+### Development Workflow
+- **Streamlined Release Process**: Removed redundant "prepare" subcommand for cleaner workflow
+- **Improved Quality Gates**: Enhanced pre-commit checks with better error reporting
 
-### Installation
-- **Apple Silicon (ARM64) Homebrew Support**: The Homebrew formula has been updated to provide a native binary for Apple Silicon (M1/M2/M3) Macs, resulting in better performance and removing the need for Rosetta 2 for this application.
+## 🏗️ Improvements
 
-### Tooling and Automation
-- **Automated Code Formatting**: The pre-commit check (`./dev-cli.sh check`) now automatically formats all code using `cargo fmt`, ensuring consistent style across the codebase without manual intervention.
-- **Build-time Environment Checks**: The `build-releases.sh` script now includes validation checks to ensure the required cross-compilation toolchains (e.g., `zig`) are installed, preventing build failures due to a misconfigured environment.
-- **Simplified Release Command**: The release preparation command was simplified from `./dev-cli.sh release prepare <version>` to the more intuitive `./dev-cli.sh release <version>`.
+### Developer Tooling
+- **Unified Interface**: Single `./dev-cli.sh` script replaces multiple development commands
+- **Enhanced Documentation**: Updated `DEVELOPER_WORKFLOW.md` with correct Git Flow patterns
+- **Local Testing**: Added `./dev-cli.sh package <version>` for complete distribution testing
 
-### Documentation
-- **Rewritten Developer Workflow**: The `docs/DEVELOPER_WORKFLOW.md` has been completely rewritten to be more concise and is now centered around the new `dev-cli.sh`, providing a clear and simple guide for contributors.
-- **Consolidated Memory Bank**: Updated and consolidated the `memory-bank/` documentation to accurately reflect the new, streamlined architecture and development processes.
+### Installation Experience
+- **Professional Scripts**: Enhanced `INSTALL.sh` and `UNINSTALL.sh` with color-coded output and step-by-step guidance
+- **Better User Guidance**: Clear instructions for shell profile management and cleanup
+- **Cross-Platform Compatibility**: Improved support for bash, zsh, and Git Bash on Windows
+
+### Build System
+- **Cross-Compilation Infrastructure**: Complete toolchain setup for consistent builds across platforms
+- **Static Linux Builds**: Using musl for maximum distribution compatibility
+- **Native macOS Builds**: Optimized for Apple Silicon (M1/M2/M3)
+- **Windows MinGW**: Cross-compiled from macOS for consistent build environment
 
 ## ⚠️ Breaking Changes
+<!-- No breaking changes in this release -->
 
-There are no breaking changes for end-users of the `aws-assume-role` CLI. The changes in this release are focused on the developer and contribution workflow.
+## 🔒 Security
+<!-- No security updates in this release -->
+
+## 📋 Technical Details
+
+### Dependencies Updated
+- All dependencies remain at current stable versions
+- AWS SDK v1.x maintained for security and performance
+
+### Test Coverage
+- **Total Tests**: 79 tests (23 unit + 14 integration + 19 shell + 23 additional)
+- **Platforms**: Ubuntu ✅ | Windows ✅ | macOS ✅
+- **Shell Integration**: Enhanced tests for universal wrapper and installation scripts
+- **Windows Git Bash**: Comprehensive testing for MINGW/MSYS/CYGWIN environments
+
+### Build Infrastructure
+- **Cross-Compilation**: musl-cross, mingw-w64, cmake toolchain
+- **Rust Targets**: x86_64-unknown-linux-musl, x86_64-pc-windows-gnu
+- **Universal Wrapper**: Single bash script for all platforms with enhanced Windows support
+
+### Windows Compatibility Fix Details
+```bash
+# Enhanced platform detection in universal wrapper
+case "$(uname -s)" in
+    Linux*)   os_type="linux" ;;
+    Darwin*)  os_type="macos" ;;
+    MINGW*|MSYS*|CYGWIN*) os_type="windows" ;;  # Fixed Windows detection
+    *)        echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
+esac
+
+# Proper credential export handling for Windows Git Bash
+if [ "$1" = "assume" ]; then
+    local output
+    if output=$("$binary_path" "$@" --format export); then
+        eval "$output"  # Fixed credential application
+    else
+        echo "$output" >&2
+        return 1
+    fi
+fi
+```
+
+## 🎉 What's Next
+
+### Next Release Planning
+- Enhanced error messaging and user feedback
+- Additional shell integration options
+- Performance optimizations and benchmarking
+
+### Future Enhancements
+- MFA support integration
+- Enhanced SSO compatibility
+- Advanced session management features
 
 ## 📥 Installation
 
-Installation methods remain unchanged.
-
 ### Package Managers
-\`\`\`bash
+```bash
 # Cargo
 cargo install aws-assume-role
 
 # Homebrew (macOS/Linux)
 brew tap holdennguyen/tap
 brew install aws-assume-role
-\`\`\`
+```
 
 ### Direct Download
 Download platform-specific binaries from the [releases page](https://github.com/holdennguyen/aws-assume-role/releases/tag/v1.3.0).
+
+### Universal Installer
+```bash
+# Download and extract
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
+
+# Navigate to extracted directory
+cd aws-assume-role-cli-*
+
+# Run installer with enhanced user experience
+./INSTALL.sh
+```
+
+## 🙏 Acknowledgments
+
+Special thanks to the Windows Git Bash users who reported the compatibility issues and the development community for feedback on the installation experience. The comprehensive testing framework ensures reliable cross-platform compatibility.
 
 ---
 
