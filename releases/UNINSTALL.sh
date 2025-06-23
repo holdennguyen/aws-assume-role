@@ -76,8 +76,8 @@ main() {
     echo
     
     # Remove installation directory
-    log_info "2. Remove installation directory (if empty):"
-    echo "   rm -rf \"$INSTALL_DIR\""
+    log_info "2. Remove installation directory:"
+    echo "   cd .. && rm -rf \"$INSTALL_DIR\""
     echo
     
     # Clear shell functions

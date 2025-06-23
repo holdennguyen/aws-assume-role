@@ -181,12 +181,12 @@ fn test_uninstaller_instructions() {
         "Uninstaller must provide sed -i commands for shell profile cleanup."
     );
     assert!(
-        content.contains("Remove this uninstaller script"),
-        "Uninstaller must instruct user to remove the uninstaller script."
+        content.contains("Remove installation directory"),
+        "Uninstaller must instruct user to remove the installation directory."
     );
     assert!(
-        content.contains("rmdir"),
-        "Uninstaller must instruct user to remove the installation directory."
+        content.contains("rm -rf"),
+        "Uninstaller must provide rm -rf command for directory removal."
     );
     assert!(
         content.contains("unset -f awsr"),
