@@ -242,8 +242,11 @@ jobs:
         # Get script directory
         SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         
-        # OS Detection
+        # OS Detection with Debugging
         os_type=""
+        echo "[awsr debug] OSTYPE: $OSTYPE" >&2
+        echo "[awsr debug] uname -s: $(uname -s)" >&2
+        
         case "$OSTYPE" in
           linux-gnu*) os_type="linux" ;;
           darwin*)    os_type="macos" ;;
@@ -262,6 +265,8 @@ jobs:
             ;;
         esac
 
+        echo "[awsr debug] Detected OS: $os_type" >&2
+        
         case "$os_type" in
           linux)   BINARY="$SCRIPT_DIR/aws-assume-role-linux" ;;
           macos)   BINARY="$SCRIPT_DIR/aws-assume-role-macos" ;;

@@ -1,68 +1,50 @@
 #!/bin/bash
-# AWS Assume Role - Universal Bash Wrapper
-# Works on Linux, macOS, and Windows (Git Bash)
-# Usage: source aws-assume-role-bash.sh
+# AWS Assume Role CLI - Universal Bash Wrapper
+# Detects platform and executes appropriate binary
 
-aws_assume_role() {
-    local binary_path=""
-    local os_type=$(uname -s)
-    
-    # Detect platform and find appropriate binary
-    case "$os_type" in
-        Linux*)
-            if [ -f "./aws-assume-role-linux" ]; then
-                binary_path="./aws-assume-role-linux"
-            elif command -v aws-assume-role >/dev/null 2>&1; then
-                binary_path="aws-assume-role"
-            fi
-            ;;
-        Darwin*)
-            if [ -f "./aws-assume-role-macos" ]; then
-                binary_path="./aws-assume-role-macos"
-            elif command -v aws-assume-role >/dev/null 2>&1; then
-                binary_path="aws-assume-role"
-            fi
-            ;;
-        MINGW*|MSYS*|CYGWIN*)
-            if [ -f "./aws-assume-role-windows.exe" ]; then
-                binary_path="./aws-assume-role-windows.exe"
-            elif [ -f "./aws-assume-role.exe" ]; then
-                binary_path="./aws-assume-role.exe"
-            elif command -v aws-assume-role.exe >/dev/null 2>&1; then
-                binary_path="aws-assume-role.exe"
-            elif command -v aws-assume-role >/dev/null 2>&1; then
-                binary_path="aws-assume-role"
-            fi
-            ;;
-        *)
-            echo "❌ Unsupported operating system: $os_type"
-            return 1
-            ;;
+set -euo pipefail
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# OS Detection with Debugging
+os_type=""
+echo "[awsr debug] OSTYPE: $OSTYPE" >&2
+echo "[awsr debug] uname -s: $(uname -s)" >&2
+
+case "$OSTYPE" in
+  linux-gnu*) os_type="linux" ;;
+  darwin*)    os_type="macos" ;;
+  cygwin|msys|win32) os_type="windows" ;;
+  *)
+    # Fallback to uname for other environments (like Git Bash on Windows)
+    case "$(uname -s)" in
+      Linux*)   os_type="linux" ;;
+      Darwin*)  os_type="macos" ;;
+      MINGW*|MSYS*|CYGWIN*) os_type="windows" ;;
+      *)
+        echo "❌ Unsupported platform. OSTYPE: $OSTYPE, uname: $(uname -s)" >&2
+        exit 1
+        ;;
     esac
-    
-    if [ -z "$binary_path" ]; then
-        echo "❌ AWS Assume Role binary not found for $os_type"
-        echo "   Make sure the appropriate binary is in your PATH or current directory"
-        return 1
-    fi
-    
-    if [ "$1" = "assume" ] && [ -n "$2" ]; then
-        echo "🔄 Assuming role: $2"
-        eval $($binary_path assume "$2" "${@:3}" --format export 2>/dev/null)
-        if [ $? -eq 0 ]; then
-            echo "🎯 Role assumed successfully in current shell!"
-            echo "Current AWS identity:"
-            aws sts get-caller-identity --query 'Arn' --output text 2>/dev/null || echo "Failed to verify identity"
-        fi
-    else
-        $binary_path "$@"
-    fi
-}
+    ;;
+esac
 
-# Create alias for convenience
-alias awsr='aws_assume_role'
+echo "[awsr debug] Detected OS: $os_type" >&2
 
-echo "✅ AWS Assume Role loaded for $(uname -s)"
-echo "Usage: awsr assume <role-name>"
-echo "       awsr list"
-echo "       awsr configure --name <name> --role-arn <arn> --account-id <id>"
+case "$os_type" in
+  linux)   BINARY="$SCRIPT_DIR/aws-assume-role-linux" ;;
+  macos)   BINARY="$SCRIPT_DIR/aws-assume-role-macos" ;;
+  windows) BINARY="$SCRIPT_DIR/aws-assume-role-windows.exe" ;;
+esac
+
+# Check if binary exists
+if [[ ! -f "$BINARY" ]]; then
+    echo "❌ Binary not found for detected OS '$os_type': $BINARY" >&2
+    echo "Available files in $SCRIPT_DIR:" >&2
+    ls -la "$SCRIPT_DIR"/ >&2
+    exit 1
+fi
+
+# Execute with all arguments
+exec "$BINARY" "$@"
