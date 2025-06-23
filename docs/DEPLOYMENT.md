@@ -15,8 +15,9 @@ brew install aws-assume-role
 cargo install aws-assume-role
 
 # 📦 Universal Installer (Linux/macOS)
-curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
-cd aws-assume-role-cli-* && ./INSTALL.sh
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/download/v1.3.0/aws-assume-role-cli-v1.3.0.zip -o aws-assume-role-cli-v1.3.0.zip
+unzip aws-assume-role-cli-v1.3.0.zip && cd aws-assume-role-cli-v1.3.0
+./INSTALL.sh
 ```
 
 **⚡ Quick Test**: `awsr --version` should show the installed version.
@@ -98,10 +99,8 @@ awsr --version
 
 ```bash
 # Download and extract
-curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
-
-# Navigate to extracted directory
-cd aws-assume-role-cli-*
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/download/v1.3.0/aws-assume-role-cli-v1.3.0.zip -o aws-assume-role-cli-v1.3.0.zip
+unzip aws-assume-role-cli-v1.3.0.zip && cd aws-assume-role-cli-v1.3.0
 
 # Run installer
 ./INSTALL.sh
@@ -494,8 +493,9 @@ brew upgrade aws-assume-role
 cargo install aws-assume-role
 
 # Universal installer
-curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
-cd aws-assume-role-cli-* && ./INSTALL.sh --upgrade
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/download/v1.3.0/aws-assume-role-cli-v1.3.0.zip -o aws-assume-role-cli-v1.3.0.zip
+unzip aws-assume-role-cli-v1.3.0.zip && cd aws-assume-role-cli-v1.3.0
+./INSTALL.sh --upgrade
 ```
 
 ### **Uninstallation**

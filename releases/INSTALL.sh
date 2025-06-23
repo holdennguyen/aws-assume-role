@@ -24,6 +24,13 @@ main() {
     echo "AWS Assume Role CLI - Installer"
     echo "==============================="
     echo
+    log_step "Step 0: Download the v1.3.0 release (if you haven't already)"
+    log_info "Download and extract the v1.3.0 .zip release with:"
+    echo
+    echo "    curl -L https://github.com/holdennguyen/aws-assume-role/releases/download/v1.3.0/aws-assume-role-cli-v1.3.0.zip -o aws-assume-role-cli-v1.3.0.zip"
+    echo "    unzip aws-assume-role-cli-v1.3.0.zip && cd aws-assume-role-cli-v1.3.0"
+    echo "    ./INSTALL.sh"
+    echo
     
     # 1. Determine OS and binary name
     log_step "Step 1: Detecting operating system..."

@@ -123,18 +123,12 @@ brew tap holdennguyen/tap
 brew install aws-assume-role
 ```
 
-### Direct Download
-Download platform-specific binaries from the [releases page](https://github.com/holdennguyen/aws-assume-role/releases/tag/v1.3.0).
-
 ### Universal Installer
+Download the .zip package for v1.3.0:
+
 ```bash
-# Download and extract
-curl -L https://github.com/holdennguyen/aws-assume-role/releases/latest/download/aws-assume-role-cli.tar.gz | tar -xz
-
-# Navigate to extracted directory
-cd aws-assume-role-cli-*
-
-# Run installer with enhanced user experience
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/download/v1.3.0/aws-assume-role-cli-v1.3.0.zip -o aws-assume-role-cli-v1.3.0.zip
+unzip aws-assume-role-cli-v1.3.0.zip && cd aws-assume-role-cli-v1.3.0
 ./INSTALL.sh
 ```
 

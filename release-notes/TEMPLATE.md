@@ -60,18 +60,16 @@ cargo install aws-assume-role
 # Homebrew (macOS/Linux)
 brew tap holdennguyen/tap
 brew install aws-assume-role
-
-# APT (Ubuntu/Debian)
-sudo add-apt-repository ppa:holdennguyen/aws-assume-role
-sudo apt install aws-assume-role
-
-# DNF/YUM (Fedora/RHEL/CentOS)
-sudo dnf copr enable holdennguyen/aws-assume-role
-sudo dnf install aws-assume-role
 \`\`\`
 
-### Direct Download
-Download platform-specific binaries from the [releases page](https://github.com/holdennguyen/aws-assume-role/releases/tag/v{VERSION}).
+### Universal Installer
+Download the .zip package for v{VERSION}:
+
+```bash
+curl -L https://github.com/holdennguyen/aws-assume-role/releases/download/v{VERSION}/aws-assume-role-cli-v{VERSION}.zip -o aws-assume-role-cli-v{VERSION}.zip
+unzip aws-assume-role-cli-v{VERSION}.zip && cd aws-assume-role-cli-v{VERSION}
+./INSTALL.sh
+```
 
 ## 🙏 Acknowledgments
 
