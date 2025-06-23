@@ -64,15 +64,15 @@ main() {
     
     # Shell profile cleanup
     log_info "1. Remove from shell profile (choose your shell):"
+    echo "   source $INSTALL_DIR/aws-assume-role-bash.sh"
     echo "   # For bash:"
-    echo "   sed -i '/aws-assume-role-bash.sh/d' ~/.bashrc"
-    echo "   sed -i '/aws-assume-role-bash.sh/d' ~/.bash_profile"
+    echo "   ~/.bashrc or ~/.bash_profile"
     echo
     echo "   # For zsh:"
-    echo "   sed -i '/aws-assume-role-bash.sh/d' ~/.zshrc"
+    echo "   ~/.zshrc"
     echo
     echo "   # For Git Bash on Windows:"
-    echo "   sed -i '/aws-assume-role-bash.sh/d' ~/.bash_profile"
+    echo "   ~/.bash_profile"
     echo
     
     # Remove installation directory

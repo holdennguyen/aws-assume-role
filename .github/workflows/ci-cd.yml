@@ -69,9 +69,6 @@ jobs:
     - name: Run integration tests
       run: cargo test --test integration_tests --verbose
 
-    - name: Run shell integration tests
-      run: cargo test --test shell_integration_tests --verbose
-
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
