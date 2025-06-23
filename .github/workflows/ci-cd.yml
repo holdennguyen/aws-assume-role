@@ -233,56 +233,50 @@ jobs:
         # Create the universal bash wrapper
         cat > releases/aws-assume-role-bash.sh << 'EOF'
         #!/bin/bash
-        
-        # AWS Assume Role CLI - Universal Bash Wrapper
-        # Detects platform and executes appropriate binary
-        
-        set -euo pipefail
-        
-        # Get script directory
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        
-        # OS Detection with Debugging
-        os_type=""
-        echo "[awsr debug] OSTYPE: $OSTYPE" >&2
-        echo "[awsr debug] uname -s: $(uname -s)" >&2
-        
-        case "$OSTYPE" in
-          linux-gnu*) os_type="linux" ;;
-          darwin*)    os_type="macos" ;;
-          cygwin|msys|win32) os_type="windows" ;;
-          *)
-            # Fallback to uname for other environments (like Git Bash on Windows)
-            case "$(uname -s)" in
-              Linux*)   os_type="linux" ;;
-              Darwin*)  os_type="macos" ;;
-              MINGW*|MSYS*|CYGWIN*) os_type="windows" ;;
-              *)
-                echo "❌ Unsupported platform. OSTYPE: $OSTYPE, uname: $(uname -s)" >&2
-                exit 1
-                ;;
-            esac
-            ;;
-        esac
+        # This file should be sourced to define the 'awsr' function.
+        # e.g., source ~/.local/bin/aws-assume-role-bash.sh
 
-        echo "[awsr debug] Detected OS: $os_type" >&2
-        
-        case "$os_type" in
-          linux)   BINARY="$SCRIPT_DIR/aws-assume-role-linux" ;;
-          macos)   BINARY="$SCRIPT_DIR/aws-assume-role-macos" ;;
-          windows) BINARY="$SCRIPT_DIR/aws-assume-role-windows.exe" ;;
-        esac
-        
-        # Check if binary exists
-        if [[ ! -f "$BINARY" ]]; then
-            echo "❌ Binary not found for detected OS '$os_type': $BINARY" >&2
-            echo "Available files in $SCRIPT_DIR:" >&2
-            ls -la "$SCRIPT_DIR"/ >&2
-            exit 1
-        fi
-        
-        # Execute with all arguments
-        exec "$BINARY" "$@"
+        awsr() {
+            # Determine the binary name based on the OS.
+            local BINARY_NAME
+            case "$(uname -s)" in
+                Linux*)   BINARY_NAME="aws-assume-role-linux" ;;
+                Darwin*)  BINARY_NAME="aws-assume-role-macos" ;;
+                MINGW*|MSYS*|CYGWIN*) BINARY_NAME="aws-assume-role-windows.exe" ;;
+                *)
+                  echo "awsr: Unsupported OS: $(uname -s)" >&2
+                  return 1
+                  ;;
+            esac
+
+            # Check if the binary exists in the PATH before trying to run it.
+            if ! command -v "$BINARY_NAME" &> /dev/null; then
+                echo "awsr: Cannot find required binary '$BINARY_NAME' in your PATH." >&2
+                echo "Please ensure your installation directory is in your PATH and you have restarted your shell." >&2
+                return 1
+            fi
+
+            # Handle the 'assume' command specially to modify the current shell.
+            if [ "$1" = "assume" ]; then
+                # Capture the output of the command. We force 'export' format for bash.
+                local output
+                output=$("$BINARY_NAME" "$@" --format export 2>&1)
+                local exit_code=$?
+
+                # If the command was successful, 'eval' its output to set environment variables.
+                if [ $exit_code -eq 0 ]; then
+                    eval "$output"
+                    echo "Role assumed."
+                else
+                    # If it failed, print the error message.
+                    echo "$output" >&2
+                fi
+                return $exit_code
+            fi
+
+            # For all other commands, just run the binary directly and let its output flow through.
+            "$BINARY_NAME" "$@"
+        }
         EOF
         chmod +x releases/aws-assume-role-bash.sh
 

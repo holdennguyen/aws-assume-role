@@ -139,9 +139,8 @@ awsr assume production
 **Automated Release Pipeline**:
 1. `scripts/build-releases.sh` - Cross-platform builds with proper toolchain
 2. `scripts/release.sh` - Complete unified release management (507 lines)
-3. `scripts/install.sh` - Universal installer (355 lines)
-4. `releases/INSTALL.sh` - Distribution installer
-5. `releases/UNINSTALL.sh` - Clean uninstaller
+3. `releases/INSTALL.sh` - Distribution installer
+4. `releases/UNINSTALL.sh` - Clean uninstaller
 
 **Documentation Structure**:
 1. `README.md` - Central hub with navigation (root only)
@@ -185,7 +184,7 @@ awsr assume production
 - Proper linker configuration in `.cargo/config.toml` essential
 - Environment variables needed for cross-compilation (CC, AR, etc.)
 - Static linking (musl) preferred for Linux distribution compatibility
-- Pattern: `cargo build --release --target x86_64-unknown-linux-musl`
+- Pattern: `./dev-cli.sh build` now handles all cross-platform builds.
 
 **Universal Wrapper Pattern**:
 - Single bash script more maintainable than multiple shell-specific scripts
@@ -194,9 +193,9 @@ awsr assume production
 - Error handling pattern: clear messages for unsupported OS or missing binaries
 - Role assumption pattern: `eval $($binary_path assume "$2" "${@:3}" --format export)`
 
-**CRITICAL PATTERN: The Pre-Commit Script is Mandatory**
-- ALL code modifications must be validated with `./scripts/pre-commit-hook.sh` before committing.
-- This script handles formatting, linting, testing, and building, and is the key to preventing CI failures.
+**CRITICAL PATTERN: The Developer CLI is Mandatory**
+- ALL code modifications must be validated with `./dev-cli.sh check` before committing.
+- This single command handles formatting, linting, testing, and building, preventing CI failures.
 
 **Cross-Platform Environment Variables**:
 - Windows uses `USERPROFILE`, Unix uses `HOME`
@@ -205,7 +204,7 @@ awsr assume production
 - Integration tests must set both variables for cross-platform compatibility
 
 **Automation-Driven Release Workflow**:
-- The release process is initiated with `./scripts/release.sh prepare <version>`.
+- The release process is initiated with `./dev-cli.sh release prepare <version>`.
 - The subsequent steps are governed by the **Safe Release Process** documented in `DEVELOPER_WORKFLOW.md`.
 - This process requires a successful CI run on the `develop` branch before a release tag can be created and pushed.
 

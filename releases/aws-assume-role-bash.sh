@@ -1,50 +1,61 @@
 #!/bin/bash
-# AWS Assume Role CLI - Universal Bash Wrapper
-# Detects platform and executes appropriate binary
+# AWS Assume Role - Bash Wrapper
+#
+# This script should be sourced in your shell's profile (e.g., .bashrc, .zshrc)
+# to enable the 'awsr' command and manage the PATH.
+#
+# Example for ~/.bash_profile or ~/.bashrc:
+#   source "/path/to/your/install_dir/aws-assume-role-bash.sh"
+#
 
-set -euo pipefail
+# --- Self-Contained PATH Management ---
+# Get the directory where this script is located.
+_AWS_ASSUME_ROLE_SCRIPT_DIR="$(cd "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# OS Detection with Debugging
-os_type=""
-echo "[awsr debug] OSTYPE: $OSTYPE" >&2
-echo "[awsr debug] uname -s: $(uname -s)" >&2
-
-case "$OSTYPE" in
-  linux-gnu*) os_type="linux" ;;
-  darwin*)    os_type="macos" ;;
-  cygwin|msys|win32) os_type="windows" ;;
-  *)
-    # Fallback to uname for other environments (like Git Bash on Windows)
+# This function is now the single source of truth for the 'awsr' command.
+awsr() {
+    # 1. Determine OS and the full binary path
+    local os_type
     case "$(uname -s)" in
-      Linux*)   os_type="linux" ;;
-      Darwin*)  os_type="macos" ;;
-      MINGW*|MSYS*|CYGWIN*) os_type="windows" ;;
-      *)
-        echo "❌ Unsupported platform. OSTYPE: $OSTYPE, uname: $(uname -s)" >&2
-        exit 1
-        ;;
+        Linux*)   os_type="linux" ;;
+        Darwin*)  os_type="macos" ;;
+        MINGW*|MSYS*|CYGWIN*) os_type="windows" ;;
+        *)
+            echo "awsr: Unsupported OS: $(uname -s)" >&2
+            return 1
+            ;;
     esac
-    ;;
-esac
 
-echo "[awsr debug] Detected OS: $os_type" >&2
+    local binary_name="aws-assume-role-$os_type"
+    if [ "$os_type" = "windows" ]; then
+        binary_name="aws-assume-role-windows.exe"
+    fi
+    
+    # Construct the full, absolute path to the binary.
+    # This avoids all PATH-related issues.
+    local binary_path="$_AWS_ASSUME_ROLE_SCRIPT_DIR/$binary_name"
 
-case "$os_type" in
-  linux)   BINARY="$SCRIPT_DIR/aws-assume-role-linux" ;;
-  macos)   BINARY="$SCRIPT_DIR/aws-assume-role-macos" ;;
-  windows) BINARY="$SCRIPT_DIR/aws-assume-role-windows.exe" ;;
-esac
+    if [ ! -x "$binary_path" ]; then
+        echo "awsr: Error: binary not found or not executable at '$binary_path'" >&2
+        return 1
+    fi
 
-# Check if binary exists
-if [[ ! -f "$BINARY" ]]; then
-    echo "❌ Binary not found for detected OS '$os_type': $BINARY" >&2
-    echo "Available files in $SCRIPT_DIR:" >&2
-    ls -la "$SCRIPT_DIR"/ >&2
-    exit 1
-fi
-
-# Execute with all arguments
-exec "$BINARY" "$@"
+    # 2. Handle the 'assume' command to modify the current shell
+    if [ "$1" = "assume" ]; then
+        local output
+        # Pass all arguments to the binary and request 'export' format.
+        # If the command fails, its stderr will be captured in 'output'.
+        if output=$("$binary_path" "$@" --format export); then
+            # On success, evaluate the output to set environment variables.
+            eval "$output"
+        else
+            # On failure, print the error captured from the binary and return failure.
+            echo "$output" >&2
+            return 1
+        fi
+    else
+        # 3. For all other commands, execute the binary directly.
+        # This passes through args, stdout, stderr, and exit codes correctly.
+        "$binary_path" "$@"
+    fi
+}

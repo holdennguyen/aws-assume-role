@@ -127,10 +127,9 @@ The tool automatically detects your shell and outputs the appropriate format."#
         #[arg(
             short,
             long,
-            default_value = "export",
-            help = "Output format: 'export' or 'json'"
+            help = "Output format: 'export' or 'json'. Defaults to shell-specific exports."
         )]
-        format: String,
+        format: Option<String>,
 
         /// Execute a command with the assumed role credentials
         #[arg(short, long, help = "Command to execute with assumed role credentials")]
@@ -277,7 +276,12 @@ impl Cli {
                 if let Some(command) = exec {
                     execute_with_credentials(&credentials, command).await?;
                 } else {
-                    output_credentials_for_shell(&credentials, format, name)?;
+                    let format_str = format.as_deref().unwrap_or(if cfg!(windows) {
+                        "powershell"
+                    } else {
+                        "export"
+                    });
+                    output_credentials_for_shell(&credentials, format_str, name)?;
                 }
             }
 
@@ -466,114 +470,88 @@ async fn verify_prerequisites(
     if verbose {
         println!("Checking AWS CLI installation...");
     }
-    match AwsClient::check_aws_cli() {
-        Ok(true) => println!("✅ AWS CLI is installed and accessible"),
-        Ok(false) => {
-            println!("❌ AWS CLI is not installed or not in PATH");
-            println!("   Install AWS CLI v2: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html");
-            all_checks_passed = false;
-        }
-        Err(e) => {
-            println!("⚠️  Could not verify AWS CLI installation: {}", e);
-            all_checks_passed = false;
-        }
+    if !AwsClient::check_aws_cli().unwrap_or(false) {
+        println!("❌ AWS CLI is not installed or not in PATH");
+        println!("   Install AWS CLI v2: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html");
+        all_checks_passed = false;
+    } else {
+        println!("✅ AWS CLI is installed and accessible");
     }
 
     // Check 2: AWS Credentials and Identity
     if verbose {
-        println!("Checking AWS credentials...");
+        println!("\nChecking AWS credentials...");
     }
-    let aws_client = match AwsClient::new().await {
-        Ok(client) => {
+    match AwsClient::new().await {
+        Ok(aws_client) => {
             println!("✅ AWS SDK initialized successfully");
-            client
+            match aws_client.verify_current_identity().await {
+                Ok(identity) => {
+                    println!("✅ Current AWS identity verified");
+                    if verbose {
+                        println!("   - Account: {}", identity.account);
+                        println!("   - ARN: {}", identity.arn);
+                        println!("   - User ID: {}", identity.user_id);
+                    }
+                }
+                Err(e) => {
+                    println!("❌ Failed to verify current AWS identity: {}", e);
+                    println!("   Ensure your AWS credentials are valid and not expired");
+                    all_checks_passed = false;
+                }
+            }
+
+            // Check 3: Role Configurations
+            if config.roles.is_empty() {
+                println!("\n⚠️  No roles configured yet");
+            } else {
+                println!("\n✅ Found {} configured role(s)", config.roles.len());
+                let roles_to_check: Vec<&RoleConfig> = if let Some(role_name) = specific_role {
+                    match config.get_role(role_name) {
+                        Some(role) => vec![role],
+                        None => {
+                            println!("❌ Role '{}' not found in configuration", role_name);
+                            all_checks_passed = false;
+                            vec![]
+                        }
+                    }
+                } else {
+                    config.roles.iter().collect()
+                };
+
+                for role in roles_to_check {
+                    if verbose {
+                        println!("   - Testing role assumption for '{}'...", role.name);
+                    }
+                    match aws_client.test_assume_role(role).await {
+                        Ok(true) => {
+                            println!("   ✅ Can assume role '{}'", role.name);
+                        }
+                        Ok(false) => {
+                            println!("   ❌ Cannot assume role '{}'", role.name);
+                            all_checks_passed = false;
+                        }
+                        Err(e) => {
+                            println!("   ⚠️  Could not test role '{}': {}", role.name, e);
+                            all_checks_passed = false;
+                        }
+                    }
+                }
+            }
         }
         Err(e) => {
             println!("❌ Failed to initialize AWS SDK: {}", e);
-            println!("   Check your AWS credentials configuration");
-            return Ok(());
+            println!("   Check your AWS credentials configuration ('aws configure').");
+            all_checks_passed = false;
         }
     };
 
-    // Check current identity
-    match aws_client.verify_current_identity().await {
-        Ok(identity) => {
-            println!("✅ Current AWS identity verified");
-            if verbose {
-                println!("   Account: {}", identity.account);
-                println!("   ARN: {}", identity.arn);
-                println!("   User ID: {}", identity.user_id);
-            }
-        }
-        Err(e) => {
-            println!("❌ Failed to verify current AWS identity: {}", e);
-            println!("   Ensure your AWS credentials are valid and not expired");
-            println!("   Try: aws sts get-caller-identity");
-            all_checks_passed = false;
-        }
-    }
-
-    // Check 3: Role Configurations
-    if config.roles.is_empty() {
-        println!("⚠️  No roles configured yet");
-        println!("   Run 'awsr configure --help' to add your first role");
-    } else {
-        println!("✅ Found {} configured role(s)", config.roles.len());
-
-        // Check specific role or all roles
-        let roles_to_check: Vec<&RoleConfig> = if let Some(role_name) = specific_role {
-            match config.get_role(role_name) {
-                Some(role) => vec![role],
-                None => {
-                    println!("❌ Role '{}' not found in configuration", role_name);
-                    all_checks_passed = false;
-                    vec![]
-                }
-            }
-        } else {
-            config.roles.iter().collect()
-        };
-
-        // Test role assumptions
-        for role in roles_to_check {
-            if verbose {
-                println!("Testing role assumption for '{}'...", role.name);
-            }
-
-            match aws_client.test_assume_role(role).await {
-                Ok(true) => {
-                    println!("✅ Can assume role '{}' ({})", role.name, role.role_arn);
-                }
-                Ok(false) => {
-                    println!("❌ Cannot assume role '{}' ({})", role.name, role.role_arn);
-                    println!("   Possible issues:");
-                    println!("   - Role doesn't exist in account {}", role.account_id);
-                    println!("   - Role trust policy doesn't allow your current identity");
-                    println!("   - You don't have sts:AssumeRole permission");
-                    all_checks_passed = false;
-                }
-                Err(e) => {
-                    println!("⚠️  Could not test role '{}': {}", role.name, e);
-                    all_checks_passed = false;
-                }
-            }
-        }
-    }
-
-    // Summary
+    // Final Summary
     println!();
     if all_checks_passed {
         println!("🎉 All prerequisites verified successfully!");
-        println!("   You're ready to assume roles with 'awsr assume <role-name>'");
     } else {
-        println!("❌ Some prerequisites failed verification");
-        println!("   Fix the issues above before assuming roles");
-        println!();
-        println!("💡 Common solutions:");
-        println!("   1. Install AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html");
-        println!("   2. Configure credentials: aws configure");
-        println!("   3. Check role trust policies in AWS IAM Console");
-        println!("   4. Ensure you have sts:AssumeRole permission");
+        println!("❌ Some prerequisites failed. Please review the errors above.");
     }
 
     Ok(())

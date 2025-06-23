@@ -19,7 +19,6 @@ exclude = [
     "tests/",
     ".gitignore",
     "build-releases.sh",
-    "install.sh",
     "DEPLOYMENT.md"
 ]
 
