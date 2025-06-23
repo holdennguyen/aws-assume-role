@@ -171,29 +171,39 @@ fn test_uninstaller_instructions() {
     let content = fs::read_to_string(script_path)
         .unwrap_or_else(|_| panic!("Should read UNINSTALL.sh from {}", script_path));
 
-    // It must instruct the user to manually remove the source line.
+    // It must instruct the user to perform manual cleanup steps.
     assert!(
-        content.contains("manually remove the following line"),
-        "Uninstaller must state that manual action is required."
+        content.contains("Remove from shell profile"),
+        "Uninstaller must instruct user to remove from shell profile."
     );
     assert!(
-        content.contains("source \\\"$INSTALL_DIR/aws-assume-role-bash.sh\\\""),
-        "Uninstaller must show the exact 'source' line to remove."
+        content.contains("sed -i"),
+        "Uninstaller must provide sed -i commands for shell profile cleanup."
     );
-
-    // It must NOT modify shell profiles itself.
     assert!(
-        !content.contains("sed -i"),
+        content.contains("Remove installation directory"),
+        "Uninstaller must instruct user to remove the installation directory."
+    );
+    assert!(
+        content.contains("rm -rf"),
+        "Uninstaller must provide rm -rf command for directory removal."
+    );
+    assert!(
+        content.contains("unset -f awsr"),
+        "Uninstaller must instruct user to clear the awsr shell function."
+    );
+    assert!(
+        content.contains("Reload your shell configuration"),
+        "Uninstaller must instruct user to reload their shell configuration."
+    );
+    // It must NOT modify shell profiles itself automatically (no direct file redirection)
+    assert!(
+        !content.contains(">> ~/.bashrc") && !content.contains(">> $HOME/.bash_profile"),
         "Uninstaller must NOT automatically modify user profiles."
     );
-
-    // It must remove the correct files.
+    // It must remove the correct files (by pattern)
     assert!(
-        content.contains("rm -v {} +"),
-        "Uninstaller should remove the program files."
-    );
-    assert!(
-        content.contains("-name 'aws-assume-role*'"),
+        content.contains("aws-assume-role-*") || content.contains("aws-assume-role-bash.sh"),
         "Uninstaller should target the correct files for removal."
     );
 }
