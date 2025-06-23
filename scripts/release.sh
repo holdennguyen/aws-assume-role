@@ -253,9 +253,7 @@ create_packages() {
     
     log_info "📦 Creating distribution packages for v$version..."
     
-    # Get current date for versioning
-    local date=$(date +%Y%m%d)
-    local package_name="aws-assume-role-cli-v${version}-${date}"
+    local package_name="aws-assume-role-cli-v${version}"
     
     # Create temporary distribution directory
     local dist_dir="releases/dist/$package_name"
