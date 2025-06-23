@@ -348,7 +348,7 @@ jobs:
     - name: Download packaged distributions
       uses: actions/download-artifact@v4
       with:
-        name: packages
+        name: distribution-packages
         path: releases/dist
 
     - name: Stage binaries for release
