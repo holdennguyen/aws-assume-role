@@ -1,8 +1,20 @@
 # 🔧 Technical Context
 
-Comprehensive technical documentation covering system patterns, technology stack, and implementation details for AWS Assume Role CLI.
+**MEMORY BANK UPDATE RULE**: This file must be updated whenever technical architecture changes, new patterns are discovered, dependencies are modified, or when explicitly requested with "update memory bank" instruction.
 
-## 🏗️ System Patterns & Architecture
+Complete technical architecture, implementation patterns, and security considerations for AWS Assume Role CLI.
+
+## 🎯 Current Architecture (v1.3.0)
+
+### **Core Technology Stack**
+- **Language**: Rust (1.70+) for performance, safety, and cross-platform compatibility
+- **AWS SDK**: `aws-sdk-sts` and `aws-sdk-sso` for direct AWS API integration
+- **CLI Framework**: `clap` with derive macros for command-line interface
+- **Configuration**: JSON-based with `serde` for serialization
+- **Error Handling**: `thiserror` for structured error types
+- **Cross-Platform**: Universal bash wrapper for shell integration
+
+### **Architecture Overview**
 
 ### **Core Architecture Pattern**
 
@@ -200,7 +212,7 @@ graph TD
 4.  **Release**: Downloads all build and package artifacts, stages them in a `releases/` directory, and creates a formal GitHub Release.
 5.  **Artifact Passing**: The `release` job uploads the entire `releases/` directory as a single artifact named `release-assets`.
 6.  **Publish**: The `publish-homebrew` and `publish-container` jobs depend on `release`. They download the `release-assets` artifact to ensure they use the exact same files that were published in the GitHub Release.
-    - **Homebrew**: This job requires a `HOMEBREW_TAP_TOKEN` secret to push updates to the `holdennguyen/homebrew-tap` repository.
+    - **Homebrew**: This job requires a `HOMEBREW_TAP_TOKEN` secret to push updates to the `holdennguyen/tap` repository.
 
 ## 🔧 Implementation Patterns
 

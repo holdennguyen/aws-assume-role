@@ -276,10 +276,18 @@ impl Cli {
                 if let Some(command) = exec {
                     execute_with_credentials(&credentials, command).await?;
                 } else {
-                    let format_str = format.as_deref().unwrap_or(if cfg!(windows) {
-                        "powershell"
-                    } else {
-                        "export"
+                    let format_str = format.as_deref().unwrap_or_else(|| {
+                        // Better shell detection for Windows
+                        if cfg!(windows) {
+                            // Check if we're in Git Bash or similar Unix-like environment
+                            if is_git_bash_or_unix_like() {
+                                "export"
+                            } else {
+                                "powershell"
+                            }
+                        } else {
+                            "export"
+                        }
                     });
                     output_credentials_for_shell(&credentials, format_str, name)?;
                 }
@@ -350,12 +358,58 @@ fn output_credentials_for_shell(
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
-fn output_shell_exports(credentials: &Credentials, role_name: &str) -> AppResult<()> {
-    // Check if we're in PowerShell or Command Prompt
+/// Detect if we're running in Git Bash or similar Unix-like environment on Windows
+fn is_git_bash_or_unix_like() -> bool {
     use std::env;
 
-    if env::var("PSModulePath").is_ok() {
+    // Check for MSYSTEM (set by Git Bash, MSYS2, etc.)
+    if let Ok(msystem) = env::var("MSYSTEM") {
+        if msystem.contains("MINGW") || msystem.contains("MSYS") {
+            return true;
+        }
+    }
+
+    // Check for SHELL environment variable
+    if let Ok(shell) = env::var("SHELL") {
+        if shell.contains("bash") || shell.contains("sh") {
+            return true;
+        }
+    }
+
+    // Check for TERM environment variable (Unix-like terminals)
+    if let Ok(term) = env::var("TERM") {
+        if term.contains("xterm") || term.contains("linux") || term.contains("cygwin") {
+            return true;
+        }
+    }
+
+    // Check for OSTYPE (set by some Unix-like environments on Windows)
+    if let Ok(ostype) = env::var("OSTYPE") {
+        if ostype.contains("msys") || ostype.contains("cygwin") {
+            return true;
+        }
+    }
+
+    false
+}
+
+#[cfg(target_os = "windows")]
+fn output_shell_exports(credentials: &Credentials, role_name: &str) -> AppResult<()> {
+    use std::env;
+
+    // Check if we're in Git Bash or similar Unix-like environment
+    if is_git_bash_or_unix_like() {
+        // Use bash-compatible export format for Git Bash
+        println!("export AWS_ACCESS_KEY_ID=\"{}\"", credentials.access_key_id);
+        println!(
+            "export AWS_SECRET_ACCESS_KEY=\"{}\"",
+            credentials.secret_access_key
+        );
+        if let Some(token) = &credentials.session_token {
+            println!("export AWS_SESSION_TOKEN=\"{}\"", token);
+        }
+        println!("echo \"✅ Assumed role: {}\"", role_name);
+    } else if env::var("PSModulePath").is_ok() {
         // PowerShell format
         println!("$env:AWS_ACCESS_KEY_ID = \"{}\"", credentials.access_key_id);
         println!(
