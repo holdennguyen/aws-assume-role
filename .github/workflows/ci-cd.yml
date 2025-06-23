@@ -280,8 +280,46 @@ jobs:
         EOF
         chmod +x releases/aws-assume-role-bash.sh
 
-    - name: Create distribution packages using release script
-      run: ./scripts/release.sh package ${{ steps.version.outputs.VERSION }}
+    - name: Create distribution packages (CI version)
+      run: |
+        # Extract version
+        VERSION=${{ steps.version.outputs.VERSION }}
+        
+        # Set up directory structure
+        PACKAGE_NAME="aws-assume-role-cli-v${VERSION}"
+        DIST_DIR="releases/dist"
+        PACKAGE_DIR="$DIST_DIR/$PACKAGE_NAME"
+        
+        echo "Creating package directory: $PACKAGE_DIR"
+        rm -rf "$PACKAGE_DIR"
+        mkdir -p "$PACKAGE_DIR"
+
+        # Copy all required artifacts
+        echo "Copying binaries and scripts..."
+        cp releases/aws-assume-role-macos "$PACKAGE_DIR/"
+        cp releases/aws-assume-role-linux "$PACKAGE_DIR/"
+        cp releases/aws-assume-role-windows.exe "$PACKAGE_DIR/"
+        cp releases/aws-assume-role-bash.sh "$PACKAGE_DIR/"
+        cp releases/INSTALL.sh "$PACKAGE_DIR/"
+        cp releases/UNINSTALL.sh "$PACKAGE_DIR/"
+        cp README.md "$PACKAGE_DIR/"
+
+        # Create archives
+        echo "Creating .tar.gz and .zip archives..."
+        cd "$DIST_DIR"
+        
+        tar -czf "${PACKAGE_NAME}.tar.gz" "$PACKAGE_NAME"
+        zip -r "${PACKAGE_NAME}.zip" "$PACKAGE_NAME" > /dev/null
+
+        # Generate checksums
+        echo "Generating SHA256 checksums..."
+        sha256sum "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.tar.gz.sha256"
+        sha256sum "${PACKAGE_NAME}.zip" > "${PACKAGE_NAME}.zip.sha256"
+        
+        cd ../..
+
+        echo "✅ Distribution packages created successfully in '$DIST_DIR'."
+        ls -l "$DIST_DIR"
 
     - name: Upload distribution packages
       uses: actions/upload-artifact@v4
