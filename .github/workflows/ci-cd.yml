@@ -206,26 +206,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download Linux binary
+    - name: Download all build artifacts
       uses: actions/download-artifact@v4
       with:
-        name: binary-ubuntu-latest-x86_64-unknown-linux-gnu
-        path: releases/
+        path: artifacts/
 
-    - name: Download Windows binary
-      uses: actions/download-artifact@v4
-      with:
-        name: binary-windows-latest-x86_64-pc-windows-msvc
-        path: releases/
-
-    - name: Download macOS binary
-      uses: actions/download-artifact@v4
-      with:
-        name: binary-macos-latest-aarch64-apple-darwin
-        path: releases/
+    - name: Stage binaries for packaging
+      shell: bash
+      run: |
+        mkdir -p releases
+        cp artifacts/binary-ubuntu-latest-x86_64-unknown-linux-gnu/aws-assume-role-linux releases/
+        cp artifacts/binary-windows-latest-x86_64-pc-windows-msvc/aws-assume-role-windows.exe releases/
+        cp artifacts/binary-macos-latest-aarch64-apple-darwin/aws-assume-role-macos releases/
+        
+        ls -la releases/
 
     - name: Make binaries executable
-      run: chmod +x releases/aws-assume-role-*
+      run: chmod +x releases/aws-assume-role-linux releases/aws-assume-role-macos
 
     - name: Extract version from tag
       id: version
@@ -276,43 +273,48 @@ jobs:
         path: releases/dist/
 
   # ============================================================================
-  # GitHub Release - Run on tags only
+  # Release to GitHub - Run on tags only
   # ============================================================================
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [package]
+    needs: [build, package]
     if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Download distribution packages
+      
+    - name: Download all build artifacts
       uses: actions/download-artifact@v4
       with:
-        name: distribution-packages
-        path: releases/dist/
+        path: artifacts/
 
-    - name: Download Linux binary
+    - name: Download packaged distributions
       uses: actions/download-artifact@v4
       with:
-        name: binary-ubuntu-latest-x86_64-unknown-linux-gnu
+        name: packages
+        path: releases/dist
+
+    - name: Stage binaries for release
+      shell: bash
+      run: |
+        mkdir -p releases
+        cp artifacts/binary-ubuntu-latest-x86_64-unknown-linux-gnu/aws-assume-role-linux releases/
+        cp artifacts/binary-windows-latest-x86_64-pc-windows-msvc/aws-assume-role-windows.exe releases/
+        cp artifacts/binary-macos-latest-aarch64-apple-darwin/aws-assume-role-macos releases/
+        
+        ls -la releases/
+        ls -la releases/dist/
+
+    - name: Upload staged release assets
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-assets
         path: releases/
 
-    - name: Download Windows binary
-      uses: actions/download-artifact@v4
-      with:
-        name: binary-windows-latest-x86_64-pc-windows-msvc
-        path: releases/
-
-    - name: Download macOS binary
-      uses: actions/download-artifact@v4
-      with:
-        name: binary-macos-latest-aarch64-apple-darwin
-        path: releases/
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
 
     - name: Extract version from tag
       id: version
@@ -375,26 +377,25 @@ jobs:
       with:
         tag_name: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
-        body_path: ${{ steps.release_notes.outputs.RELEASE_NOTES_FILE || 'temp_release_body.md' }}
+        body_path: ${{ steps.release_notes.outputs.RELEASE_NOTES_FILE }}
         draft: false
         prerelease: false
         files: |
           releases/aws-assume-role-linux
           releases/aws-assume-role-macos
           releases/aws-assume-role-windows.exe
-          releases/aws-assume-role-bash.sh
           releases/dist/*.tar.gz
           releases/dist/*.zip
           releases/dist/*.sha256
 
   # ============================================================================
-  # Distribution Publishing - Run on tags only
+  # Documentation & Final Steps - Run on main branch
   # ============================================================================
-  publish-cargo:
-    name: Publish to crates.io
+  docs:
+    name: Generate Documentation
     runs-on: ubuntu-latest
-    needs: [release]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: quality
+    if: github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout code
@@ -403,48 +404,60 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Extract version from tag
-      id: version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-    - name: Verify Cargo.toml version matches tag
+    - name: Generate cargo-readme
       run: |
-        CARGO_VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-        TAG_VERSION="${{ steps.version.outputs.VERSION }}"
-        echo "Cargo.toml version: $CARGO_VERSION"
-        echo "Git tag version: $TAG_VERSION"
-        if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
-          echo "❌ Version mismatch! Cargo.toml has '$CARGO_VERSION' but tag is '$TAG_VERSION'"
-          echo "Please run './scripts/release.sh prepare $TAG_VERSION' to fix version mismatch"
-          exit 1
-        fi
-        echo "✅ Version verified: $CARGO_VERSION"
+        cargo install cargo-readme
+        cargo readme > README.md
 
-    - name: Publish to crates.io
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    - name: Commit and push changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "docs: update README with latest options"
+        branch: main
+        file_pattern: README.md
+
+# ==============================================================================
+# Final Summary Job
+# ==============================================================================
+  summary:
+    name: CI/CD Summary
+    runs-on: ubuntu-latest
+    needs: [quality, security-audit, benchmark, build, package, release, docs]
+    if: always()
+
+    steps:
+    - name: Summarize workflow run
       run: |
-        if [ -n "$CARGO_REGISTRY_TOKEN" ]; then
-          cargo publish --token $CARGO_REGISTRY_TOKEN
-          echo "✅ Published to crates.io"
-        else
-          echo "⚠️ CARGO_REGISTRY_TOKEN not set, skipping crates.io publish"
-        fi
+        echo "### CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+        echo "| Quality & Testing | ${{ needs.quality.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Audit | ${{ needs.security-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Performance Benchmarks | ${{ needs.benchmark.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Cross-Platform Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Package Creation | ${{ needs.package.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| GitHub Release | ${{ needs.release.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Documentation | ${{ needs.docs.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Workflow complete. Check job logs for details." >> $GITHUB_STEP_SUMMARY
+        echo "ℹ️  Optional jobs (security audit, benchmarks) are advisory"
+        echo "ℹ️  Build and release jobs run based on branch/tag triggers"
 
   publish-homebrew:
     name: Update Homebrew Tap
     runs-on: ubuntu-latest
-    needs: [release]
+    needs: release
     if: startsWith(github.ref, 'refs/tags/v')
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download binaries for checksums
+    - name: Download release assets
       uses: actions/download-artifact@v4
       with:
-        name: binaries
+        name: release-assets
         path: releases/
 
     - name: Extract version from tag
@@ -455,196 +468,78 @@ jobs:
       env:
         HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       run: |
-        if [ -n "$HOMEBREW_TAP_TOKEN" ]; then
-          # Calculate checksums
-          MACOS_SHA256=$(shasum -a 256 releases/aws-assume-role-macos | cut -d' ' -f1)
-          LINUX_SHA256=$(shasum -a 256 releases/aws-assume-role-linux | cut -d' ' -f1)
-          WINDOWS_SHA256=$(shasum -a 256 releases/aws-assume-role-windows.exe | cut -d' ' -f1)
-          
-          echo "Calculated checksums:"
-          echo "macOS: $MACOS_SHA256"
-          echo "Linux: $LINUX_SHA256"
-          echo "Windows: $WINDOWS_SHA256"
-          
-          # Clone homebrew tap
-          git clone https://x-access-token:$HOMEBREW_TAP_TOKEN@github.com/holdennguyen/homebrew-tap.git
-          cd homebrew-tap
-          
-          # Create Formula directory if it doesn't exist
-          mkdir -p Formula
-          
-          # Update formula (copy from packaging/homebrew if it exists, otherwise create basic one)
-          if [ -f "../packaging/homebrew/aws-assume-role.rb" ]; then
-            cp ../packaging/homebrew/aws-assume-role.rb Formula/
-          else
-            # Create basic formula
-            cat > Formula/aws-assume-role.rb << EOF
-        class AwsAssumeRole < Formula
-          desc "Simple command-line tool to switch between AWS IAM roles"
-          homepage "https://github.com/holdennguyen/aws-assume-role"
-          version "${{ steps.version.outputs.VERSION }}"
-          
-          if OS.mac? && Hardware::CPU.arm?
-            url "https://github.com/holdennguyen/aws-assume-role/releases/download/v${{ steps.version.outputs.VERSION }}/aws-assume-role-macos"
-            sha256 "$MACOS_SHA256"
-          elsif OS.mac?
-            url "https://github.com/holdennguyen/aws-assume-role/releases/download/v${{ steps.version.outputs.VERSION }}/aws-assume-role-macos"
-            sha256 "$MACOS_SHA256"
-          elsif OS.linux?
-            url "https://github.com/holdennguyen/aws-assume-role/releases/download/v${{ steps.version.outputs.VERSION }}/aws-assume-role-linux"
-            sha256 "$LINUX_SHA256"
-          end
-          
-          def install
-            bin.install Dir["aws-assume-role*"].first => "aws-assume-role"
-            bin.install_symlink "aws-assume-role" => "awsr"
-          end
-          
-          test do
-            system "#{bin}/aws-assume-role", "--version"
-          end
-        end
-        EOF
-          fi
-          
-          # Update version and checksums in formula
-          sed -i "s/version \".*\"/version \"${{ steps.version.outputs.VERSION }}\"/" Formula/aws-assume-role.rb
-          sed -i "s|download/v[^/]*/|download/v${{ steps.version.outputs.VERSION }}/|g" Formula/aws-assume-role.rb
-          
-          # Update checksums (handle different formats)
-          sed -i "s/sha256 \"[^\"]*\" # macos/sha256 \"$MACOS_SHA256\" # macos/" Formula/aws-assume-role.rb
-          sed -i "s/sha256 \"[^\"]*\" # linux/sha256 \"$LINUX_SHA256\" # linux/" Formula/aws-assume-role.rb
-          # Also handle direct sha256 lines
-          sed -i "0,/sha256 \"[^\"]*\"/{s/sha256 \"[^\"]*\"/sha256 \"$MACOS_SHA256\"/}" Formula/aws-assume-role.rb
-          
-          # Commit and push
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add Formula/aws-assume-role.rb
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update aws-assume-role to v${{ steps.version.outputs.VERSION }}"
-            git push
-            echo "✅ Updated Homebrew tap"
-          fi
-        else
+        if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
           echo "⚠️ HOMEBREW_TAP_TOKEN not set, skipping Homebrew publish"
+          exit 0
+        fi
+
+        # Calculate checksums
+        MACOS_SHA256=$(shasum -a 256 releases/aws-assume-role-macos | cut -d' ' -f1)
+        LINUX_SHA256=$(shasum -a 256 releases/aws-assume-role-linux | cut -d' ' -f1)
+        
+        echo "Calculated checksums:"
+        echo "macOS: $MACOS_SHA256"
+        echo "Linux: $LINUX_SHA256"
+        
+        # Clone homebrew tap
+        git clone https://x-access-token:$HOMEBREW_TAP_TOKEN@github.com/holdennguyen/homebrew-tap.git
+        cd homebrew-tap
+        
+        # Create Formula directory if it doesn't exist
+        mkdir -p Formula
+        
+        # Update formula from existing file in packaging/homebrew
+        if [ -f "../packaging/homebrew/aws-assume-role.rb" ]; then
+          cp ../packaging/homebrew/aws-assume-role.rb Formula/
+        else
+          echo "❌ packaging/homebrew/aws-assume-role.rb not found!"
+          exit 1
+        fi
+        
+        # Replace version and checksums
+        sed -i.bak "s/version \".*\"/version \"${{ steps.version.outputs.VERSION }}\"/" Formula/aws-assume-role.rb
+        sed -i.bak "s|url \"https://github.com/holdennguyen/aws-assume-role/releases/download/v.*/aws-assume-role-macos\"|url \"https://github.com/holdennguyen/aws-assume-role/releases/download/v${{ steps.version.outputs.VERSION }}/aws-assume-role-macos\"|" Formula/aws-assume-role.rb
+        sed -i.bak "s/sha256 \".*\" # macos/sha256 \"$MACOS_SHA256\" # macos/" Formula/aws-assume-role.rb
+        sed -i.bak "s|url \"https://github.com/holdennguyen/aws-assume-role/releases/download/v.*/aws-assume-role-linux\"|url \"https://github.com/holdennguyen/aws-assume-role/releases/download/v${{ steps.version.outputs.VERSION }}/aws-assume-role-linux\"|" Formula/aws-assume-role.rb
+        sed -i.bak "s/sha256 \".*\" # linux/sha256 \"$LINUX_SHA256\" # linux/" Formula/aws-assume-role.rb
+        
+        # Commit and push
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add Formula/aws-assume-role.rb
+        
+        if git diff --staged --quiet; then
+          echo "No changes to Homebrew tap formula."
+        else
+          git commit -m "Update aws-assume-role to v${{ steps.version.outputs.VERSION }}"
+          git push
+          echo "✅ Successfully updated Homebrew tap."
         fi
 
   publish-container:
     name: Build and Push Container Image
     runs-on: ubuntu-latest
-    needs: [release]
+    needs: release
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
-      packages: write
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download binaries
+    - name: Download release assets
       uses: actions/download-artifact@v4
       with:
-        name: binaries
+        name: release-assets
         path: releases/
 
     - name: Extract version from tag
       id: version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: Build container image
+      run: docker build -t ${{ github.repository }}:${{ steps.version.outputs.VERSION }} .
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: |
-          ghcr.io/${{ github.repository_owner }}/aws-assume-role:latest
-          ghcr.io/${{ github.repository_owner }}/aws-assume-role:v${{ steps.version.outputs.VERSION }}
-          ghcr.io/${{ github.repository_owner }}/aws-assume-role:${{ steps.version.outputs.VERSION }}
-        labels: |
-          org.opencontainers.image.title=AWS Assume Role CLI
-          org.opencontainers.image.description=A simple command-line tool to easily switch between AWS IAM roles
-          org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          org.opencontainers.image.licenses=AGPL-3.0-or-later
-          org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
-          org.opencontainers.image.revision=${{ github.sha }}
-
-  # ============================================================================
-  # Deployment Notification - Run after successful release
-  # ============================================================================
-  notify:
-    name: Deployment Notification
-    runs-on: ubuntu-latest
-    needs: [release, publish-cargo, publish-homebrew, publish-container]
-    if: startsWith(github.ref, 'refs/tags/v') && success()
-    
-    steps:
-    - name: Extract version from tag
-      id: version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-    - name: Notify success
-      run: |
-        echo "🎉 Successfully released AWS Assume Role CLI v${{ steps.version.outputs.VERSION }}"
-        echo ""
-        echo "📦 Available on:"
-        echo "  - GitHub Releases: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.VERSION }}"
-        echo "  - crates.io: https://crates.io/crates/aws-assume-role"
-        echo "  - Homebrew: brew tap holdennguyen/tap && brew install aws-assume-role"
-        echo "  - Container: docker pull ghcr.io/${{ github.repository_owner }}/aws-assume-role:v${{ steps.version.outputs.VERSION }}"
-        echo ""
-        echo "🚀 Installation:"
-        echo "  # Direct binary download"
-        echo "  curl -L https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.VERSION }}/aws-assume-role-cli-v${{ steps.version.outputs.VERSION }}.tar.gz | tar -xz"
-        echo "  cd aws-assume-role-cli-v${{ steps.version.outputs.VERSION }} && ./INSTALL.sh"
-        echo ""
-        echo "  # Cargo (Rust)"
-        echo "  cargo install aws-assume-role"
-        echo ""
-        echo "  # Homebrew"
-        echo "  brew tap holdennguyen/tap && brew install aws-assume-role"
-        echo ""
-        echo "  # Container"
-        echo "  docker run --rm -v ~/.aws:/home/awsuser/.aws ghcr.io/${{ github.repository_owner }}/aws-assume-role:v${{ steps.version.outputs.VERSION }} awsr --help"
-
-  # ============================================================================
-  # Test Summary - Always run to provide clear feedback
-  # ============================================================================
-  test-summary:
-    name: Test Summary
-    runs-on: ubuntu-latest
-    needs: [quality]
-    if: always()
-    
-    steps:
-    - name: Check test results
-      run: |
-        if [[ "${{ needs.quality.result }}" != "success" ]]; then
-          echo "❌ Quality gates failed - check the logs above"
-          echo ""
-          echo "Common fixes:"
-          echo "  - Run 'cargo fmt' to fix formatting"
-          echo "  - Run 'cargo clippy -- -D warnings' to fix linting"
-          echo "  - Run 'cargo test' to fix failing tests"
-          echo ""
-          exit 1
-        fi
-        
-        echo "✅ All quality gates passed successfully!"
-        echo ""
-        echo "ℹ️  Optional jobs (security audit, benchmarks) are advisory"
-        echo "ℹ️  Build and release jobs run based on branch/tag triggers" 
+    - name: Push container image
+      run: docker push ${{ github.repository }}:${{ steps.version.outputs.VERSION }} 

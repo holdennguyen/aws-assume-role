@@ -163,6 +163,45 @@ Low-Level Error → Context Addition → Error Chain → User-Friendly Message �
 | **Container** | GitHub Container Registry | ✅ Automated | Active |
 | **GitHub** | Releases | ✅ Automated | Active |
 
+### **CI/CD Workflow**
+
+The CI/CD pipeline is designed for robustness and clarity, using a strategy of passing artifacts between dependent jobs.
+
+```mermaid
+graph TD
+    subgraph "Trigger: Push to any branch"
+        A[Quality Gates] --> B{Branch Check};
+    end
+
+    subgraph "Trigger: Push to main/develop"
+        B -- main/develop --> C[Security & Benchmarks];
+    end
+
+    subgraph "Trigger: Tag Push (v*)"
+        B -- Tag v* --> D[Build Cross-Platform Binaries];
+        D --> E[Create Distribution Packages];
+        E --> F[Create GitHub Release];
+        F --> G[Upload Release Assets Artifact];
+        G --> H[Publish to Homebrew];
+        G --> I[Publish Container Image];
+    end
+
+    A --> J[Summary];
+    C --> J;
+    H --> J;
+    I --> J;
+```
+
+**Key Workflow Steps:**
+
+1.  **Quality Gates**: Run on every push to ensure code quality, formatting, and tests pass.
+2.  **Build**: Compiles binaries for Linux, macOS, and Windows. Each binary is uploaded as a platform-specific artifact (e.g., `binary-ubuntu-latest-x86_64-unknown-linux-gnu`).
+3.  **Package**: Downloads all build artifacts and creates distributable packages (`.tar.gz`, `.zip`) and checksum files.
+4.  **Release**: Downloads all build and package artifacts, stages them in a `releases/` directory, and creates a formal GitHub Release.
+5.  **Artifact Passing**: The `release` job uploads the entire `releases/` directory as a single artifact named `release-assets`.
+6.  **Publish**: The `publish-homebrew` and `publish-container` jobs depend on `release`. They download the `release-assets` artifact to ensure they use the exact same files that were published in the GitHub Release.
+    - **Homebrew**: This job requires a `HOMEBREW_TAP_TOKEN` secret to push updates to the `holdennguyen/homebrew-tap` repository.
+
 ## 🔧 Implementation Patterns
 
 ### **Configuration Management Pattern**
