@@ -306,7 +306,7 @@ create_packages() {
     cd ../..
     
     log_info "📁 Distribution files created in: releases/dist/"
-    ls -la "releases/dist/${package_name}.*"
+    ls -la "releases/dist/${package_name}".*
     
     echo ""
     log_info "🎉 Distribution packages ready!"
