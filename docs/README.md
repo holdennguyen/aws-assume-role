@@ -1,32 +1,62 @@
-# 📚 Documentation Directory
+# 📚 Documentation Hub
 
-This directory contains all comprehensive documentation for AWS Assume Role CLI, organized for different audiences and use cases.
+Welcome to the AWS Assume Role CLI documentation. This directory contains comprehensive guides for different user types and use cases.
 
 ## 📋 Documentation Structure
 
 | Document | Purpose | Target Audience |
 |----------|---------|-----------------|
-| **[📋 DEPLOYMENT.md](DEPLOYMENT.md)** | Complete installation guide, prerequisites, enterprise deployment | **End Users, DevOps Teams** |
-| **[👨‍💻 DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md)** | Development setup, testing, contributing, release workflow | **Contributors, Maintainers** |
-| **[🏗️ ARCHITECTURE.md](ARCHITECTURE.md)** | System design, security architecture, technical deep-dive | **Technical Users, Architects** |
+| **[📋 Installation & Deployment](DEPLOYMENT.md)** | Complete installation guide, prerequisites, enterprise deployment | **End Users, DevOps Teams** |
+| **[👨‍💻 Development Guide](DEVELOPER_WORKFLOW.md)** | Development setup, testing, contributing, release workflow | **Contributors, Maintainers** |
+| **[🏗️ Technical Architecture](ARCHITECTURE.md)** | System design, security architecture, technical deep-dive | **Technical Users, Architects** |
 
 ## 🎯 Quick Navigation
 
 ### **For End Users**
-- **Getting Started**: See [../README.md](../README.md) for quick installation
-- **Detailed Installation**: [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive setup
-- **Troubleshooting**: [DEPLOYMENT.md](DEPLOYMENT.md#troubleshooting) for common issues
+- **Getting Started**: [Installation Guide](DEPLOYMENT.md#-quick-installation)
+- **Configuration**: [Configuration Section](DEPLOYMENT.md#-configuration)
+- **Troubleshooting**: [Common Issues](DEPLOYMENT.md#-troubleshooting)
 
-### **For Developers**
-- **Development Setup**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#quick-start)
-- **Testing**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#testing-framework)
-- **Contributing**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#contributing-guidelines)
-- **Release Process**: [DEVELOPER_WORKFLOW.md](DEVELOPER_WORKFLOW.md#safe-release-process-critical)
+### **For Developers & Contributors**
+- **Development Setup**: [Quick Start](DEVELOPER_WORKFLOW.md#-quick-start)
+- **Daily Workflow**: [Core Workflow](DEVELOPER_WORKFLOW.md#-the-core-workflow-day-to-day-development)
+- **Release Process**: [Release Workflow](DEVELOPER_WORKFLOW.md#-the-release-workflow-publishing-a-new-version)
 
-### **For Technical Users**
-- **System Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md#system-architecture)
-- **Security Design**: [ARCHITECTURE.md](ARCHITECTURE.md#security-architecture)
-- **Performance**: [ARCHITECTURE.md](ARCHITECTURE.md#performance-characteristics)
+### **For DevOps & Enterprise**
+- **Enterprise Deployment**: [Enterprise Section](DEPLOYMENT.md#-enterprise-deployment)
+- **Architecture Overview**: [System Architecture](ARCHITECTURE.md#-system-overview)
+- **Security Considerations**: [Security Architecture](ARCHITECTURE.md#-security-architecture)
+
+## 🔧 Development Tools
+
+The project uses a unified developer CLI for all development tasks:
+
+```bash
+# Quality checks (run before every commit)
+./dev-cli.sh check
+
+# Build binaries for all platforms
+./dev-cli.sh build
+
+# Create local distribution package for testing
+./dev-cli.sh package <version>
+
+# Prepare for release
+./dev-cli.sh release <version>
+
+# Show help
+./dev-cli.sh help
+```
+
+## 📖 Additional Resources
+
+- **[Release Notes](../release-notes/README.md)**: Version history and changelog
+- **[Memory Bank](../memory-bank/README.md)**: AI agent context and project insights
+- **[GitHub Repository](https://github.com/holdennguyen/aws-assume-role)**: Source code and issues
+
+---
+
+**Need help?** Open an issue on GitHub or check the troubleshooting sections in each guide.
 
 ## 📊 Documentation Metrics
 

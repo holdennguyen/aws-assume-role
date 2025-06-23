@@ -144,7 +144,7 @@ aws-whoami      # Check current identity
 1. **Development Setup**: Follow the [Development Guide](docs/DEVELOPER_WORKFLOW.md)
 2. **Testing**: Run our comprehensive test suite (`cargo test`)
 3. **Contributing**: Submit PRs following our development workflow
-4. **Release Process**: Maintainers see our [Safe Release Process](docs/DEVELOPER_WORKFLOW.md#safe-release-process-critical)
+4. **Release Process**: Maintainers see our [Safe Release Process](docs/DEVELOPER_WORKFLOW.md#the-release-workflow-publishing-a-new-version)
 
 ## 🎯 Why Choose AWS Assume Role CLI?
 
@@ -183,7 +183,7 @@ We welcome contributions! Here's how to get started:
 ```bash
 git clone https://github.com/holdennguyen/aws-assume-role.git
 cd aws-assume-role
-./scripts/pre-commit-hook.sh  # Run all quality checks
+./dev-cli.sh check  # Run all quality checks
 ./target/release/aws-assume-role --help
 ```
 

@@ -4,7 +4,7 @@
 
 Complete development workflow, patterns, and best practices for AWS Assume Role CLI development.
 
-## 🚀 Current Development Status (December 2024 - v1.3.0)
+## 🚀 Current Development Status (v1.3.0)
 
 ### **Recent Major Changes (v1.3.0)**
 - ✅ **Cross-Compilation Toolchain**: Complete setup for Linux (musl), macOS, Windows
@@ -14,8 +14,10 @@ Complete development workflow, patterns, and best practices for AWS Assume Role 
 - ✅ **Release Process**: Fully automated with distribution packaging
 - ✅ **Documentation Updated**: All docs reflect universal wrapper approach
 - ✅ **GitHub Actions Fixed**: Upgraded deprecated actions (v3 to v4) and resolved artifact naming conflicts.
-- ✅ **Pre-Commit Script**: Automated quality gates preventing CI failures (Dec 2024)
+- ✅ **Unified Developer CLI**: Single `./dev-cli.sh` script for all development tasks
+- ✅ **Local Distribution Testing**: `./dev-cli.sh package <version>` for end-to-end testing
 - ✅ **Windows CI Fix**: Cross-platform test compatibility resolved with conditional compilation
+- ✅ **Simplified Release Interface**: `./dev-cli.sh release <version>` (removed redundant "prepare" subcommand)
 
 ### **Current Streamlined Architecture (v1.3.0)**
 
@@ -26,10 +28,11 @@ Complete development workflow, patterns, and best practices for AWS Assume Role 
 - `.cargo/config.toml` with proper linker configuration
 - Rust targets: `x86_64-unknown-linux-musl`, `x86_64-pc-windows-gnu`
 
-**Developer Tooling (3 core components)**:
+**Developer Tooling (4 core components)**:
 1. `./dev-cli.sh` - **NEW**: The unified developer script for all tasks. This is the primary entry point for developers.
-2. `releases/INSTALL.sh` - Distribution installer for end-users.
-3. `releases/UNINSTALL.sh` - Clean uninstaller for end-users.
+2. `scripts/release.sh` - Streamlined backend for release preparation and local packaging
+3. `releases/INSTALL.sh` - Distribution installer for end-users.
+4. `releases/UNINSTALL.sh` - Clean uninstaller for end-users.
 
 **Documentation (4 core files)**:
 1. `README.md` - Central navigation hub
@@ -48,9 +51,9 @@ use std::os::unix::fs::PermissionsExt;  // ❌ Unix-only module
 let mode = permissions.mode();          // ❌ Unix-only method
 ```
 
-**Detection**: Pre-commit script caught formatting issues before push
+**Detection**: Developer CLI caught formatting issues before push
 ```bash
-./scripts/pre-commit-hook.sh
+./dev-cli.sh check
 # 🔍 Running pre-commit quality checks...
 # ❌ Code formatting issues found!
 # 💡 Fix with: cargo fmt
@@ -67,7 +70,7 @@ fn test_windows_file_existence() { /* Windows-compatible code */ }
 ```
 
 **Outcome**: 
-- ✅ Pre-commit script prevented CI failure by catching formatting early
+- ✅ Developer CLI prevented CI failure by catching formatting early
 - ✅ Cross-platform compatibility maintained
 - ✅ All 79 tests pass on Windows, macOS, and Linux
 - ✅ Safe release process validated - no broken CI pipeline
@@ -104,17 +107,17 @@ This workflow begins after all features for a release have been merged into the 
 **The Official Release Steps:**
 ```bash
 # 1. Prepare the release with the unified script
-./dev-cli.sh release prepare 1.4.0
+./dev-cli.sh release <version>
 
 # 2. Commit the version bump and push to 'develop' to trigger CI
-git add . && git commit -m "🔖 Prepare release v1.4.0"
+git add . && git commit -m "🔖 Prepare release v<version>"
 git push origin develop
 
 # 3. CRITICAL: Wait for GitHub Actions to PASS on 'develop'.
 
 # 4. ONLY after CI passes, create and push the release tag
-git tag -a v1.4.0 -m "Release v1.4.0"
-git push origin v1.4.0
+git tag -a v<version> -m "Release v<version>"
+git push origin v<version>
 
 # 5. Finalize by merging 'develop' into 'main'
 git checkout main && git merge develop && git push
@@ -134,6 +137,17 @@ To ensure your changes work on all target operating systems, you can build the b
 ls -l releases/aws-assume-role-*
 ```
 
+### **Local Distribution Testing**
+Before creating an official release, you can test the complete end-to-end user experience locally.
+
+```bash
+# Create a full distributable package for testing
+./dev-cli.sh package <version>
+
+# This creates releases/dist/ with .tar.gz and .zip archives
+# Test the installation process with these local artifacts
+```
+
 **CRITICAL PATTERN: Developer CLI Usage**
 - The `./dev-cli.sh check` command is the **single source of truth** for code quality.
 - It prevents CI failures by running the exact same checks locally.
@@ -146,10 +160,10 @@ ls -l releases/aws-assume-role-*
 ```bash
 # The ONLY safe way to release:
 # 1. Prepare release locally
-./scripts/release.sh prepare X.Y.Z
+./dev-cli.sh release <version>
 
 # 2. Push to develop and WAIT for CI
-git add . && git commit -m "🔖 Prepare release vX.Y.Z"
+git add . && git commit -m "🔖 Prepare release v<version>"
 git push origin develop
 
 # 3. Check GitHub Actions status
@@ -157,8 +171,8 @@ git push origin develop
 # Wait for ✅ All checks have passed
 
 # 4. ONLY after CI success, create tag
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin vX.Y.Z
+git tag -a v<version> -m "Release v<version>"
+git push origin v<version>
 
 # 5. Tag triggers automated release pipeline
 ```
@@ -186,10 +200,8 @@ export AR_x86_64_unknown_linux_musl=x86_64-linux-musl-ar
 export CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc
 export AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar
 
-# 5. Build with specific targets
-cargo build --release --target x86_64-unknown-linux-musl
-cargo build --release --target x86_64-pc-windows-gnu
-cargo build --release  # Native macOS build
+# 5. Build with unified command
+./dev-cli.sh build
 ```
 
 ### **Universal Wrapper Development Pattern**
@@ -199,55 +211,112 @@ cargo build --release  # Native macOS build
 
 # Platform detection pattern:
 case "$(uname -s)" in
-    Linux*)   binary_path="./aws-assume-role-linux" ;;
-    Darwin*)  binary_path="./aws-assume-role-macos" ;;
-    MINGW*|MSYS*|CYGWIN*) binary_path="./aws-assume-role-windows.exe" ;;
+    Linux*)     os_type="linux" ;;
+    Darwin*)    os_type="macos" ;;
+    MINGW*|MSYS*|CYGWIN*) os_type="windows" ;;
+    *)          echo "Unsupported operating system" >&2; exit 1 ;;
 esac
 
-# Role assumption pattern with eval:
-eval $($binary_path assume "$2" "${@:3}" --format export 2>/dev/null)
+# Binary selection pattern:
+local binary_name="aws-assume-role-$os_type"
+if [ "$os_type" = "windows" ]; then
+    binary_name="aws-assume-role-windows.exe"
+fi
 
-# Testing pattern for universal wrapper:
-source ./releases/aws-assume-role-bash.sh
-awsr --version                     # Test alias
-awsr list                         # Test functionality
+# Role assumption pattern:
+if [ "$1" = "assume" ]; then
+    eval $("$binary_path" assume "$2" "${@:3}" --format export)
+else
+    "$binary_path" "$@"
+fi
 ```
 
-### **CRITICAL: Code Formatting Pattern**
+### **CRITICAL: Quality Gate Pattern**
 ```bash
-# This pattern has been observed multiple times in CI failures:
-# 1. Developer makes code changes
-# 2. Forgets to run cargo fmt
-# 3. CI fails with formatting violations
-# 4. Must fix and re-commit
+# The developer CLI is the single quality gate
+./dev-cli.sh check
 
-# SOLUTION: Always format after ANY code change
-cargo fmt                          # After every edit session
-git add . && git commit            # Never commit unformatted code
+# This command:
+# 1. Formats code automatically (cargo fmt)
+# 2. Runs linting (cargo clippy -- -D warnings)
+# 3. Runs all tests (cargo test)
+# 4. Validates build (cargo build --release)
+# 5. Provides clear feedback on any issues
+
+# MUST be run before every commit to prevent CI failures
 ```
 
-### **Enhanced Testing Pattern (79 Tests)**
+### **Local Distribution Testing Pattern**
 ```bash
-# Comprehensive test suite structure:
-# - 23 unit tests (src/lib.rs, src/main.rs)
-# - 14 integration tests (tests/integration_tests.rs)
-# - 19 shell integration tests (tests/shell_integration_tests.rs)
-# - 23 additional tests (common utilities)
+# Create full distributable package for end-to-end testing
+./dev-cli.sh package <version>
 
-# Cross-platform testing requirements:
-#[cfg(test)]
-use serial_test::serial;
+# This creates:
+# - releases/dist/aws-assume-role-cli-v<version>.tar.gz
+# - releases/dist/aws-assume-role-cli-v<version>.zip
+# - SHA256 checksums for both archives
+# - All required binaries and scripts
 
-#[test]
-#[serial]
-fn test_cross_platform() {
-    std::env::set_var("HOME", "/tmp/test");           # Unix
-    std::env::set_var("USERPROFILE", "C:\\tmp\\test"); # Windows
-    // Test logic here
-}
-
-# Shell integration testing pattern:
-# Tests now validate single universal wrapper instead of multiple shells
-# Focus on cross-platform binary discovery and error handling
-# Verify role assumption with eval and --format export
+# Test the complete user experience:
+# 1. Extract the archive
+# 2. Run the installer
+# 3. Test the awsr command
+# 4. Verify role assumption works
 ```
+
+## 🔧 Development Environment Setup
+
+### **Required Tools (macOS)**
+```bash
+# Install cross-compilation toolchain
+brew install musl-cross mingw-w64 cmake
+
+# Add Rust targets
+rustup target add x86_64-unknown-linux-musl
+rustup target add x86_64-pc-windows-gnu
+
+# Verify setup
+rustup target list --installed | grep -E "(musl|windows-gnu)"
+```
+
+### **Development Commands Reference**
+```bash
+# Quality checks (run before every commit)
+./dev-cli.sh check
+
+# Build binaries for all platforms
+./dev-cli.sh build
+
+# Create local distribution package for testing
+./dev-cli.sh package <version>
+
+# Prepare for release
+./dev-cli.sh release <version>
+
+# Show help
+./dev-cli.sh help
+```
+
+## 📊 Quality Metrics & Standards
+
+### **Current Standards (v1.3.0)**
+- **Test Coverage**: 79 tests (100% must pass)
+- **Code Quality**: Zero clippy warnings, perfect formatting
+- **Security**: Zero known vulnerabilities
+- **Cross-Platform**: Linux musl, macOS aarch64, Windows MSVC
+- **Performance**: < 100ms startup, < 50MB memory usage
+
+### **Release Checklist**
+- [ ] All 79 tests pass locally (`./dev-cli.sh check`)
+- [ ] Cross-platform builds successful (`./dev-cli.sh build`)
+- [ ] Local distribution package tested (`./dev-cli.sh package <version>`)
+- [ ] Release preparation complete (`./dev-cli.sh release <version>`)
+- [ ] Pushed to develop branch
+- [ ] **GitHub Actions passed** ✅
+- [ ] Tag created and pushed
+- [ ] Release pipeline completed
+
+---
+
+**Last Updated**: December 2024 - Unified developer CLI and local distribution testing complete
+**Next Review**: When significant changes occur or upon explicit request

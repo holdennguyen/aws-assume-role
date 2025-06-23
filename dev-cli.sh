@@ -31,52 +31,53 @@ show_usage() {
     echo "  check          Run all pre-commit quality checks (format, lint, test, build)."
     echo "                 This is the standard check before committing."
     echo ""
-    echo "  build          Build cross-platform binaries for Linux, macOS, and Windows."
-    echo "                 This is needed to run shell integration tests locally."
+    echo "  build          Build all cross-platform binaries into the 'releases/' directory."
     echo ""
-    echo "  release [args]   Manage the release process (prepare version, create notes, etc.)."
-    echo "                 Pass arguments directly to the underlying release script."
-    echo "                 Example: ./dev-cli.sh release prepare 1.4.0"
+    echo "  package <ver>  Create a local, distributable release package (archives and checksums)."
+    echo ""
+    echo "  release <ver>  Prepare for a new release (updates version and creates release notes)."
+    echo "                 Example: ./dev-cli.sh release 1.4.0"
     echo ""
     echo "  help           Show this help message."
     echo ""
+    echo "EXAMPLES:"
+    echo "  ./dev-cli.sh check"
+    echo "  ./dev-cli.sh build"
+    echo "  ./dev-cli.sh package 1.4.0"
+    echo "  ./dev-cli.sh release 1.4.0"
+    echo ""
     echo "DEVELOPER WORKFLOW:"
-    echo "  1. Make code changes."
-    echo "  2. Run './dev-cli.sh check' to ensure quality."
-    echo "  3. Commit changes."
-    echo "  4. For releases, follow instructions in 'docs/DEVELOPER_WORKFLOW.md'."
+    echo "  1. Make your changes"
+    echo "  2. Run: ./dev-cli.sh check"
+    echo "  3. Commit and push your changes"
+    echo "  4. For releases: ./dev-cli.sh release <version>"
+    echo ""
 }
 
-# --- Main Command Handler ---
+# --- Main Logic ---
 main() {
     local command="$1"
-    
-    if [ -z "$command" ]; then
-        show_usage
-        exit 1
-    fi
-    
-    # Remove the main command from the argument list
     shift
     
     case "$command" in
         check)
-            echo -e "${GREEN}Running pre-commit quality checks...${NC}"
+            echo -e "${GREEN}Running quality checks...${NC}"
             bash "$PRE_COMMIT_SCRIPT"
             ;;
-        
+            
         build)
-            echo -e "${GREEN}Building cross-platform release binaries...${NC}"
-            bash "$BUILD_SCRIPT"
+            echo -e "${GREEN}Building local artifacts...${NC}"
+            bash "$RELEASE_SCRIPT" build
+            ;;
+            
+        package)
+            echo -e "${GREEN}Packaging local artifacts for distribution...${NC}"
+            bash "$RELEASE_SCRIPT" package "$@"
             ;;
             
         release)
-            echo -e "${GREEN}Initiating release process...${NC}"
-            if [ ! -f "$RELEASE_SCRIPT" ]; then
-                echo "Error: Release script not found at $RELEASE_SCRIPT"
-                exit 1
-            fi
-            bash "$RELEASE_SCRIPT" "$@"
+            echo -e "${GREEN}Preparing release...${NC}"
+            bash "$RELEASE_SCRIPT" prepare "$@"
             ;;
             
         help|--help|-h)
@@ -84,7 +85,7 @@ main() {
             ;;
             
         *)
-            echo "Error: Unknown command '$command'"
+            echo -e "${BLUE}Unknown command: $command${NC}"
             echo ""
             show_usage
             exit 1
@@ -92,5 +93,7 @@ main() {
     esac
 }
 
-# Run the main function with all provided arguments
-main "$@" 
+# --- Script Execution ---
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi 
