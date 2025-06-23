@@ -1,6 +1,6 @@
 # 🧠 Memory Bank - AI Agent Context
 
-This directory contains contextual information for AI agents working on the AWS Assume Role CLI project. The memory bank preserves project knowledge across sessions and ensures continuity when AI agents have memory resets.
+This directory contains consolidated contextual information for AI agents working on the AWS Assume Role CLI project. The memory bank preserves project knowledge across sessions and ensures continuity when AI agents have memory resets.
 
 ## 📋 Purpose
 
@@ -32,62 +32,72 @@ The memory bank serves as the **complete project context** for AI agents, contai
    - Critical workflows established
    - Quality issues or solutions found
 
-## 📁 File Structure
+## 📁 Optimized File Structure
 
-### Core Context Files
+### Core Context Files (Consolidated)
 
-| File | Purpose | Update Frequency |
-|------|---------|------------------|
-| `project-context.md` | Complete project overview, status, achievements | Major changes |
-| `development-context.md` | Development workflows, patterns, quality gates | Workflow changes |
-| `technical-context.md` | Architecture, technical decisions, dependencies | Technical changes |
-| `development-setup.md` | Environment setup, tooling, prerequisites | Setup changes |
-| `testing-framework.md` | Testing strategy, patterns, coverage | Testing changes |
-| `security-upgrade.md` | Security considerations, vulnerabilities, upgrades | Security updates |
+| File | Purpose | Key Information |
+|------|---------|-----------------|
+| `project-context.md` | **Complete project overview** - Mission, status, achievements, user stories | Project goals, current version status, recent achievements, user experience |
+| `development-context.md` | **Development workflows** - Git Flow, quality gates, patterns, tooling | Git Flow strategy, dev-cli.sh usage, quality checks, release process |
+| `technical-context.md` | **Architecture & implementation** - Code patterns, dependencies, security | Rust patterns, AWS SDK usage, cross-platform builds, security practices |
+| `testing-framework.md` | **Testing strategy** - Test matrix, patterns, execution | 79 tests breakdown, shell integration tests, CI/CD testing |
 
-### Usage Guidelines
+### Consolidated Information
 
-1. **Read ALL files at session start** - AI agents must review complete context
-2. **Update immediately after major changes** - Don't let context become stale
-3. **Focus on current state** - Emphasize what's working now vs. historical details
-4. **Document patterns** - Capture critical learnings and repeated patterns
-5. **Maintain accuracy** - Remove outdated information, update status
+**Removed Redundancies**:
+- `development-setup.md` → Merged into `development-context.md`
+- `security-upgrade.md` → Merged into `technical-context.md`
+
+**Benefits**:
+- Reduced file count from 7 to 4 core files
+- Eliminated duplicate information
+- Faster context loading for AI agents
+- Clearer information hierarchy
 
 ## 🎯 Current Project Status (December 2024)
 
 ### Recent Major Achievements
-- ✅ **CI/CD Pipeline Fixed**: Upgraded deprecated actions and resolved artifact conflicts.
-- ✅ **Standardized Workflow**: The entire development and release process is now standardized in `DEVELOPER_WORKFLOW.md` and `release.sh`.
-- ✅ **Pre-Commit Script**: A single `pre-commit-hook.sh` now enforces all quality gates locally.
-- ✅ **Documentation Overhaul**: All user-facing and internal documentation has been updated and aligned.
-- ✅ **Test Suite Expanded**: The test suite now contains **79 tests** covering the universal wrapper and all core functionality.
+- ✅ **CI/CD Pipeline Fixed**: Upgraded deprecated actions and resolved artifact conflicts
+- ✅ **Standardized Workflow**: Unified `dev-cli.sh` script for all development tasks
+- ✅ **Git Flow Documentation**: Corrected branch strategy to reflect proper Git Flow workflow
+- ✅ **Test Suite**: 79 comprehensive tests covering all functionality
+- ✅ **Cross-Platform Support**: Universal bash wrapper for Linux, macOS, Windows Git Bash
 
 ### Active Focus
-- **Monitoring v1.3.0**: Ensure the new release is stable.
-- **Documentation Maintenance**: Keep all documentation current with any new learnings or changes.
-- **Proactive Security**: Continue monitoring dependencies and security best practices.
+- **Git Bash Windows Issue**: Fixing shell detection for proper export commands
+- **Documentation Maintenance**: Keeping all documentation current and accurate
+- **Quality Assurance**: Maintaining 79 tests and CI/CD pipeline stability
 
 ### Next Updates Expected
-- When user feedback on v1.3.0 is received.
-- When user feedback requires documentation changes
-- When new features or architectural changes occur  
+- When Git Bash Windows fix is implemented
+- When new features or architectural changes occur
 - When development workflows evolve
 - Upon explicit "update memory bank" instruction
 
 ---
 
-**Last Updated**: December 2024 - After the release of v1.3.0.
+**Last Updated**: December 2024 - After identifying Git Bash Windows issue
 **Next Review**: When significant changes occur or upon explicit request
 
-## 🔍 Quick Reference
+## 🔍 Quick Reference for AI Agents
 
-For AI agents starting a new session:
+### **Session Start Protocol**
+1. **Read `project-context.md`** - Understand project mission and current status
+2. **Review `development-context.md`** - Understand Git Flow and development workflow
+3. **Check `technical-context.md`** - Understand architecture and implementation patterns
+4. **Reference `testing-framework.md`** - Understand testing strategy and execution
 
-1. **Start here**: Read `project-context.md` for complete overview
-2. **Development work**: Review `development-context.md` for workflows
-3. **Technical questions**: Check `technical-context.md` for architecture
-4. **Setup needs**: Reference `development-setup.md` for environment
-5. **Testing work**: Review `testing-framework.md` for test patterns
-6. **Security concerns**: Check `security-upgrade.md` for current status
+### **Critical Patterns to Remember**
+- **Git Flow**: Feature branches from `develop`, PRs to `develop`, releases to `main`
+- **Quality Gates**: Always run `./dev-cli.sh check` before commits
+- **Cross-Platform**: Universal bash wrapper handles Linux, macOS, Windows Git Bash
+- **Testing**: 79 tests must pass (unit, integration, shell integration)
+
+### **Common Tasks**
+- **Bug Fixes**: Create `fix/` branch from `develop`
+- **Features**: Create `feature/` branch from `develop`
+- **Releases**: Use `./dev-cli.sh release <version>` workflow
+- **Testing**: Use `./dev-cli.sh check` for all quality gates
 
 **Remember**: The memory bank is only as good as it is current. Update it whenever significant changes occur! 

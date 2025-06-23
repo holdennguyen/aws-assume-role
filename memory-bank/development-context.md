@@ -13,11 +13,12 @@ Complete development workflow, patterns, and best practices for AWS Assume Role 
 - ✅ **Test Suite Expansion**: 79 comprehensive tests (updated shell integration tests)
 - ✅ **Release Process**: Fully automated with distribution packaging
 - ✅ **Documentation Updated**: All docs reflect universal wrapper approach
-- ✅ **GitHub Actions Fixed**: Upgraded deprecated actions (v3 to v4) and resolved artifact naming conflicts.
+- ✅ **GitHub Actions Fixed**: Upgraded deprecated actions (v3 to v4) and resolved artifact naming conflicts
 - ✅ **Unified Developer CLI**: Single `./dev-cli.sh` script for all development tasks
 - ✅ **Local Distribution Testing**: `./dev-cli.sh package <version>` for end-to-end testing
 - ✅ **Windows CI Fix**: Cross-platform test compatibility resolved with conditional compilation
 - ✅ **Simplified Release Interface**: `./dev-cli.sh release <version>` (removed redundant "prepare" subcommand)
+- ✅ **Git Flow Documentation**: Corrected branch strategy documentation to reflect proper Git Flow workflow
 
 ### **Current Streamlined Architecture (v1.3.0)**
 
@@ -37,7 +38,7 @@ Complete development workflow, patterns, and best practices for AWS Assume Role 
 **Documentation (4 core files)**:
 1. `README.md` - Central navigation hub
 2. `docs/DEPLOYMENT.md` - Installation & deployment guide
-3. `docs/DEVELOPER_WORKFLOW.md` - Complete development guide
+3. `docs/DEVELOPER_WORKFLOW.md` - Complete development guide (updated with correct Git Flow)
 4. `docs/ARCHITECTURE.md` - Technical architecture
 
 **GitHub Actions**: Single `ci-cd.yml` with smart triggers and unified pipeline
@@ -320,3 +321,34 @@ rustup target list --installed | grep -E "(musl|windows-gnu)"
 
 **Last Updated**: December 2024 - Unified developer CLI and local distribution testing complete
 **Next Review**: When significant changes occur or upon explicit request
+
+## 🎯 Development Setup (Consolidated)
+
+### **One-Time Setup**
+
+**Prerequisites**:
+- **Rust**: Version 1.70 or newer
+- **Git**: For source control
+- **Homebrew** (macOS): For installing the cross-compilation toolchain
+
+**Repository Setup**:
+```bash
+git clone https://github.com/holdennguyen/aws-assume-role.git
+cd aws-assume-role
+```
+
+**Cross-Compilation Toolchain (Required for Release Builds)**:
+```bash
+# Install required tools via Homebrew
+brew install musl-cross mingw-w64 cmake
+
+# Add the Rust target platforms
+rustup target add x86_64-unknown-linux-musl
+rustup target add x86_64-pc-windows-gnu
+```
+
+**Project Structure**:
+```bash
+# Verify project structure
+tree
+```

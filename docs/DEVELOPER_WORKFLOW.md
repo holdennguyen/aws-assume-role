@@ -5,6 +5,7 @@ This guide outlines the standard end-to-end process for development, testing, an
 ## 📋 Table of Contents
 
 - [Quick Start](#-quick-start)
+- [Branch Strategy](#-branch-strategy)
 - [The Core Workflow: Day-to-Day Development](#-the-core-workflow-day-to-day-development)
 - [Creating a Local Distribution Package for Testing](#-creating-a-local-distribution-package-for-testing)
 - [The Release Workflow: Publishing a New Version](#-the-release-workflow-publishing-a-new-version)
@@ -52,16 +53,30 @@ If all checks pass, you are ready to start development!
 
 ---
 
+## 🌿 Branch Strategy
+
+This project follows **Git Flow** with the following branch structure:
+
+- **`main`** - Production branch (stable releases only)
+- **`develop`** - Integration branch (where features are merged)
+- **`feature/*`** - Feature branches (created from `develop`)
+- **`release/*`** - Release preparation branches (created from `develop`)
+- **`hotfix/*`** - Critical fixes (created from `main`)
+
+**Important**: All development work should branch from `develop`, not `main`.
+
+---
+
 ## 🔄 The Core Workflow: Day-to-Day Development
 
 This is the standard process for adding features, fixing bugs, and contributing to the project.
 
 ### Step 1: Create a Feature Branch
-Always start your work from an up-to-date `main` branch.
+Always start your work from an up-to-date `develop` branch.
 
 ```bash
-git checkout main
-git pull origin main
+git checkout develop
+git pull origin develop
 git checkout -b feature/your-new-feature
 ```
 
