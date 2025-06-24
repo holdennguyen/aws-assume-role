@@ -141,6 +141,24 @@ package_local_artifacts() {
 
 # Builds local artifacts for all platforms.
 build_local_artifacts() {
+    # ------------------------------------------------------------------
+    # Fast-path for CI:
+    #   – GitHub Actions has already produced the three platform binaries
+    #     in the earlier `build` job and they are copied to ./releases/.
+    #   – If they're present, we can safely skip the expensive rebuild /
+    #     environment-validation that requires musl-cross, mingw-w64, etc.
+    # ------------------------------------------------------------------
+    if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+        if [[ -f releases/aws-assume-role-linux       && \
+              -f releases/aws-assume-role-macos       && \
+              -f releases/aws-assume-role-windows.exe ]]; then
+            log_info "✅ CI environment detected and binaries already staged – skipping local build."
+            return 0
+        else
+            log_info "CI environment detected but binaries missing – falling back to full build."
+        fi
+    fi
+
     log_info "🏗️ Building local release artifacts..."
     if [ ! -f "scripts/build-releases.sh" ]; then
         log_error "Build script not found at scripts/build-releases.sh"
