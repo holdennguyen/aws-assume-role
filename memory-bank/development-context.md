@@ -10,7 +10,7 @@ Complete development workflow, patterns, and best practices for AWS Assume Role 
 - ✅ **Cross-Compilation Toolchain**: Complete setup for Linux (musl), macOS, Windows
 - ✅ **Universal Bash Wrapper**: Consolidated to single wrapper for all platforms
 - ✅ **Build Automation**: Enhanced scripts with cross-platform toolchain integration
-- ✅ **Test Suite Expansion**: 79 comprehensive tests (updated shell integration tests)
+- ✅ **Test Suite Update**: 60 comprehensive tests (shell integration tests removed)
 - ✅ **Release Process**: Fully automated with distribution packaging
 - ✅ **Documentation Updated**: All docs reflect universal wrapper approach
 - ✅ **GitHub Actions Fixed**: Upgraded deprecated actions (v3 to v4) and resolved artifact naming conflicts
@@ -73,7 +73,7 @@ fn test_windows_file_existence() { /* Windows-compatible code */ }
 **Outcome**: 
 - ✅ Developer CLI prevented CI failure by catching formatting early
 - ✅ Cross-platform compatibility maintained
-- ✅ All 79 tests pass on Windows, macOS, and Linux
+- ✅ All 60 tests pass on Windows, macOS, and Linux
 - ✅ Safe release process validated - no broken CI pipeline
 
 **Key Learning**: A unified developer CLI (`./dev-cli.sh`) is essential for maintaining quality and simplifying cross-platform development.
@@ -301,14 +301,14 @@ rustup target list --installed | grep -E "(musl|windows-gnu)"
 ## 📊 Quality Metrics & Standards
 
 ### **Current Standards (v1.3.0)**
-- **Test Coverage**: 79 tests (100% must pass)
+- **Test Coverage**: 60 tests (100% must pass)
 - **Code Quality**: Zero clippy warnings, perfect formatting
 - **Security**: Zero known vulnerabilities
 - **Cross-Platform**: Linux musl, macOS aarch64, Windows MSVC
 - **Performance**: < 100ms startup, < 50MB memory usage
 
 ### **Release Checklist**
-- [ ] All 79 tests pass locally (`./dev-cli.sh check`)
+- [ ] All 60 tests pass locally (`./dev-cli.sh check`)
 - [ ] Cross-platform builds successful (`./dev-cli.sh build`)
 - [ ] Local distribution package tested (`./dev-cli.sh package <version>`)
 - [ ] Release preparation complete (`./dev-cli.sh release <version>`)

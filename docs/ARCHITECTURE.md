@@ -317,25 +317,24 @@ pub fn resolve_config(cli_args: &CliArgs) -> Config {
 
 ## 🧪 Testing Architecture
 
-### **Test Structure (59 Total Tests)**
+### **Test Structure (60 Total Tests)**
 
 ```
 Testing Framework:
-├── Unit Tests (14 tests)
+├── Unit Tests (23 tests)
 │   ├── Configuration module tests
 │   ├── Error handling tests
 │   ├── AWS integration tests
 │   └── CLI parsing tests
-├── Integration Tests (23 tests)
+├── Integration Tests (14 tests)
 │   ├── End-to-end CLI functionality
 │   ├── Cross-platform compatibility
 │   ├── Configuration workflows
 │   └── Error scenarios
-└── Shell Integration Tests (22 tests)
-    ├── Bash/Zsh wrapper validation
-    ├── PowerShell wrapper validation
-    ├── Fish shell wrapper validation
-    └── CMD batch wrapper validation
+└── Additional Tests (23 tests)
+    ├── Performance benchmarks
+    ├── Cross-platform utilities
+    └── Serialization helpers
 ```
 
 ### **Test Isolation Patterns**
@@ -479,7 +478,7 @@ CI/CD Pipeline:
 │   ├── Formatting check
 │   ├── Clippy linting
 │   ├── Security audit
-│   └── Test suite (59 tests)
+│   └── Test suite (60 tests)
 ├── Multi-Platform Builds
 │   ├── Linux x86_64
 │   ├── Windows x86_64

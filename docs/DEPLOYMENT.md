@@ -303,17 +303,11 @@ awsr configure --name prod-db --role-arn arn:aws:iam::345678901234:role/Database
 Add to `~/.bashrc` or `~/.zshrc`:
 ```bash
 # AWS Assume Role CLI aliases
-alias assume-dev='eval $(awsr assume dev)'
-alias assume-staging='eval $(awsr assume staging)'
-alias assume-prod='eval $(awsr assume prod)'
+alias assume-dev='awsr assume dev'
+alias assume-staging='awsr assume staging'
+alias assume-prod='awsr assume prod'
 alias aws-whoami='aws sts get-caller-identity --query "Arn" --output text'
 alias aws-unset='unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN'
-
-# Auto-completion (if available)
-if command -v awsr >/dev/null 2>&1; then
-  eval "$(awsr completion bash)"  # For bash
-  eval "$(awsr completion zsh)"   # For zsh
-fi
 ```
 
 ### **Fish Shell Integration**
@@ -330,22 +324,6 @@ alias aws-whoami='aws sts get-caller-identity --query "Arn" --output text'
 if command -v awsr >/dev/null 2>&1
   awsr completion fish | source
 end
-```
-
-### **PowerShell Integration**
-
-Add to your PowerShell profile:
-```powershell
-# AWS Assume Role CLI functions
-function Assume-Dev { Invoke-Expression (awsr assume dev --format powershell) }
-function Assume-Staging { Invoke-Expression (awsr assume staging --format powershell) }
-function Assume-Prod { Invoke-Expression (awsr assume prod --format powershell) }
-function Get-AWSIdentity { aws sts get-caller-identity --query "Arn" --output text }
-
-# Auto-completion
-if (Get-Command awsr -ErrorAction SilentlyContinue) {
-    Invoke-Expression (awsr completion powershell)
-}
 ```
 
 ## 🔍 Troubleshooting
@@ -365,7 +343,7 @@ aws --version
 
 **2. "Unable to locate credentials"**
 ```bash
-# Configure AWS credentials
+# Configure base AWS credentials
 aws configure
 # OR
 aws sso login

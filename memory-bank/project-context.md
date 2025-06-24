@@ -89,7 +89,7 @@ awsr assume production
 - ✅ **CI/CD Pipeline**: Fully automated unified pipeline
 - ✅ **Security**: All vulnerabilities resolved, modern cryptography
 - ✅ **Documentation**: Consolidated and streamlined structure
-- ✅ **Test Suite**: 79 comprehensive tests (unit, integration, shell) - all passing
+- ✅ **Test Suite**: 60 comprehensive tests (unit, integration, additional) - all passing
 - ✅ **Standardized Workflow**: The entire development and release process is now standardized and documented in `DEVELOPER_WORKFLOW.md`.
 - ✅ **Unified Developer CLI**: Single `./dev-cli.sh` script for all development tasks
 - ✅ **Local Distribution Testing**: `./dev-cli.sh package <version>` for end-to-end testing
@@ -127,10 +127,9 @@ awsr assume production
 - Streamlined releases directory managed by automation
 
 **Test Suite Updates**:
-- Updated shell integration tests to reflect universal wrapper approach
-- 19 shell integration tests now validate single universal wrapper
+- Removed legacy shell integration tests (functionality now covered by integration tests)
 - Tests verify cross-platform binary discovery, error handling, and usage
-- All 79 tests passing (23 unit + 14 integration + 19 shell + 23 additional)
+- All 60 tests passing (23 unit + 14 integration + 23 additional)
 
 ### **Current Architecture (v1.3.0)**
 
@@ -183,7 +182,7 @@ awsr assume production
 **Quality Standards**:
 - **Zero Clippy Warnings**: Enforced by CI pipeline
 - **Mandatory Formatting**: All code must pass `cargo fmt --check`
-- **Comprehensive Testing**: 79 tests covering all functionality (expanded test coverage)
+- **Comprehensive Testing**: 60 tests covering all functionality (unit, integration, additional)
 - **Cross-Platform Validation**: Every change tested on multiple platforms with real toolchain
 
 ### **Critical Patterns & Learnings (Updated v1.3.0)**

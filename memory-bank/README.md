@@ -41,7 +41,7 @@ The memory bank serves as the **complete project context** for AI agents, contai
 | `project-context.md` | **Complete project overview** - Mission, status, achievements, user stories | Project goals, current version status, recent achievements, user experience |
 | `development-context.md` | **Development workflows** - Git Flow, quality gates, patterns, tooling | Git Flow strategy, dev-cli.sh usage, quality checks, release process |
 | `technical-context.md` | **Architecture & implementation** - Code patterns, dependencies, security | Rust patterns, AWS SDK usage, cross-platform builds, security practices |
-| `testing-framework.md` | **Testing strategy** - Test matrix, patterns, execution | 79 tests breakdown, shell integration tests, CI/CD testing |
+| `testing-framework.md` | **Testing strategy** - Test matrix, patterns, execution | 60 tests breakdown, CI/CD testing |
 
 ### Consolidated Information
 
@@ -61,13 +61,13 @@ The memory bank serves as the **complete project context** for AI agents, contai
 - ✅ **CI/CD Pipeline Fixed**: Upgraded deprecated actions and resolved artifact conflicts
 - ✅ **Standardized Workflow**: Unified `dev-cli.sh` script for all development tasks
 - ✅ **Git Flow Documentation**: Corrected branch strategy to reflect proper Git Flow workflow
-- ✅ **Test Suite**: 79 comprehensive tests covering all functionality
+- ✅ **Test Suite**: 60 comprehensive tests covering all functionality (shell integration tests removed)
 - ✅ **Cross-Platform Support**: Universal bash wrapper for Linux, macOS, Windows Git Bash
 
 ### Active Focus
 - **Git Bash Windows Issue**: Fixing shell detection for proper export commands
 - **Documentation Maintenance**: Keeping all documentation current and accurate
-- **Quality Assurance**: Maintaining 79 tests and CI/CD pipeline stability
+- **Quality Assurance**: Maintaining 60 tests and CI/CD pipeline stability
 
 ### Next Updates Expected
 - When Git Bash Windows fix is implemented
@@ -92,7 +92,7 @@ The memory bank serves as the **complete project context** for AI agents, contai
 - **Git Flow**: Feature branches from `develop`, PRs to `develop`, releases to `main`
 - **Quality Gates**: Always run `./dev-cli.sh check` before commits
 - **Cross-Platform**: Universal bash wrapper handles Linux, macOS, Windows Git Bash
-- **Testing**: 79 tests must pass (unit, integration, shell integration)
+- **Testing**: 60 tests must pass (unit, integration, additional)
 
 ### **Common Tasks**
 - **Bug Fixes**: Create `fix/` branch from `develop`

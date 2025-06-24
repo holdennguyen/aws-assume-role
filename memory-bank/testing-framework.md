@@ -2,7 +2,9 @@
 
 ## Overview
 
-AWS Assume Role implements a comprehensive testing framework with **79 total tests** covering all aspects of functionality, cross-platform compatibility, and shell integration. This document details our testing strategy, test matrix, and development processes.
+AWS Assume Role implements a comprehensive testing framework with **79 total tests** covering all aspects of functionality, cross-platform compatibility, and shell integration.
+AWS Assume Role implements a comprehensive testing framework with **60 total tests** covering all aspects of functionality and cross-platform compatibility (shell integration tests removed in v1.3.1).
+This document details our testing strategy, test matrix, and development processes.
 
 ## Test Matrix (v1.3.0)
 
@@ -30,6 +32,20 @@ Testing Architecture:
 │   │   ├── test_unix_file_permissions() - Unix executable permissions
 │   │   └── ...
 │   └── Test Utilities (6 tests)
+└── Additional Tests (23 tests)
+```
+
+### Complete Test Coverage (60 Tests)
+
+```
+Testing Architecture:
+├── Unit Tests (23 tests)
+│   ├── Config Module (10 tests)
+│   └── Error Module (13 tests)
+├── Integration Tests (14 tests)
+│   ├── CLI Functionality (8 tests)
+│   ├── Error Handling (3 tests)
+│   └── Config Integration (3 tests)
 └── Additional Tests (23 tests)
 ```
 
@@ -211,10 +227,10 @@ All tests are executed on every push to the `develop` and `master` branches, and
 
 ### Current Status (v1.2.0)
 
-- **Total Tests**: 55 (23 unit + 14 integration + 18 shell integration)
+- **Total Tests**: 60 (23 unit + 14 integration + 23 additional)
 - **Success Rate**: 100% (55/55 passing)
 - **Platform Coverage**: Ubuntu, Windows, macOS
-- **Shell Coverage**: Bash, Zsh, PowerShell, Fish, CMD
+- **Shell Coverage**: N/A (shell wrapper validated via unit tests)
 - **Security Coverage**: Automated vulnerability scanning
 - **Performance Coverage**: Benchmark regression detection
 - **Code Coverage**: Comprehensive module coverage with tarpaulin

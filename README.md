@@ -14,7 +14,7 @@
 - 📋 **Multiple output formats** (shell exports, JSON, environment variables)
 - 💾 **Persistent configuration** with intuitive JSON storage
 - ⏱️ **Flexible session control** with custom durations and automatic refresh
-- 🧪 **Battle-tested reliability** (79 comprehensive tests across all platforms)
+- 🧪 **Battle-tested reliability** (60 comprehensive tests across all platforms)
 - 🚀 **Zero-config installation** via popular package managers
 
 ## 🚀 Quick Start
@@ -44,10 +44,7 @@ unzip aws-assume-role-cli-v1.3.0.zip && cd aws-assume-role-cli-v1.3.0
 # 1. Configure your first role
 awsr configure --name dev --role-arn arn:aws:iam::123456789012:role/DevRole --account-id 123456789012
 
-# 2. Assume the role (exports credentials to your shell)
-eval $(awsr assume dev)
-
-# 3. Verify it worked by checking your AWS identity
+# 2. Verify it worked by checking your AWS identity
 aws sts get-caller-identity
 ```
 
@@ -66,8 +63,8 @@ Make role switching even faster with aliases:
 
 ```bash
 # Add to ~/.bashrc, ~/.zshrc, or your shell config
-alias assume-dev='eval $(awsr assume dev)'
-alias assume-prod='eval $(awsr assume prod)'
+alias assume-dev='awsr assume dev'
+alias assume-prod='awsr assume prod'
 alias aws-whoami='aws sts get-caller-identity --query "Arn" --output text'
 
 # Usage
@@ -177,7 +174,7 @@ awsr assume dev
 We welcome contributions! Here's how to get started:
 
 1. **📖 Read the Development Guide**: [docs/DEVELOPER_WORKFLOW.md](docs/DEVELOPER_WORKFLOW.md)
-2. **🧪 Run Tests**: `cargo test` (all 79 tests must pass)
+2. **🧪 Run Tests**: `cargo test` (all 60 tests must pass)
 3. **🚀 Submit Changes**: Follow our git flow workflow as described in the development guide.
 
 **Quick development setup:**
@@ -190,7 +187,7 @@ cd aws-assume-role
 
 ## 📊 Project Stats
 
-- **🧪 Test Coverage**: 79 comprehensive tests (unit, integration, shell)
+- **🧪 Test Coverage**: 60 comprehensive tests (unit, integration, additional)
 - **🌍 Platform Support**: Linux, macOS, Windows (100% test pass rate)
 - **🔐 Security**: Zero known vulnerabilities, modern cryptography
 - **📦 Distribution**: 6+ installation methods, automated CI/CD

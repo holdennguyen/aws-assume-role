@@ -6,7 +6,9 @@ This directory contains comprehensive release notes for all versions of AWS Assu
 
 | Version | Release Date | Focus | Status |
 |---------|--------------|-------|--------|
-| [v1.2.0](RELEASE_NOTES_v1.2.0.md) | 2024-12-21 | Windows Compatibility & CI/CD Reliability | ✅ Released |
+| [v1.2.0](RELEASE_NOTES_v1.2.0.md) | 2025-06-22 | Windows Compatibility & CI/CD Reliability | ✅ Released |
+| [v1.3.0](RELEASE_NOTES_v1.3.0.md) | 2025-06-24 | Developer Experience & Critical Windows Compatibility | ✅ Released |
+| [v1.3.1](RELEASE_NOTES_v1.3.1.md) | 2025-06-24 | Installation Script Fixes & Quality Improvements | ✅ Released |
 
 ## 📝 Process
 
@@ -14,10 +16,10 @@ This directory contains comprehensive release notes for all versions of AWS Assu
 
 ```bash
 # Use the helper script (recommended)
-./scripts/release.sh notes 1.2.1
+./dev-cli.sh release v<version>
 
 # Or manually copy template
-cp release-notes/TEMPLATE.md release-notes/RELEASE_NOTES_v1.2.1.md
+cp release-notes/TEMPLATE.md release-notes/RELEASE_NOTES_v<version>.md
 ```
 
 ### Required Content

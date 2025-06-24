@@ -45,12 +45,13 @@ awsr list
 awsr configure --name dev --role-arn arn:aws:iam::123456789012:role/DevRole
 ```
 
-### Direct Binary Usage
+### Direct Credentials Usage
 ```bash
-# Direct execution
-./aws-assume-role-macos assume my-role-name --format export
-eval $(./aws-assume-role-macos assume my-role-name --format export)
+# After awsr assume role successfully
+env | grep AWS
 ```
+
+
 
 ## 🔧 Supported Platforms
 

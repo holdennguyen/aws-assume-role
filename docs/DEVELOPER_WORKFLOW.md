@@ -174,7 +174,7 @@ git push origin main
 The `./dev-cli.sh` script is the single entry point for all common tasks.
 
 -   `check`: Runs all pre-commit quality checks (format, lint, test, build). Use this before every commit.
--   `build`: Builds all cross-platform binaries. This is required for running shell integration tests.
+-   `build`: Builds all cross-platform binaries required by integration and additional tests.
 -   `package <version>`: Creates a full, local distributable package (`.tar.gz`, `.zip`) for end-to-end testing.
 -   `release <version>`: Prepares for a new release (updates version and creates release notes).
 -   `help`: Displays the help message.
@@ -183,9 +183,7 @@ The `./dev-cli.sh` script is the single entry point for all common tasks.
 
 ## 🔧 Troubleshooting
 
--   **Shell integration tests are failing?**
-    -   You likely need to build the release binaries first. Run `./dev-cli.sh build`.
--   **CI is failing, but my code works locally?**
+-   **Binary-dependent tests are failing?**
     -   Ensure you ran `./dev-cli.sh check` and it passed before you committed. This script runs the same checks as the CI pipeline.
 -   **Cross-compilation is failing?**
     -   Verify that you have installed the toolchain described in the [Quick Start](#-quick-start) section. 

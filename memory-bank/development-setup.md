@@ -61,7 +61,7 @@ aws-assume-role/
 │   ├── aws/               # AWS integration using the Rust SDK
 │   ├── config/            # Role configuration management
 │   └── error/             # Error handling
-├── tests/                 # Integration and shell integration tests
+├── tests/                 # Integration and additional tests
 ├── scripts/               # Build, release, and quality-gate scripts
 ├── .github/workflows/     # CI/CD automation pipeline (ci-cd.yml)
 ├── docs/                  # Project documentation (architecture, workflow)

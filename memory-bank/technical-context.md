@@ -362,30 +362,22 @@ fn test_cli_integration() {
 
 ## 🧪 Testing Architecture
 
-### **Test Structure (59 Total Tests)**
+### **Test Structure (60 Total Tests)**
 
 ```
 Testing Framework:
-├── Unit Tests (14 tests)
-│   ├── config::tests (10 tests)
-│   │   ├── Configuration loading/saving
-│   │   ├── Cross-platform path handling
-│   │   ├── JSON serialization/deserialization
-│   │   └── Environment variable resolution
-│   └── error::tests (4 tests)
-│       ├── Error type creation
-│       ├── Error chain handling
-│       └── Display formatting
-├── Integration Tests (23 tests)
+├── Unit Tests (23 tests)
+│   ├── Config Module (10 tests)
+│   └── Error Module (13 tests)
+├── Integration Tests (14 tests)
 │   ├── CLI functionality testing
 │   ├── End-to-end workflows
 │   ├── Error scenario validation
 │   └── Configuration integration
-└── Shell Integration Tests (22 tests)
-    ├── Bash/Zsh wrapper validation (6 tests)
-    ├── PowerShell wrapper validation (6 tests)
-    ├── Fish shell wrapper validation (5 tests)
-    └── CMD batch wrapper validation (5 tests)
+└── Additional Tests (23 tests)
+    ├── Performance benchmarks
+    ├── Cross-platform path utilities
+    └── Serialization helpers
 ```
 
 ### **Quality Assurance Patterns**
